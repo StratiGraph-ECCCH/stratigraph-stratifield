@@ -10,7 +10,7 @@
 # THE RULE for editing this file: open the Dockerfile and read the `COPY` lines
 # first. Everything they name must stay reachable; everything else is weight.
 # What this image copies:
-#   pyproject.toml · README.md · app/ · web/   ← web/ IS the PWA, not an accessory
+#   pyproject.toml · README.md · LICENSE · app/ · web/   ← web/ IS the PWA, not an accessory
 
 # ── the big one ──────────────────────────────────────────────────────────────
 .venv/
