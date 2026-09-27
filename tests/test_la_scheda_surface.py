@@ -175,7 +175,7 @@ def test_a_failed_creation_stops_before_filling(client, monkeypatch):
 # ── 3 · la conchiglia è servita dalla STESSA directory che si mette in cache ─
 
 @pytest.mark.parametrize("name", ["shell.css", "scheda.css", "shell.js",
-                                  "scheda.js"])
+                                  "scheda.js", "foglio.js", "foglio.css"])
 def test_every_new_shell_file_is_both_served_and_precached(client, name):
     """UNA DIRECTORY, UNA FONTE. Due elenchi sarebbero due risposte, e il guasto
     è quello del §3: un file in cache e non servito, o servito e non in cache, e

@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="./brand/stratigraph-theme.css">
 <link rel="stylesheet" href="./shell.css">
 <link rel="stylesheet" href="./scheda.css">
+<link rel="stylesheet" href="./foglio.css">
 </head>
 <body>
 <!-- ══ LA CONCHIGLIA ═══════════════════════════════════════════════════════
@@ -177,6 +178,11 @@
     <!-- Dove il modulo si disegna. Vuoto finche' non si apre una scheda: un
          nodo che non serve definizioni e' l'assistente che e' sempre stato. -->
     <section id="scheda" hidden>
+      <!-- LA FASCIA COMANDI DELLA SCHEDA: Lingua della scheda · Vista · Facciate
+           (alla scrivania) o Facciata · Solo i campi da trincea (in campo). La
+           dipinge `shell.js`, che tiene lo stato; sul telefono resta vuota e
+           nascosta, perché lì non c'è foglio. -->
+      <div class="fo-strip" id="scheda-strip" hidden></div>
       <p class="saysit" id="scheda-says" hidden></p>
       <div id="scheda-host"></div>
     </section>
@@ -341,6 +347,35 @@ const STRINGS = {
     "here": "Here: {lat}, {lon}",
     "lang.label": "Language",
     "commands.in": "This node understands commands in {language}.",
+    // ── the Sheet (il Foglio), 16 October: SAME KEYS as
+    //    StratiGraph_UI_strings.xlsx («UI strings»), values en/it from there.
+    "view.sheet": "Paper",
+    "view.fields": "Fields",
+    "ctl.view": "View",
+    "ctl.faces": "Sides",
+    "ctl.cardlang": "Sheet language",
+    "faces.both": "Recto and verso",
+    "faces.recto": "Recto",
+    "faces.verso": "Verso",
+    "page.expand": "Enlarge this side to write",
+    "page.collapse": "Back to recto and verso",
+    "insp.thiscard": "This sheet",
+    "insp.all": "All",
+    "insp.trench": "Trench",
+    "insp.lab": "Lab",
+    "insp.check": "To check",
+    "insp.required": "required",
+    "insp.ai_todo": "AI · to confirm",
+    "insp.ai_ok": "AI · confirmed",
+    "insp.empty": "Empty boxes",
+    "insp.write": "Write",
+    "act.confirm": "I confirm this text",
+    "f.side": "Side",
+    "f.trench_only": "Trench fields only",
+    "f.later": "filled in later",
+    //    NOT in the xlsx yet — the one sentence the sheet needs that the file
+    //    does not have. To be added there under this key.
+    "view.sheet.none": "This definition declares no paper sheet: here are its fields.",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -444,6 +479,31 @@ const STRINGS = {
     "here": "Qui: {lat}, {lon}",
     "lang.label": "Lingua",
     "commands.in": "Questo nodo capisce i comandi in {language}.",
+    "view.sheet": "Foglio",
+    "view.fields": "Campi",
+    "ctl.view": "Vista",
+    "ctl.faces": "Facciate",
+    "ctl.cardlang": "Lingua della scheda",
+    "faces.both": "Fronte e retro",
+    "faces.recto": "Fronte",
+    "faces.verso": "Retro",
+    "page.expand": "Ingrandisci questa facciata per scrivere",
+    "page.collapse": "Torna a fronte e retro",
+    "insp.thiscard": "Questa scheda",
+    "insp.all": "Tutti",
+    "insp.trench": "Trincea",
+    "insp.lab": "Laboratorio",
+    "insp.check": "Da guardare",
+    "insp.required": "obbligatorio",
+    "insp.ai_todo": "AI · da confermare",
+    "insp.ai_ok": "AI · confermato",
+    "insp.empty": "Caselle vuote",
+    "insp.write": "Scrivi",
+    "act.confirm": "Confermo il testo",
+    "f.side": "Facciata",
+    "f.trench_only": "Solo i campi da trincea",
+    "f.later": "si compila dopo",
+    "view.sheet.none": "Questa definizione non dichiara un foglio: ecco i suoi campi.",
   },
   // ── the partners' slots: same keys, empty values, falling back to `en` ──────
   ro: {}, el: {}, es: {}, pl: {},
@@ -672,6 +732,9 @@ function paintStrings() {
   set("hint", recognitionHint());
   document.title = "StratiGraph · " + t("app.subtitle");
   paintCommandLanguage();
+  // I comandi della scheda (Vista, Facciate…) e le parole del Foglio sono
+  // dipinti dal modulo: gli si dice che la lingua è cambiata.
+  window.SGShell?.onLocale?.();
   render();
 }
 
@@ -1056,10 +1119,15 @@ async function ping() {
     // il nodo lo si può ripuntare da un altro dispositivo, e una riga che dice
     // la stanza di mezz'ora fa è peggio di nessuna riga.
     window.SGRoom?.(health);
+    // LA POSTURA, dallo stesso battito: seduto nella stanza = scrivania, no =
+    // in campo. La decide `postureOf` (room.js), la tiene `shell.js`.
+    window.SGPosture?.(health);
     flush();
   } catch {
     state.className = "state off";
     state.textContent = t("node.offline");
+    // Un nodo che non risponde non tiene nessuna sessione per nessuno.
+    window.SGPosture?.(null);
   }
 }
 $("signin").addEventListener("click", signIn);

@@ -166,9 +166,29 @@ class Scheda:
         nobody wrote.
 
         Everything the JS renderer needs is here and nothing it does not:
-        `graph` bindings, `provenance` and the print `sheet` stay behind,
-        because the module does not draw an A4 and does not decide what a field
-        means to the graph.
+        `graph` bindings and `provenance` stay behind, because the module does
+        not decide what a field means to the graph.
+
+        **The `sheet` TRAVELS since 2026-10-16**, and that is a decision
+        reversed, not a detail. Until then it stayed behind with the words «the
+        module does not draw an A4»: the print was the Python renderer's, and
+        sending the grid to the browser would have looked like sending the
+        second implementation along with the first. E.D. decided on 27
+        September that at the desk the scheda is filled IN ON THE SHEET — the
+        two faces of the A4, where an archaeologist already knows where every
+        box is — so the browser now draws the grid the definition declares.
+
+        What crosses is **the geometry and nothing else** (`_sheet_for_browser`
+        whitelists it): page, margins, sides with their label in THIS language,
+        rows in mm, cells in % of the row, blocks, `rotated`, `label: none`. A
+        cell names its field by id and the field's meaning stays in `fields`,
+        where the graph binding has already been left out. Still one
+        implementation of the standard: the grid is READ from the definition,
+        the Python print and the JS sheet both read the same rows.
+
+        A definition with no `sheet` sends no `sheet` key — not an empty one.
+        The browser then falls back to the field list and says so: an empty
+        sheet would look like a standard with no boxes.
         """
         if lang not in self.languages:
             raise SchedaError(
@@ -176,7 +196,7 @@ class Scheda:
                 f"Chiedere una lingua che la definizione non ha è un errore, "
                 f"non una modalità degradata: servirebbe una parola che "
                 f"nessuno ha scritto per quello standard.")
-        return {
+        out = {
             "id": self.id,
             "lang": lang,
             "title": self.title(lang),
@@ -194,6 +214,74 @@ class Scheda:
             "unit_field": self.unit_field,
             "counts": self.counts(),
         }
+        # The running head of the sheet spells the unit with the definition's
+        # own pattern (SPEC §1.2), so the browser does not invent «US 12».
+        pattern = ((self.raw.get("identity") or {}).get("human_key")
+                   or {}).get("pattern")
+        if pattern:
+            out["human_key_pattern"] = str(pattern)
+        sheet = self.raw.get("sheet")
+        if isinstance(sheet, dict) and sheet.get("sides"):
+            out["sheet"] = self._sheet_for_browser(sheet, lang)
+        return out
+
+    # ── the A4, as geometry ─────────────────────────────────────────────────
+
+    def _sheet_for_browser(self, sheet: Dict[str, Any],
+                           lang: str) -> Dict[str, Any]:
+        """The grid of SPEC §4, WHITELISTED key by key.
+
+        Copied by name and not passed through, so that whatever an author adds
+        to a cell tomorrow does not reach the telephone by accident — the same
+        reason `graph` is left out of the fields. Labels are flattened to one
+        language with `labels_for`, and refused the same way.
+        """
+        margins = sheet.get("margins_mm") or {}
+        return {
+            "page": str(sheet.get("page") or "A4"),
+            "margins_mm": {k: float(margins.get(k) or 0)
+                           for k in ("top", "right", "bottom", "left")},
+            "sides": [
+                {"id": str(side.get("id")),
+                 "label": labels_for(side.get("labels") or {}, lang,
+                                     f"la facciata «{side.get('id')}» di "
+                                     f"«{self.id}»"),
+                 "rows": self._rows_for_browser(side.get("rows") or [], lang)}
+                for side in sheet.get("sides") or []],
+        }
+
+    def _rows_for_browser(self, rows: List[Dict[str, Any]],
+                          lang: str) -> List[Dict[str, Any]]:
+        return [{"h": float(row.get("h") or 0),
+                 "cells": [self._cell_for_browser(c, lang)
+                           for c in row.get("cells") or []]}
+                for row in rows]
+
+    def _cell_for_browser(self, cell: Dict[str, Any],
+                          lang: str) -> Dict[str, Any]:
+        out: Dict[str, Any] = {"w": float(cell.get("w") or 0)}
+        if cell.get("rows") is not None:
+            # A BLOCK: a nested grid. Its label is optional (`label: none`, or
+            # simply no `block_labels`); when it is declared it is a label like
+            # any other, and a missing language is refused like any other.
+            out["block"] = str(cell.get("block") or "")
+            labels = cell.get("block_labels") or {}
+            if labels and cell.get("label") != "none":
+                out["label"] = labels_for(labels, lang,
+                                          f"il blocco «{cell.get('block')}» "
+                                          f"di «{self.id}»")
+            if cell.get("rotated"):
+                out["rotated"] = True
+            out["rows"] = self._rows_for_browser(cell["rows"], lang)
+            return out
+        if cell.get("field"):
+            fid = str(cell["field"])
+            self.field(fid)       # a box for a field that does not exist: refuse
+            out["field"] = fid
+            if cell.get("label") == "none":
+                out["label"] = "none"
+        # …and otherwise a SPACE: `{w}` alone, an empty cell nobody writes in.
+        return out
 
     def _field_for_browser(self, f: Dict[str, Any], lang: str) -> Dict[str, Any]:
         fid = str(f.get("id"))

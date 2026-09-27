@@ -15,8 +15,9 @@ import {
   refreshCompleteness, rememberMode, render, save, stepTo, thumbbarPlan,
   trenchFields, otherFields, wayBack,
 } from "./scheda.js";
+import { drawSheet, hasSheet, optionsFor, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
-import { mount as mountRoom, roomOf } from "./room.js";
+import { mount as mountRoom, postureOf, roomOf } from "./room.js";
 import { mount as mountIndex } from "./indice.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { mount as mountChat } from "./chat.js";
@@ -81,6 +82,26 @@ const state = {
   keyField: null,
   showAll: false,
   onePage: false,
+  // ── IL FOGLIO (16 ottobre) ────────────────────────────────────────────────
+  // Quale vista sulle soglie grandi: «sheet» (il Foglio) o «fields» (Campi, la
+  // vista a paragrafi). Default Foglio: alla scrivania la scheda si compila
+  // sulla carta. Il telefono non la legge: lì c'è un campo per volta.
+  view: "sheet",
+  // Le facciate alla scrivania — «both», «recto», «verso». UNO stato per due
+  // strade: il comando «Facciate» e il glifo sull'angolo lo scrivono entrambi.
+  faces: "both",
+  // In campo: quale facciata, e se i campi non da trincea si attenuano.
+  fieldSide: "recto",
+  trenchOnly: true,
+  // LA POSTURA — «desk» o «field» — nel SOLO posto dove vive (spec §4 bis).
+  // Non si deduce dalla larghezza: un tablet può stare al tavolo o in trincea.
+  // Si legge da come il nodo è connesso alla stanza (`postureOf`, room.js, sul
+  // `seated` di `/health`) a ogni battito di `ping()`. `postureForced` è la
+  // leva per provarla a mano (`SGShell.forcePosture`), e non si ricorda.
+  posture: "desk",
+  postureForced: null,
+  // La casella selezionata sul Foglio: il pannello a destra la mostra.
+  selected: null,
   onChange: () => paintCompleteness(),
   onStep: (i, n) => { $("tb-step").textContent = n ? `${i + 1}/${n}` : ""; },
   onValidate: (field) => validateField(field),
@@ -88,7 +109,44 @@ const state = {
   // Lo stesso atto del bottone della barra dei pollici, chiamato dal piede
   // della scheda quando la barra non c'è. Una via sola verso `save`.
   onSave: () => save(state.def, state),
+  // IL GLIFO SULL'ANGOLO: dalla vista d'insieme espande quella facciata, dalla
+  // facciata espansa torna a fronte e retro. Il fuoco resta sul glifo della
+  // stessa facciata — chi usa la tastiera non deve ricominciare da capo.
+  onCorner: (side) => {
+    state.faces = state.faces === "both" ? side : "both";
+    draw();
+    const back = $("scheda-host").querySelector(
+      `.fo-corner[data-corner="${side}"]`);
+    if (back) back.focus();
+  },
 };
+
+/* LA POSTURA CHE VALE: quella forzata, se qualcuno la sta provando, altrimenti
+ * quella letta dal nodo. */
+const posture = () => state.postureForced || state.posture;
+
+/** Il battito di `ping()` porta la salute; cambia la postura solo se cambia, e
+ *  ridisegna solo se la scheda è a schermo sul foglio. */
+function takePosture(health) {
+  const now = postureOf(health);
+  if (now === state.posture) return;
+  state.posture = now;
+  if (!state.def || state.postureForced) return;
+  // MAI SOTTO LE DITA: se qualcuno sta scrivendo in una casella, ridisegnare
+  // gli toglierebbe il cursore a metà parola. Si aspetta che esca.
+  const host = $("scheda-host");
+  if (host.contains(document.activeElement)) {
+    host.addEventListener("focusout", function later() {
+      setTimeout(() => {
+        if (host.contains(document.activeElement)) return;
+        host.removeEventListener("focusout", later);
+        draw();
+      }, 0);
+    });
+    return;
+  }
+  draw();
+}
 
 /* ── il modo ─────────────────────────────────────────────────────────────── */
 
@@ -234,7 +292,28 @@ async function loadSchede() {
 
 /* ── aprire una scheda ───────────────────────────────────────────────────── */
 
-async function openScheda(id, su = null) {
+/* LA LINGUA DELLA SCHEDA non è quella dell'interfaccia (nota dell'xlsx: «from
+ * the sheet definition, not the UI»). Una definizione dichiara le sue lingue e
+ * una lingua che non ha è un rifiuto (SPEC §1.5): quindi si chiede quella già
+ * scelta per QUESTA scheda, poi quella dell'interfaccia se la definizione la
+ * ha, poi la prima che la definizione dichiara. Prima di stanotte si chiedeva
+ * sempre la lingua dell'interfaccia, e la ficha spagnola (es · it) con
+ * l'interfaccia in inglese diceva «non ho la definizione». */
+function cardLanguageFor(id, wanted) {
+  let declared = [];
+  try {
+    const listing = JSON.parse(localStorage.getItem("sg.schede.v1") || "null");
+    const item = ((listing && listing.schede) || []).find((x) => x.id === id);
+    declared = (item && item.languages) || [];
+  } catch { /* nessuna lista: si prova con la lingua dell'interfaccia */ }
+  const ui = SG().locale || "it";
+  if (wanted && (!declared.length || declared.includes(wanted))) return wanted;
+  if (state.def && state.def.id === id && state.def.lang) return state.def.lang;
+  if (!declared.length || declared.includes(ui)) return ui;
+  return declared[0];
+}
+
+async function openScheda(id, su = null, lang = null) {
   const says = $("scheda-says");
   state.panel = "scheda";
   $("scheda").hidden = false;
@@ -243,7 +322,7 @@ async function openScheda(id, su = null) {
   says.hidden = true;
   markNav(id);
   try {
-    const { def, from } = await definitionFor(id, SG().locale || "it");
+    const { def, from } = await definitionFor(id, cardLanguageFor(id, lang));
     // CAMBIARE SCHEDA SVUOTA CIÒ CHE C'ERA, e non è pulizia: i campi di uno
     // standard non sono i campi di un altro. Trovato nel giro offline —
     // aprendo prima la scheda ungherese e poi la US ICCD, il payload in coda
@@ -258,6 +337,7 @@ async function openScheda(id, su = null) {
       state.validated = new Set();
       state.us = "";
       state.model = "";
+      state.selected = null;
     }
     state.def = def;
     state.keyField = keyField(def);
@@ -282,6 +362,7 @@ async function openScheda(id, su = null) {
     // etichette sarebbe inventare uno standard.
     state.def = null;
     $("scheda-host").replaceChildren();
+    paintStrip();
     paintThumbbar();
     says.hidden = false;
     says.textContent =
@@ -297,8 +378,34 @@ function markNav(id) {
   }
 }
 
+/* QUALE VISTA, in un posto: il Foglio sulle soglie grandi quando è scelto e la
+ * definizione ne dichiara uno; altrimenti i Campi. Il telefono non ha foglio. */
+const sheetActive = () => state.mode !== "phone" && state.view === "sheet"
+  && hasSheet(state.def);
+
+/* LE TRE OPZIONI DEL FOGLIO, dalla postura: `optionsFor` è pura e vive in
+ * foglio.js, fuori dal disegno. Qui si passano soltanto le scelte fatte. */
+const sheetOptions = () => optionsFor(posture(), {
+  faces: state.faces, side: state.fieldSide, trenchOnly: state.trenchOnly,
+});
+
 function draw() {
-  render($("scheda-host"), state.def, state);
+  const host = $("scheda-host");
+  paintStrip();
+  if (sheetActive()) {
+    drawSheet(host, state.def, state, sheetOptions());
+  } else {
+    render(host, state.def, state);
+    // FOGLIO CHIESTO, FOGLIO CHE NON C'È: si dice, e si mostrano i campi. Un
+    // foglio vuoto sembrerebbe uno standard senza caselle.
+    if (state.mode !== "phone" && state.view === "sheet") {
+      const note = document.createElement("p");
+      note.className = "saysit";
+      note.dataset.why = "no-sheet";
+      note.textContent = SG().t ? SG().t("view.sheet.none") : "";
+      host.prepend(note);
+    }
+  }
   paintThumbbar();
   const shown = state.mode === "phone" && !state.showAll
     ? trenchFields(state.def) : state.def.fields;
@@ -308,7 +415,83 @@ function draw() {
 }
 
 function paintCompleteness() {
-  if (state.def) refreshCompleteness($("scheda-host"), state.def, state);
+  if (!state.def) return;
+  if (sheetActive()) refreshSheet($("scheda-host"), state.def, state);
+  else refreshCompleteness($("scheda-host"), state.def, state);
+}
+
+/* ── la fascia comandi della scheda ────────────────────────────────────────
+ *
+ * Come nel mockup, sotto la riga delle sezioni: «Lingua della scheda», «Vista»
+ * e, con il Foglio, «Facciate». In campo «Facciate» diventa «Facciata» (una per
+ * volta) e compare «Solo i campi da trincea». Sul telefono niente: là non c'è
+ * foglio e non ci sono comandi nuovi.
+ *
+ * I testi vengono dal dizionario (`STRINGS`, chiavi dell'xlsx del WP1); le
+ * lingue della scheda vengono dalla DEFINIZIONE e si scrivono come codici,
+ * perché sono le sue. */
+function paintStrip() {
+  const strip = $("scheda-strip");
+  if (!strip) return;
+  strip.replaceChildren();
+  strip.hidden = state.mode === "phone" || !state.def;
+  if (strip.hidden) return;
+  const t = (key) => (SG().t ? SG().t(key) : key);
+  const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+
+  const control = (labelKey, name, items, current, pick) => {
+    const box = make("div", { className: "fo-ctl" });
+    box.dataset.ctl = name;
+    const label = make("span", { className: "fo-ctl-label", textContent: t(labelKey) });
+    label.id = `ctl-${name}`;
+    const seg = make("span", { className: "fo-seg" });
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-labelledby", label.id);
+    for (const [value, text, disabled] of items) {
+      const button = make("button", { type: "button", textContent: text });
+      button.dataset.value = value;
+      button.setAttribute("aria-pressed", String(value === current));
+      if (disabled) button.disabled = true;
+      button.addEventListener("click", () => pick(value));
+      seg.append(button);
+    }
+    box.append(label, seg);
+    strip.append(box);
+  };
+
+  const def = state.def;
+  if ((def.languages || []).length > 1) {
+    control("ctl.cardlang", "cardlang",
+      def.languages.map((l) => [l, l]), def.lang,
+      (l) => { if (l !== def.lang) void openScheda(def.id, null, l); });
+  }
+  control("ctl.view", "view",
+    [["sheet", t("view.sheet"), !hasSheet(def)], ["fields", t("view.fields")]],
+    hasSheet(def) ? state.view : "fields",
+    (v) => { state.view = v; draw(); });
+  if (!sheetActive()) return;
+
+  if (posture() === "field") {
+    control("f.side", "side",
+      [["recto", t("faces.recto")], ["verso", t("faces.verso")]],
+      state.fieldSide, (v) => { state.fieldSide = v; draw(); });
+    const box = make("div", { className: "fo-ctl" });
+    box.dataset.ctl = "trench";
+    const toggle = make("button", { type: "button", className: "fo-toggle",
+                                    textContent: t("f.trench_only") });
+    toggle.setAttribute("aria-pressed", String(state.trenchOnly));
+    toggle.addEventListener("click", () => {
+      state.trenchOnly = !state.trenchOnly;
+      draw();
+    });
+    box.append(toggle);
+    strip.append(box);
+  } else {
+    control("ctl.faces", "faces",
+      [["both", t("faces.both")], ["recto", t("faces.recto")],
+       ["verso", t("faces.verso")]],
+      state.faces, (v) => { state.faces = v; draw(); });
+  }
 }
 
 /* ── validare ────────────────────────────────────────────────────────────── */
@@ -402,6 +585,8 @@ function wireShell() {
   // che vive nella pagina e non in un modulo: la conchiglia dichiara un seam
   // sola (`window.SG`) e questa è la sua controparte nell'altro verso.
   window.SGRoom = mountRoom($("nav-room"));
+  // …e la POSTURA dallo stesso battito (vedi `takePosture`).
+  window.SGPosture = takePosture;
   // COSA C'È GIÀ. `schede` è una funzione e non un valore: la lista delle
   // definizioni arriva dal nodo dopo l'avvio, e passarla adesso vorrebbe dire
   // passarne una vuota per sempre.
@@ -484,5 +669,12 @@ void land();
 // dimostrare (dove stanno i bersagli, quale modo è attivo, quanti campi).
 window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                    payloadFor, paintThumbbar, thumbbarPlan, land,
+                   // FORZARE LA POSTURA, per provarla: «desk», «field», o null
+                   // per tornare a quella che il nodo dice. Non si ricorda.
+                   forcePosture: (p) => {
+                     state.postureForced = p === "desk" || p === "field" ? p : null;
+                     if (state.def) draw();
+                   },
+                   onLocale: () => { if (state.def) draw(); },
                    repaintPhotos: () => repaintPhotos(),
                    repaintIndex: () => repaintIndex() };

@@ -1,0 +1,503 @@
+/* ══ La carta del Foglio — i ruoli che il tema non ha, dichiarati come debito ══
+ *
+ * DOVE STANNO E PERCHÉ QUI. Stesso patto di `--sf-accent-ink` in `shell.css`:
+ * prefisso `--sf-` perché NON sono del tema WP01 (`brand/stratigraph-theme.css`,
+ * che non si tocca). Stanno in testa a QUESTO file e non in `shell.css` per due
+ * ragioni: sono i colori di UN oggetto — il foglio di carta dentro la scrivania
+ * — e il loro solo consumatore è questo file; e `shell.css` ha una guardia
+ * (`test_brand.py`) che lo tiene senza esadecimali tranne il bianco, che vale la
+ * pena lasciare com'è. Il divieto di letterali di questo file (`test_il_foglio`)
+ * ammette colori SOLO nelle dichiarazioni `--sf-*` di questo blocco: nel resto
+ * del foglio ogni colore è un ruolo. Vanno chiesti al WP01 come ruoli
+ * (`--sg-paper`, `--sg-paper-ink`, …) se reggono.
+ *
+ * MISURATI (WCAG 2), non stimati. Ricontrolla dopo ogni modifica:
+ *
+ *   coppia                         chiaro (#FFFFFF)   scuro (#ECE6DE)
+ *   ───────────────────────────────────────────────────────────────────
+ *   --sf-paper-value su carta           14.00             11.29   AA
+ *   --sf-paper-label su carta            7.27              5.87   AA
+ *   --sf-paper-ink   su carta           13.74             11.09   AA
+ *   --sf-paper-rule  su carta            3.54              3.13   ≥ 3:1
+ *   --sf-paper-ai  (bollo AI)            5.92              4.77   AA
+ *   --sf-paper-ok  (bollo AI✓)           6.39              5.16   AA
+ *
+ * IL FILETTO SCURO, 16 ottobre. Con #8E8782 su #ECE6DE misurava 2,85: sotto il
+ * 3:1 che WCAG 1.4.11 chiede a un tratto che separa le caselle. Scurito sulla
+ * stessa tinta, un punto per volta, e misurato a ogni passo:
+ *
+ *   #8A837E  3.01   passa per un centesimo: nessun margine, scartato
+ *   #88827D  3.06
+ *   #87807C  3.13   ← scelto: il primo con un margine che regge l'arrotondamento
+ *
+ * Solo nel tema scuro: sulla carta bianca #8E8782 regge già (3,54) e non si
+ * tocca un valore approvato che non ha un problema.
+ *
+ * `--sf-paper-ok` È UN NOME NUOVO, e va detto. Il bollo AI✓ nel mockup usa
+ * l'ok-ink del tema chiaro (#5C6410, già fra i derivati dichiarati in
+ * `test_brand.py`); ma `--sg-ok-ink` nel tema scuro diventa il verde neon, che
+ * sulla carta — chiara anche di notte — sparisce (1,3). La carta non cambia
+ * tema, quindi il suo inchiostro nemmeno. Lo stesso vale per il bollo AI, che è
+ * `--sg-terracotta` (costante di palette) e non `--sg-warn` (un ruolo che il
+ * tema scuro schiarisce).
+ *
+ * La carta resta CHIARA anche nel tema scuro, un po' spenta (#ECE6DE): è un
+ * documento, e un foglio ministeriale in negativo non lo riconosce nessuno. È
+ * una scelta, non una dimenticanza.
+ *
+ * `--sf-paper-value` è il Deep Blue della palette (`--sg-deep-blue`): la penna
+ * blu sul modulo stampato, cioè la distinzione etichetta/valore che un
+ * archeologo si aspetta. Alias, non un esadecimale nuovo.
+ */
+:root {
+  --sf-desk:        #E4DDD4;              /* il piano su cui stanno i fogli */
+  --sf-paper:       #FFFFFF;
+  --sf-paper-ink:   var(--sg-deep-charcoal);
+  --sf-paper-rule:  #8E8782;
+  --sf-paper-label: #5A5652;
+  --sf-paper-value: var(--sg-deep-blue);
+  --sf-paper-ai:    var(--sg-terracotta);
+  --sf-paper-ok:    #5C6410;
+  --sf-paper-shadow: 0 1px 2px rgba(46, 45, 44, .12), 0 10px 28px rgba(46, 45, 44, .12);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-sg-theme="light"]) {
+    --sf-desk:  #1F1E1D;
+    --sf-paper: #ECE6DE;
+    --sf-paper-rule: #87807C;
+    --sf-paper-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  }
+}
+:root[data-sg-theme="dark"] {
+  --sf-desk:  #1F1E1D;
+  --sf-paper: #ECE6DE;
+  --sf-paper-rule: #87807C;
+  --sf-paper-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+}
+
+/* ══ da qui in giù: SOLO ruoli ══════════════════════════════════════════════
+ *
+ * UNA SCALA. `--mm` (px per mm) la scrive `foglio.js` sul contenitore delle
+ * facciate, misurata sul piano; tutto quello che segue è `calc(var(--mm) * N)`
+ * con N in millimetri, cioè le misure della definizione e del mockup. Le
+ * leggibilità minime (etichette ≥ 8,5 px, valori ≥ 12 px) sono `max()`: da
+ * rimpicciolito il foglio resta leggibile, e le righe crescono per contenerle.
+ *
+ * `shell.css` porta regole scritte per il telefono (`button { width: 100% }`,
+ * `.row { display: flex }`): per questo ogni classe qui ha il prefisso `fo-` —
+ * `.row` sarebbe stata la riga della barra dei gesti — e i bottoni del foglio
+ * si rimettono a misura qui sotto invece di cambiare quelle regole là.
+ */
+
+.fo > header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sg-space-2);
+  margin-bottom: var(--sg-space-3);
+  padding-bottom: var(--sg-space-2);
+  border-bottom: 1px solid var(--sg-line);
+}
+
+/* Il piano e il pannello: il pannello va SOTTO quando il posto non c'è, che è
+   una questione del contenitore e non della finestra.
+
+   MISURATO a 1024 × 768, soglia desktop: con il pannello accanto (18rem) il
+   piano restava di 447 px e le due facciate scendevano alla scala minima —
+   0,95 px per mm, 200 px di larghezza l'una, le righe cresciute per tenere le
+   etichette a 8,5 px. Leggibile al limite, e con il piano che scorre. Sotto
+   gli 800 px di contenitore, quindi, il pannello va sotto e le facciate
+   prendono la larghezza intera (1,59 px per mm a 1024). Sopra — a 1280 il
+   contenitore è ~1000 px — sta a destra come nel mockup. */
+#scheda-host { container-type: inline-size; }
+.fo-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: 0;
+  border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-sm);
+  overflow: hidden;
+}
+@container (max-width: 800px) {
+  .fo-body { grid-template-columns: minmax(0, 1fr); }
+  .fo-insp { border-left: 0; border-top: 1px solid var(--sg-line); }
+}
+
+/* IL PIANO SCORRE IN ORIZZONTALE, non impila: sotto la scala minima le due
+   facciate restano affiancate e la barra di scorrimento è la sola concessione. */
+.fo-desk {
+  background: var(--sf-desk);
+  padding: 22px;
+  overflow-x: auto;
+  min-width: 0;
+}
+.fo-pages {
+  --mm: 1px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 22px;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: min-content;
+}
+
+.fo-page {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(var(--mm) * 210);
+  min-height: calc(var(--mm) * 297);
+  padding: calc(var(--mm) * var(--fo-mt)) calc(var(--mm) * var(--fo-mr))
+           calc(var(--mm) * var(--fo-mb)) calc(var(--mm) * var(--fo-ml));
+  background: var(--sf-paper);
+  color: var(--sf-paper-ink);
+  box-shadow: var(--sf-paper-shadow);
+  font-family: var(--sg-font-sans);
+}
+
+/* ── il glifo sull'angolo ────────────────────────────────────────────────── */
+.fo .fo-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--sf-paper-ink);
+  background: linear-gradient(225deg, var(--sg-surface-sunk) 0 50%, transparent 50%);
+  cursor: pointer;
+}
+.fo .fo-corner:hover,
+.fo .fo-corner:focus-visible {
+  background: linear-gradient(225deg,
+    color-mix(in srgb, var(--sg-accent) 30%, var(--sg-surface-sunk)) 0 50%,
+    transparent 50%);
+}
+.fo .fo-corner:focus-visible { outline: 2px solid var(--sg-accent); outline-offset: -2px; }
+.fo-corner svg {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fo-fixture {
+  position: absolute;
+  top: calc(var(--mm) * 4);
+  right: calc(var(--mm) * 4 + 30px);
+  padding: 1px 5px;
+  font: 500 max(calc(var(--mm) * 2.4), 9px) var(--sg-font-mono);
+  color: var(--sf-paper-ai);
+  border: 1px solid currentColor;
+  transform: rotate(3deg);
+}
+
+/* ── l'intestazione corrente ─────────────────────────────────────────────── */
+.fo-pagehead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+  padding-bottom: calc(var(--mm) * 1.2);
+  margin-bottom: calc(var(--mm) * 2);
+  border-bottom: 1.5px solid var(--sf-paper-ink);
+}
+.fo-pagehead b { font: 600 max(calc(var(--mm) * 3.1), 11px)/1 var(--sg-font-sans); }
+.fo-pagehead .fo-key {
+  font-size: max(calc(var(--mm) * 2.2), 9px);
+  color: var(--sf-paper-label);
+  text-align: right;
+}
+
+/* ── la griglia ──────────────────────────────────────────────────────────── */
+.fo-grid {
+  border: 1px solid var(--sf-paper-rule);
+  border-right: 0;
+  border-bottom: 0;
+}
+.fo-row {
+  display: flex;
+  min-height: calc(var(--mm) * var(--fo-h));
+  border-bottom: 1px solid var(--sf-paper-rule);
+}
+.fo-cell {
+  position: relative;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: calc(var(--mm) * .9) calc(var(--mm) * 1.1);
+  border-right: 1px solid var(--sf-paper-rule);
+  overflow-wrap: anywhere;
+}
+.fo-f { cursor: text; }
+.fo-f:hover { background: color-mix(in srgb, var(--sg-info) 7%, transparent); }
+/* LA CASELLA SELEZIONATA: bordo interno `--sg-info`, come nel mockup. */
+.fo-f.fo-sel {
+  background: color-mix(in srgb, var(--sg-info) 12%, transparent);
+  box-shadow: inset 0 0 0 2px var(--sg-info);
+}
+/* ATTENUATA, NON DISABILITATA (spec §1): si legge meno, si scrive uguale. */
+.fo-f.fo-dim { opacity: .42; }
+.fo-f.fo-dim:focus-within { opacity: 1; }
+
+.fo-space {
+  background: repeating-linear-gradient(135deg, transparent 0 6px,
+    color-mix(in srgb, var(--sf-paper-rule) 14%, transparent) 6px 7px);
+}
+
+/* Un blocco è una griglia dentro la cella: nessun padding suo, e l'ultima riga
+   e l'ultima colonna non raddoppiano il filetto del contenitore. */
+.fo-block { display: flex; padding: 0; }
+.fo-block:not(.fo-rotated) { flex-direction: column; }
+.fo-inner { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.fo-inner > .fo-row { flex: 1 0 auto; }
+.fo-inner > .fo-row:last-child { border-bottom: 0; }
+.fo-inner > .fo-row > .fo-cell:last-child { border-right: 0; }
+.fo-blab {
+  padding: calc(var(--mm) * .8);
+  font: 500 max(calc(var(--mm) * 1.6), 8.5px) var(--sg-font-sans);
+  letter-spacing: .06em;
+  color: var(--sf-paper-label);
+  background: color-mix(in srgb, var(--sf-paper-rule) 10%, transparent);
+}
+.fo-rotated > .fo-blab {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  border-left: 1px solid var(--sf-paper-rule);
+}
+.fo-block:not(.fo-rotated) > .fo-blab { border-bottom: 1px solid var(--sf-paper-rule); }
+
+/* ── dentro una casella ──────────────────────────────────────────────────── */
+.fo-lab {
+  display: block;
+  font: 500 max(calc(var(--mm) * 1.75), 8.5px)/1.15 var(--sg-font-sans);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--sf-paper-label);
+  cursor: text;
+}
+.fo-req { color: var(--sg-accent); }
+.fo-stamp {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 3px;
+  font: 500 max(calc(var(--mm) * 1.6), 8.5px)/1 var(--sg-font-mono);
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  vertical-align: 1px;
+}
+.fo-stamp.ai { color: var(--sf-paper-ai); }
+.fo-stamp.aiok { color: var(--sf-paper-ok); }
+
+/* Il valore: la penna blu. Un campo di testo senza cornice, che cresce.
+   `.fo .fo-val` e non `.fo-val`: `shell.css` dà a `input[type=text]` il padding
+   da pollice col guanto (16px), e una classe sola perde contro quel selettore.
+   Misurato: la casella US era alta 59px, con uno sfondo scuro sulla carta. */
+.fo .fo-val {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 1.3em;
+  font: 400 max(calc(var(--mm) * 2.55), 12px)/1.3 var(--sg-font-sans);
+  color: var(--sf-paper-value);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  resize: none;
+  overflow: hidden;
+}
+.fo .fo-val:focus { outline: none; }
+.fo-f:focus-within { box-shadow: inset 0 0 0 2px var(--sg-info); }
+/* IL NUMERO DELL'UNITÀ, in Plex Mono. Stretto di un soffio (-0,03em) perché
+   MISURATO a 1280 × 800 la casella US della scheda ICCD è larga 32,6 px (11,6%
+   di una facciata a 1,52 px per mm) e «3014» a 12px ne voleva 29 contro 28 di
+   spazio: un pixel, e il numero finiva in «30…». Un numero di cinque cifre non
+   ci sta comunque a quella scala — lo dice il referto. */
+.fo .fo-val.fo-big {
+  font-weight: 500;
+  font-family: var(--sg-font-mono);
+  letter-spacing: -.03em;
+}
+.fo input.fo-val { overflow: visible; text-overflow: ellipsis; }
+
+.fo-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--mm) * 1.2) calc(var(--mm) * 2.5);
+}
+.fo .fo-chk {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--mm) * .8);
+  width: auto;
+  margin: 0;
+  padding: 0;
+  font: 500 max(calc(var(--mm) * 1.75), 8.5px) var(--sg-font-sans);
+  color: var(--sf-paper-label);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+.fo-chk i {
+  display: inline-block;
+  width: max(calc(var(--mm) * 2.4), 10px);
+  height: max(calc(var(--mm) * 2.4), 10px);
+  border: 1px solid var(--sf-paper-ink);
+}
+.fo-chk[aria-pressed="true"] i {
+  background: var(--sf-paper-value);
+  border-color: var(--sf-paper-value);
+}
+.fo-box { width: max(calc(var(--mm) * 2.4), 12px); height: max(calc(var(--mm) * 2.4), 12px); }
+
+/* ── il pannello a destra ────────────────────────────────────────────────── */
+.fo-insp {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--sg-surface);
+  border-left: 1px solid var(--sg-line);
+}
+.fo-insp section { padding: var(--sg-space-4); border-bottom: 1px solid var(--sg-line); }
+.fo-insp h2 {
+  margin: 0 0 var(--sg-space-1);
+  font: var(--sg-weight-headline) var(--sg-text-lg)/1.2 var(--sg-font-display);
+}
+.fo-insp p { margin: 0 0 var(--sg-space-2); font-size: var(--sg-text-sm); color: var(--sg-muted); }
+.fo-eyebrow {
+  display: block;
+  margin: 0 0 6px;
+  font-size: var(--sg-text-xs);
+  font-weight: var(--sg-weight-subtitle);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+.fo-tags { display: flex; flex-wrap: wrap; gap: var(--sg-space-1); }
+.fo-tag {
+  display: inline-flex;
+  padding: 2px 8px;
+  font: 500 var(--sg-text-xs) var(--sg-font-mono);
+  border-radius: var(--sg-radius-pill);
+  background: color-mix(in srgb, var(--sg-info) 16%, transparent);
+  color: var(--sg-info-ink);
+}
+.fo-tag.warn { background: color-mix(in srgb, var(--sg-warn) 14%, transparent); color: var(--sg-warn); }
+.fo-tag.ok { background: color-mix(in srgb, var(--sg-ok) 22%, transparent); color: var(--sg-ok-ink); }
+.fo-meter {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 6px 10px;
+  align-items: center;
+  font-size: var(--sg-text-sm);
+}
+.fo-track { height: 6px; border-radius: 3px; background: var(--sg-surface-sunk); overflow: hidden; }
+.fo-track i { display: block; height: 100%; background: var(--sg-info); }
+.fo-track i.quiet { background: var(--sg-quiet); }
+.fo-num {
+  font: 400 var(--sg-text-xs) var(--sg-font-mono);
+  color: var(--sg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fo-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--sg-line);
+  font-size: var(--sg-text-sm);
+}
+.fo-item:first-of-type { border-top: 0; }
+.fo-write textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: var(--sg-space-2);
+  font: inherit;
+  color: var(--sg-text);
+  background: var(--sg-bg);
+  border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-sm);
+  resize: vertical;
+}
+.fo .fo-confirm {
+  width: 100%;
+  margin: var(--sg-space-2) 0 0;
+  padding: 9px 12px;
+  font-size: var(--sg-text-sm);
+  font-weight: var(--sg-weight-subtitle);
+  color: var(--sf-accent-ink);
+  background: var(--sg-accent-quiet);
+  border-color: var(--sg-accent-quiet);
+  border-radius: var(--sg-radius-sm);
+  box-shadow: none;
+}
+
+/* ── la fascia comandi della scheda (Vista · Facciate · Lingua) ──────────── */
+.fo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sg-space-2) var(--sg-space-5);
+  margin: 0 0 var(--sg-space-3);
+  padding: 0 0 var(--sg-space-3);
+  border-bottom: 1px solid var(--sg-line);
+}
+.fo-ctl { display: flex; align-items: center; gap: 6px; }
+.fo-ctl > .fo-ctl-label {
+  font-size: var(--sg-text-xs);
+  font-weight: var(--sg-weight-subtitle);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+.fo-seg {
+  display: inline-flex;
+  overflow: hidden;
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-sm);
+}
+.fo-strip button {
+  width: auto;
+  margin: 0;
+  padding: 6px 11px;
+  font-size: var(--sg-text-sm);
+  text-align: center;
+  color: var(--sg-muted);
+  background: none;
+  border: 0;
+  border-right: 1px solid var(--sg-line);
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+.fo-seg button:last-child { border-right: 0; }
+.fo-strip button[aria-pressed="true"] {
+  color: var(--sg-text);
+  background: var(--sg-surface-sunk);
+  font-weight: var(--sg-weight-subtitle);
+  box-shadow: inset 0 -2px 0 var(--sg-accent);
+}
+.fo-strip button[disabled] { opacity: .45; cursor: not-allowed; }
+.fo-strip .fo-toggle {
+  border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-pill);
+  padding: 4px 11px;
+}
+.fo-strip .fo-toggle[aria-pressed="true"] { border-color: var(--sg-accent); }
+
+@media (prefers-reduced-motion: reduce) { .fo * { transition: none !important; } }

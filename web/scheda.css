@@ -152,13 +152,13 @@
   max-width: none;
   margin: 0;
 }
-.chip, .iconbtn, .box .validate, .sheet .risky {
+.chip, .iconbtn, .box .validate, .sheet .risky, .fo .risky {
   width: auto;
   margin-bottom: 0;
   text-align: center;
   box-shadow: none;
 }
-.sheet .risky, .box .validate { white-space: nowrap; }
+.sheet .risky, .fo .risky, .box .validate { white-space: nowrap; }
 .thumbbar button { margin-bottom: 0; text-align: center; box-shadow: none; }
 /* ☰ è un'icona, non un quinto della barra. E quando nessuna scheda è a schermo
    resta DA SOLA — è la maniglia della colonna, che deve esserci sempre (vedi
@@ -185,7 +185,7 @@
   padding-bottom: var(--sg-space-2);
   border-bottom: 1px solid var(--sg-line);
 }
-.sheet h2 {
+.sheet h2, .fo > header h2 {
   margin: 0;
   font-family: var(--sg-font-display);
   font-size: var(--sg-text-lg);
@@ -424,7 +424,7 @@
 
 /* LE AZIONI DISTRUTTIVE NON STANNO DOVE CADE IL POLLICE. Vivono in cima alla
    scheda, sopra la piega dei bersagli, e sono le sole cose fuori dalla barra. */
-.sheet .risky {
+.sheet .risky, .fo .risky {
   margin-left: auto;
   padding: 2px var(--sg-space-2);
   font-size: var(--sg-text-xs);
@@ -434,12 +434,12 @@
   border-radius: var(--sg-radius-pill);
   cursor: pointer;
 }
-.sheet .risky:hover { color: var(--sg-warn); border-color: var(--sg-warn); }
+.sheet .risky:hover, .fo .risky:hover { color: var(--sg-warn); border-color: var(--sg-warn); }
 
 /* Il piede della scheda: dove si salva quando la barra dei pollici non c'è.
    Separato dal contenuto da una riga, e il bottone NON a tutta larghezza —
    quello è il gesto di un pollice, qui c'è un cursore. */
-.sheet .sheetfoot {
+.sheet .sheetfoot, .fo .sheetfoot {
   display: flex;
   justify-content: flex-end;
   margin-top: var(--sg-space-5);
@@ -450,7 +450,7 @@
    5.92 e regge qualunque testo, mentre sopra l'arancio bruciato sta a 3.53 e
    regge solo il testo grande. È la stessa scelta del «Salva» del telefono, e la
    ragione sta in cima a `shell.css`. */
-.sheet .sheetfoot button.save {
+.sheet .sheetfoot button.save, .fo .sheetfoot button.save {
   width: auto;
   margin: 0;
   padding: 14px var(--sg-space-5);

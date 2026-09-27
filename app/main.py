@@ -225,6 +225,13 @@ class Health(BaseModel):
     #: `GET /v1/room` — e chi prova a prendere un nodo occupato lo trova nel
     #: rifiuto, che è il posto in cui serve.
     held: str = "libero"
+    #: SE IL NODO È SEDUTO NELLA STANZA, adesso: la sessione tenuta di
+    #: `app/session.py`, letta dal suo `seated` e non dedotta da `writes_to`.
+    #: È ciò da cui il browser ricava la POSTURA (spec del Foglio §4 bis):
+    #: seduto = scrivania, nessuna sessione = in campo, dove il dispositivo
+    #: consegna per REST e se ne va. Un booleano e non una frase, perché una
+    #: frase si legge male il giorno che cambia forma.
+    seated: bool = False
     #: LE CODE CHE QUESTO NODO HA SUL DISCO, una per stanza, con quanto c'è
     #: dentro. Da quando le code sono per stanza esiste un modo nuovo di perdere
     #: del lavoro — ripuntare via da una stanza e dimenticarsene — e l'unica
@@ -369,6 +376,7 @@ def _health() -> Health:
                      else shared_name()),
         larder=larder_describe(LARDER),
         held=holding_describe(HOLDING),
+        seated=bool(getattr(getattr(WRITER, "session", None), "seated", False)),
         queues=queues_beside(LOCAL.path),
         server_hint=(getattr(WRITER, "base_url", "")
                      or (os.environ.get("EM_SERVER_URL") or "").strip()),

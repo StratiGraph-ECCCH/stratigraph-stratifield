@@ -182,14 +182,136 @@ def test_the_browser_never_receives_the_graph_binding(tmp_path):
         assert "verdict" not in f
 
 
-def test_the_print_sheet_does_not_travel_either(tmp_path):
-    """L'A4 è un atto da laboratorio e lo disegna il Python di
-    `stratigraph-templates`. Mandarlo al telefono sarebbe mandare la seconda
-    implementazione insieme alla prima."""
+def a_sheet():
+    """Un foglio con le tre specie di cella (campo, blocco ruotato, spazio) e
+    una chiave che nessuno dovrebbe mai vedere arrivare al browser."""
+    return {
+        "page": "A4",
+        "margins_mm": {"top": 10, "right": 12, "bottom": 10, "left": 12},
+        "sides": [{
+            "id": "recto", "labels": {"it": "fronte"},
+            "rows": [
+                {"h": 9, "cells": [{"field": "numero", "w": 30},
+                                   {"w": 70}]},
+                {"h": 20, "cells": [{
+                    "block": "seq", "block_labels": {"it": "SEQUENZA"},
+                    "rotated": True, "w": 100,
+                    "graph": {"verdict": "edge"},
+                    "rows": [{"h": 20, "cells": [
+                        {"field": "nota", "w": 100, "label": "none",
+                         "graph": {"verdict": "property"}}]}]}]},
+            ]}],
+    }
+
+
+def test_the_sheet_travels_as_geometry_since_2026_10_16(tmp_path):
+    """LA REGOLA È CAMBIATA, e questo test lo dice invece di sparire.
+
+    Fino al 16 ottobre 2026 si chiamava `test_the_print_sheet_does_not_travel
+    _either` e affermava `"sheet" not in for_browser(...)`, con la ragione:
+    «l'A4 è un atto da laboratorio e lo disegna il Python di
+    `stratigraph-templates`; mandarlo al telefono sarebbe mandare la seconda
+    implementazione insieme alla prima».
+
+    Il 27 settembre E.D. ha deciso che alla scrivania la scheda si compila
+    SUL FOGLIO: il modulo disegna l'A4. La griglia viaggia, quindi — ma solo
+    come GEOMETRIA letta dalla definizione, non come una seconda definizione:
+    pagina, margini, facciate con l'etichetta nella lingua chiesta, righe in
+    mm, celle in %, blocchi, `rotated`, `label: none`. Il Python continua a
+    stampare, e le due strade leggono le stesse righe."""
+    doc = minimal()
+    doc["template"]["sheet"] = a_sheet()
+    served = schede.load(write(tmp_path, doc)).for_browser("it")
+
+    sheet = served["sheet"]
+    assert sheet["page"] == "A4"
+    assert sheet["margins_mm"] == {"top": 10, "right": 12, "bottom": 10,
+                                   "left": 12}
+    recto = sheet["sides"][0]
+    assert recto["id"] == "recto" and recto["label"] == "fronte"
+    first, second = recto["rows"]
+    assert first == {"h": 9, "cells": [{"w": 30, "field": "numero"},
+                                        {"w": 70}]}
+    block = second["cells"][0]
+    assert block["label"] == "SEQUENZA" and block["rotated"] is True
+    assert block["rows"][0]["cells"][0] == {"w": 100, "field": "nota",
+                                            "label": "none"}
+
+
+def test_the_graph_binding_does_not_cross_inside_the_sheet_either(tmp_path):
+    """Il gemello di `test_the_browser_never_receives_the_graph_binding`,
+    dentro `sheet`: una cella nomina il SUO campo per id, e che cosa quel
+    campo significhi per il grafo resta sul server. Una chiave che un autore
+    aggiunge a una cella domani non arriva al telefono per sbaglio, perché le
+    chiavi si copiano per nome."""
+    doc = minimal()
+    doc["template"]["fields"][0]["graph"] = {"verdict": "identity"}
+    doc["template"]["sheet"] = a_sheet()
+    served = schede.load(write(tmp_path, doc)).for_browser("it")
+
+    import json
+    wire = json.dumps(served["sheet"])
+    assert "graph" not in wire
+    assert "verdict" not in wire
+    assert "block_labels" not in wire   # appiattite a UNA lingua, come le altre
+
+
+def test_a_sheet_label_missing_in_the_language_is_refused(tmp_path):
+    """Stesso rifiuto delle etichette dei campi: una facciata senza nome in
+    quella lingua non si battezza col dizionario dell'interfaccia."""
+    doc = minimal(languages=["it", "en"])
+    for f in doc["template"]["fields"]:
+        f["labels"]["en"] = f["labels"]["it"]
+    doc["template"]["standard"]["title"]["en"] = "Test"
+    doc["template"]["paragraphs"][0]["labels"]["en"] = "All"
+    doc["template"]["sheet"] = a_sheet()        # facciata e blocco solo in it
+    s = schede.load(write(tmp_path, doc))
+    with pytest.raises(schede.SchedaError) as refusal:
+        s.for_browser("en")
+    assert "recto" in str(refusal.value)
+
+
+def test_a_cell_naming_a_field_that_does_not_exist_is_refused(tmp_path):
+    doc = minimal()
+    doc["template"]["sheet"] = a_sheet()
+    doc["template"]["sheet"]["sides"][0]["rows"][0]["cells"][0]["field"] = "x"
+    with pytest.raises(schede.SchedaError):
+        schede.load(write(tmp_path, doc)).for_browser("it")
+
+
+def test_a_definition_without_a_sheet_sends_no_sheet_key(tmp_path):
+    """Né `None` né un foglio vuoto: la CHIAVE manca, e il browser ripiega
+    sulla vista «Campi» dicendolo. Un foglio senza caselle sembrerebbe uno
+    standard senza campi."""
+    assert "sheet" not in schede.load(
+        write(tmp_path, minimal())).for_browser("it")
     doc = minimal()
     doc["template"]["sheet"] = {"page": "A4", "sides": []}
-    s = schede.load(write(tmp_path, doc))
-    assert "sheet" not in s.for_browser("it")
+    assert "sheet" not in schede.load(write(tmp_path, doc)).for_browser("it")
+
+
+@have_templates
+def test_every_real_sheet_crosses_the_wire_in_every_language():
+    """Sulle definizioni vere: ogni facciata e ogni blocco ha l'etichetta in
+    ogni lingua dichiarata, e ogni campo ha una casella sola."""
+    for path in sorted(TEMPLATES.glob("*/template.yaml")):
+        s = schede.load(path)
+        if not s.raw.get("sheet"):
+            continue
+        for lang in s.languages:
+            served = s.for_browser(lang)
+            seen = []
+
+            def walk(rows):
+                for row in rows:
+                    for cell in row["cells"]:
+                        if "rows" in cell:
+                            walk(cell["rows"])
+                        elif "field" in cell:
+                            seen.append(cell["field"])
+            for side in served["sheet"]["sides"]:
+                walk(side["rows"])
+            assert len(seen) == len(set(seen)), (s.id, lang)
 
 
 # ── 4 · niente dipendenza dal Python del formato ────────────────────────────

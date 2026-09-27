@@ -53,6 +53,21 @@ export function roomOf(health) {
   return dove.startsWith("room ") ? dove.slice(5).split(" at ")[0] : "";
 }
 
+/** LA POSTURA di questo dispositivo, dalla salute del nodo (spec del Foglio
+ *  §4 bis): `desk` se il nodo è SEDUTO nella stanza — la sessione tenuta di
+ *  `app/session.py`, che `/health` dice come `seated` — e `field` altrimenti:
+ *  nessuna sessione (il container locale, una stanza che non risponde) o un
+ *  nodo che non risponde affatto (`health` nullo). In campo il dispositivo è il
+ *  corrispondente che consegna per REST e se ne va.
+ *
+ *  Letta da un booleano e non da `writes_to`: «room … (degraded, writing
+ *  locally)» comincia anche lei con «room», e una frase si legge male il giorno
+ *  che cambia forma. Qui accanto a `roomOf` perché è la stessa salute letta per
+ *  un'altra domanda, e le letture della salute stanno in un file. */
+export function postureOf(health) {
+  return health && health.seated === true ? "desk" : "field";
+}
+
 export function headline(health, t) {
   const stanza = roomOf(health);
   if (!stanza) return t("room.local");

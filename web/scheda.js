@@ -302,11 +302,14 @@ export const otherFields = (def) =>
  *   required + lab      mancante → si compila dopo
  *   required + unknown  mancante → non si può decidere, e lo si dice
  */
+/** Un valore c'è, o no. Esportata perché la stessa domanda la fa il Foglio
+ *  (il pannello conta le caselle vuote), e due risposte diverse a «questo campo
+ *  è compilato?» sarebbero due completezze. */
+export const isFilled = (v) =>
+  v !== undefined && v !== null && String(v).trim() !== "";
+
 export function completeness(def, values) {
-  const filled = (f) => {
-    const v = values[f.id];
-    return v !== undefined && v !== null && String(v).trim() !== "";
-  };
+  const filled = (f) => isFilled(values[f.id]);
   const required = (def.fields || []).filter((f) => f.required && !filled(f));
   return {
     missingHere: required.filter((f) => f.recorded_in === "trench"),
@@ -343,6 +346,26 @@ export function completenessLine(def, values, mode) {
   return box;
 }
 
+/* ── SCRIVERE UN VALORE: una via sola, per le due viste ────────────────────
+ *
+ * Nata il 16 ottobre, quando è arrivato il Foglio: da allora ci sono due modi
+ * di guardare lo stesso record («Campi» e «Foglio») e una persona passa
+ * dall'uno all'altro a metà scheda. Se ognuno scrivesse `state.values` per
+ * conto suo, le tre cose che scrivere comporta — il valore, il numero
+ * dell'unità, l'autorialità che torna alla persona — sarebbero due copie da
+ * tenere d'accordo. È la forma delle due caselle «US», e qui non si ripete. */
+export function writeValue(state, fieldId, value) {
+  state.values[fieldId] = value;
+  // La casella dell'identità È il numero dell'unità: una sola casella, un
+  // solo valore. Quale sia lo dice la definizione, non questo file.
+  if (fieldId === state.keyField) state.us = String(value || "").trim();
+  // Un valore che una persona ha appena digitato è SUO: se il campo era di
+  // un modello, l'autorialità torna alla persona nel momento in cui lo
+  // riscrive, senza bisogno di validarlo.
+  if (state.authored[fieldId] === "ai") delete state.authored[fieldId];
+  state.onChange();
+}
+
 /* ── una casella ───────────────────────────────────────────────────────────── */
 
 function boxFor(field, state) {
@@ -376,17 +399,10 @@ function boxFor(field, state) {
     const digits = String(field.max_len).match(/\d+/g);
     if (digits) input.setAttribute("maxlength", digits[digits.length - 1]);
   }
-  input.value = state.values[field.id] ?? "";
+  if (kind === "checkbox") input.checked = Boolean(state.values[field.id]);
+  else input.value = state.values[field.id] ?? "";
   input.addEventListener("input", () => {
-    state.values[field.id] = kind === "checkbox" ? input.checked : input.value;
-    // La casella dell'identità È il numero dell'unità: una sola casella, un
-    // solo valore. Quale sia lo dice la definizione, non questo file.
-    if (field.id === state.keyField) state.us = String(input.value || "").trim();
-    // Un valore che una persona ha appena digitato è SUO: se il campo era di
-    // un modello, l'autorialità torna alla persona nel momento in cui lo
-    // riscrive, senza bisogno di validarlo.
-    if (state.authored[field.id] === "ai") delete state.authored[field.id];
-    state.onChange();
+    writeValue(state, field.id, kind === "checkbox" ? input.checked : input.value);
   });
   box.append(input);
 
@@ -408,14 +424,24 @@ function boxFor(field, state) {
   return box;
 }
 
+/** DI CHI È IL VALORE di un campo, in una parola: `ai` (proposto da un
+ *  modello, non ancora validato), `validated` (proposto e poi validato da una
+ *  persona), `""` (di una persona). Una funzione e non due letture, perché da
+ *  stanotte la domanda la fanno la vista «Campi» e il Foglio, e il bollo AI sul
+ *  foglio deve dire la stessa cosa della striscia sotto la casella. */
+export function authorshipOf(fieldId, state) {
+  if (state.validated.has(fieldId)) return "validated";
+  return state.authored[fieldId] === "ai" ? "ai" : "";
+}
+
 function paintAuthorship(box, said, field, state) {
-  const author = state.authored[field.id];
-  const validated = state.validated.has(field.id);
-  box.classList.toggle("ai", author === "ai" && !validated);
+  const who = authorshipOf(field.id, state);
+  const validated = who === "validated";
+  box.classList.toggle("ai", who === "ai");
   box.classList.toggle("validated", validated);
   if (validated) {
     said.textContent = "Validato da te — l'aveva proposto un modello";
-  } else if (author === "ai") {
+  } else if (who === "ai") {
     said.textContent = state.model
       ? `Proposto da ${state.model}, non ancora validato`
       : "Proposto da un modello, non ancora validato";
