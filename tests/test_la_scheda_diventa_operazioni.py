@@ -162,7 +162,7 @@ def test_the_unit_records_which_definition_and_which_version_compiled_it():
     plan = O.plan(iccd(), {"colore": "x"}, number="12", section={}, ts=TS,
                   create=True)
     stamp = next(op for op in plan.ops if op.get("field") == "data.scheda")
-    assert stamp["value"] == {"template": "iccd-us-2021", "version": "1.0.0",
+    assert stamp["value"] == {"template": "iccd-us-2021", "version": iccd().version,
                               "digest": iccd().digest}
 
 
@@ -311,7 +311,11 @@ def test_E1_the_whole_US_3014_lands_as_the_recipe_declares(client):
     # riga delle liste di misure
     props = [n for n in section["nodes"] if n["node_type"] == "property"]
     assert len(props) == 31
-    assert "definizione" in answer["data"]["silent"]
+    # DEFINIZIONE (ricetta 1.0.1, decisione di E.D. del 21 ottobre): un ELEMENTO
+    # del nodo US — `data.definition`, il termine intero — e non una PropertyNode
+    assert unit["data"]["definition"] == RECORD["definizione"]
+    assert not [n for n in props if n.get("name") == "definition"]
+    assert "definizione" not in answer["data"]["silent"]
 
 
 def test_E1_negativa_is_USN(client):
@@ -375,7 +379,7 @@ def test_E3_save_reopen_and_every_field_with_a_verdict_comes_back(client):
     c, _ = client
     saved_3014(client)
     read = c.get("/v1/scheda/iccd-us-2021/unita", params={"us": "3014"}).json()
-    assert read["read_with"]["version"] == "1.0.0" and read["note"] == ""
+    assert read["read_with"]["version"] == iccd().version and read["note"] == ""
     recipe = iccd().recipe["fields"]
     compared = 0
     for fid, want in RECORD.items():
@@ -390,9 +394,11 @@ def test_E3_save_reopen_and_every_field_with_a_verdict_comes_back(client):
         else:
             assert got == want, fid
         compared += 1
-    assert compared == 55
+    # 56 e non 55: dal 21 ottobre la DEFINIZIONE va e torna (data.definition)
+    assert compared == 56
+    assert read["values"]["definizione"] == RECORD["definizione"]
     assert set(read["silent"]) == {"ente_responsabile", "ufficio_mic",
-                                   "definizione", "campionature"}
+                                   "campionature"}
 
 
 def test_E3_a_unit_compiled_with_another_definition_is_read_with_THAT_one(client):
@@ -574,7 +580,7 @@ def test_the_index_lists_UNITS_says_their_scheda_and_marks_the_stubs(client):
     listed = {u["id"]: u for u in c.get("/v1/room/units").json()["units"]}
     assert all(u["node_type"] in ("US", "USN", "SF") for u in listed.values())
     us = listed["US3014"]
-    assert us["scheda"] == {"template": "iccd-us-2021", "version": "1.0.0"}
+    assert us["scheda"] == {"template": "iccd-us-2021", "version": iccd().version}
     assert us["stub"] is False
     assert "copre" in us["field_names"] and "scheda" not in us["field_names"]
     assert listed["US3018"]["stub"] is True and listed["US3018"]["scheda"] is None
@@ -583,7 +589,7 @@ def test_the_index_lists_UNITS_says_their_scheda_and_marks_the_stubs(client):
 def test_the_list_of_schede_says_version_and_whether_it_saves(client):
     c, _ = client
     listed = {s["id"]: s for s in c.get("/v1/schede").json()["schede"]}
-    assert listed["iccd-us-2021"]["version"] == "1.0.0"
+    assert listed["iccd-us-2021"]["version"] == iccd().version
     assert listed["iccd-us-2021"]["saveable"] is True
 
 

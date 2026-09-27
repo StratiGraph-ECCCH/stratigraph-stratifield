@@ -26,13 +26,13 @@
     "vocabularies": [],
     "digest": "sha256:dcadbf81f7f41b0837bb20df17f3fd1a836c9b9f1702db113dc197a7fc0ae68b",
     "datamodel": {
-      "nodes": "1.6.8",
-      "connections": "1.6.19",
+      "nodes": "1.6.9",
+      "connections": "1.6.20",
       "qualia": "1.6.1",
-      "em_ttl": "1.6.2",
+      "em_ttl": "1.6.5",
       "s3dgraphy": "1.6.0.dev20",
       "taken_from": {
-        "git_commit": "8b91867aef7443a7de37fed46812d5f1bba39327",
+        "git_commit": "f0de0a1d04169acb34ce6e93ab97e56c1e234c70",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"

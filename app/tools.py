@@ -176,7 +176,8 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
                         kind: str, detail: str,
                         authored_by: Optional[Dict[str, str]] = None,
                         model: Optional[str] = None, additive: bool = False,
-                        extra_ops: Optional[List[Dict[str, Any]]] = None):
+                        extra_ops: Optional[List[Dict[str, Any]]] = None,
+                        relations: Optional[List[Tuple[str, str, str]]] = None):
     """Valori → operazioni → stanza, e l'esito per campo. Una sola via.
 
     Il D7 dell'atto va IN CODA alla lista, per la ragione che `LocalWriter.update`
@@ -190,7 +191,8 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
     stamp = _now()
     made = make_plan(scheda, values, number=number,
                      section=graph_writer.section(), ts=stamp, create=create,
-                     authored_by=authored_by, model=model, additive=additive)
+                     authored_by=authored_by, model=model, additive=additive,
+                     relations=relations)
     process = _process_node(kind, author, made.unit_id, detail)
     ops = list(made.ops) + list(extra_ops or [])
     fields_of = list(made.op_fields) + [""] * len(extra_ops or [])
@@ -624,25 +626,66 @@ SPOKEN_FIELDS: Dict[str, Tuple[str, ...]] = {
 #: e `(edge_type, direzione)` è il passo della ricetta: `$unit → $item` è
 #: `forward`, `$item → $unit` è `swap`, un arco simmetrico è `symmetric`.
 #:
-#: CHE COSA SI È PERSO, detto: «contemporaneo a» (`has_same_time`) e «appoggia
-#: a» non sono caselle della US ICCD, e una frase che non ha una casella non ha
-#: una ricetta. Tornano il giorno che una definizione le dichiara.
+#: ── PIÙ LE RELAZIONI DEL DATAMODEL (21 ottobre, decisione di E.D.) ────────
+#:
+#: Il 19 si era perso «contemporaneo a» (`has_same_time`): non è una casella
+#: della US ICCD, e una frase senza casella non aveva una ricetta. Adesso la
+#: voce accetta ANCHE le relazioni che s3Dgraphy dichiara fra unità
+#: stratigrafiche, LETTE dal datamodel delle connessioni
+#: (`operazioni.datamodel_relations`), con nomi e grafie canonici attraverso
+#: `normalize_edge_name` / `spellings`. La ricetta vince sulla stessa frase: se
+#: una scheda ha la casella, il rapporto passa per la casella.
+#:
+#: Che cosa si dice a voce resta del frasario del nodo (`RELATION_WORDS`): il
+#: datamodel nomina le relazioni in inglese e per le macchine ("Has same time"),
+#: non nella lingua dei comandi. Il frasario NON è un elenco di relazioni —
+#: una parola legata a un nome che il datamodel non dichiara fra unità
+#: stratigrafiche non entra, e `RELATIONS_REFUSED` lo dice.
+
+#: Le parole della lingua dei comandi per le relazioni del datamodel che
+#: NESSUNA casella della scheda di riferimento copre. Chiave: la frase (il
+#: femminile dei participi si aggiunge da sé); valore: un nome che il datamodel
+#: accetta (canonico, inverso o grafia vecchia — passa per `normalize_edge_name`).
+RELATION_WORDS: Dict[str, str] = {
+    "contemporaneo a": "has_same_time",
+}
+
+
 def _relations() -> Dict[str, Tuple[str, str]]:
     from .intent import COMMAND_LANGUAGE
-    from .operazioni import relation_phrases
+    from .operazioni import (datamodel_relation_phrases, datamodel_relations,
+                             relation_phrases, unsayable_words)
 
     scheda = reference_scheda()
     if scheda is None:
+        # nessuna scheda di riferimento: nessuna via per scrivere (il
+        # generatore timbra l'unità con la sua scheda), quindi nessuna frase
         return {}
     phrases = relation_phrases(scheda, COMMAND_LANGUAGE)
+    for phrase, mapping in datamodel_relation_phrases(RELATION_WORDS).items():
+        phrases.setdefault(phrase, mapping)
     RELATION_FIELDS.clear()
     RELATION_FIELDS.update({k: v[2] for k, v in phrases.items()})
+    RELATIONS_REFUSED.clear()
+    RELATIONS_REFUSED.update(unsayable_words(RELATION_WORDS))
+    said = {v[0] for v in phrases.values()}
+    RELATIONS_UNSAID[:] = sorted(set(datamodel_relations()) - said)
     return {k: (v[0], v[1]) for k, v in phrases.items()}
 
 
-#: frase → la casella della scheda che quella frase compila
+#: frase → la casella della scheda che quella frase compila ("" = nessuna:
+#: una relazione del datamodel, scritta senza casella)
 RELATION_FIELDS: Dict[str, str] = {}
+#: parola del frasario → perché non entra (il datamodel non la dichiara così)
+RELATIONS_REFUSED: Dict[str, str] = {}
+#: le relazioni stratigrafiche del datamodel che nessuna frase dice ancora
+RELATIONS_UNSAID: List[str] = []
 RELATIONS: Dict[str, Tuple[str, str]] = _relations()
+
+
+def _physical(edge_type: str) -> Optional[bool]:
+    from .operazioni import datamodel_relations
+    return (datamodel_relations().get(edge_type) or {}).get("physical")
 
 
 def edge_id_for(source: str, edge_type: str, target: str) -> str:
@@ -690,6 +733,26 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
         edge_type, direction = mapping
         box = RELATION_FIELDS[said]
 
+        # UNA RELAZIONE DEL DATAMODEL SENZA CASELLA («contemporaneo a»): la
+        # stessa via del generatore, con un rapporto dichiarato invece che
+        # una casella — stub, simmetrici ordinati, id e `noop` sono quelli.
+        if not box:
+            scheda = reference_scheda()
+            try:
+                made, process, outcomes, landed, already, held = _through_the_recipe(
+                    graph_writer, scheda, {}, number=left, create=False,
+                    author=author, kind="relate_su",
+                    detail=f"US {left} {said} US {right}, detto sul campo",
+                    relations=[(edge_type, direction, right)])
+            except OperazioniError as wrong:
+                return ToolResult(ok=False, message=str(wrong),
+                                  data={"missing": [left]})
+            if made.refused:
+                return ToolResult(ok=False, message="; ".join(made.refused.values()))
+            box = ""
+        else:
+            made = None
+
         # LA STESSA VIA DELLA SCHEDA: «la 12 copre la 18» è la casella COPRE
         # della US 12 con dentro la 18 — e il generatore ne fa l'arco che la
         # ricetta dichiara. `additive`: una frase aggiunge UN rapporto, non
@@ -700,16 +763,17 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
         # L'ALTRA, se non c'è, si segna minima — la stessa decisione della
         # scheda (`operazioni.py`, decisione 1): un rapporto detto è
         # un'osservazione che quella unità esiste.
-        scheda = reference_scheda()
-        try:
-            made, process, outcomes, landed, already, held = _through_the_recipe(
-                graph_writer, scheda, {box: [right]}, number=left, create=False,
-                author=author, kind="relate_su",
-                detail=f"US {left} {said} US {right}, detto sul campo",
-                additive=True)
-        except OperazioniError as wrong:
-            return ToolResult(ok=False, message=str(wrong),
-                              data={"missing": [left]})
+        if made is None:
+            scheda = reference_scheda()
+            try:
+                made, process, outcomes, landed, already, held = _through_the_recipe(
+                    graph_writer, scheda, {box: [right]}, number=left, create=False,
+                    author=author, kind="relate_su",
+                    detail=f"US {left} {said} US {right}, detto sul campo",
+                    additive=True)
+            except OperazioniError as wrong:
+                return ToolResult(ok=False, message=str(wrong),
+                                  data={"missing": [left]})
         edge = next((o for o in made.ops if o["op"] == "add_edge"), None)
         message = f"Registrato: US {left} {said} US {right}."
         if made.stubs:
@@ -728,7 +792,9 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
                   # Cosa è stato DETTO, oltre a cosa è stato scritto: chi
                   # rilegge deve poter vedere che «coperta da» è diventata un
                   # `overlies` a capi scambiati e non un tipo inverso.
-                  "said": said, "direction": direction, "field": box,
+                  "said": said, "direction": direction, "field": box or None,
+                  # fisica (AP11) o no: la distinzione che il datamodel fa
+                  "physical": _physical(edge_type),
                   "stubs": list(made.stubs)})
 
     return ToolDescriptor(

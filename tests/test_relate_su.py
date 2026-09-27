@@ -135,17 +135,73 @@ def test_the_map_IS_the_recipe_of_the_reference_scheda():
     assert RELATIONS["si appoggia a"][0] == "abuts"
     assert RELATIONS["si lega a"] == ("bonded_to", "symmetric")
     assert RELATIONS["uguale a"] == ("equals", "symmetric")
+    from app.operazioni import datamodel_relations
+
+    declared = datamodel_relations()
     for phrase, (edge_type, _direction) in RELATIONS.items():
-        step = recipe[RELATION_FIELDS[phrase]]["steps"][0]["emit"]
-        assert step["edge_type"] == edge_type, phrase
+        box = RELATION_FIELDS[phrase]
+        if box:
+            # una casella: l'arco è il suo passo
+            step = recipe[box]["steps"][0]["emit"]
+            assert step["edge_type"] == edge_type, phrase
+        else:
+            # nessuna casella: una relazione che il DATAMODEL dichiara fra
+            # unità stratigrafiche, e nient'altro (21 ottobre)
+            assert edge_type in declared, phrase
 
 
-def test_what_the_derivation_lost_is_said():
-    """«contemporaneo a» (`has_same_time`) e «appoggia a» non sono caselle
-    della US ICCD: una frase che non ha una casella non ha una ricetta, e il
-    rifiuto lo dice con le parole che conosce invece di inventare un arco."""
-    assert "contemporaneo a" not in RELATIONS
+def test_the_relations_of_the_datamodel_are_READ_and_contemporaneo_is_back():
+    """ERA «ciò che la derivazione ha perso» (19 ottobre): «contemporaneo a»
+    non è una casella della US ICCD. Decisione di E.D. (21 ottobre): la voce
+    accetta ANCHE le relazioni che il datamodel dichiara fra unità
+    stratigrafiche — lette dal datamodel, non da un elenco qui."""
+    from s3dgraphy.edges.connections_loader import get_connections_datamodel
+
+    from app.operazioni import datamodel_relations
+    from app.tools import RELATION_FIELDS, RELATIONS_REFUSED, RELATIONS_UNSAID
+
+    dm = get_connections_datamodel()
+    declared = datamodel_relations()
+    # ciò che il datamodel dichiara, misurato con il datamodel stesso
+    for name in declared:
+        assert dm.is_canonical(name) and "StratigraphicNode" in dm.get_allowed_sources(name)
+    assert {"overlies", "cuts", "fills", "abuts", "bonded_to", "equals",
+            "is_after", "has_same_time"} <= set(declared)
+    assert "is_bonded_to" not in declared          # una grafia, non una relazione
+    assert "is_overlain_by" not in declared        # un inverso, non una relazione
+    # fisiche e no restano DUE cose
+    assert declared["overlies"]["physical"] is True
+    assert declared["is_after"]["physical"] is False
+    assert declared["has_same_time"]["physical"] is False
+
+    assert RELATIONS["contemporaneo a"] == ("has_same_time", "symmetric")
+    assert RELATIONS["contemporanea a"] == ("has_same_time", "symmetric")
+    assert RELATION_FIELDS["contemporaneo a"] == ""       # nessuna casella
+    # ciò che resta indicibile è DETTO, non nascosto
     assert "appoggia a" not in RELATIONS
+    assert RELATIONS_UNSAID == ["changed_from"]
+    assert RELATIONS_REFUSED == {}
+
+
+def test_a_word_for_something_the_datamodel_does_not_declare_between_units_is_refused():
+    from app.operazioni import datamodel_relation_phrases, unsayable_words
+
+    words = {"ha documento": "has_documentation", "inventato a": "made_up"}
+    assert datamodel_relation_phrases(words) == {}
+    refused = unsayable_words(words)
+    assert set(refused) == set(words)
+    assert "StratigraphicNode" in refused["ha documento"]
+    assert "non è un arco" in refused["inventato a"]
+
+
+def test_an_older_spelling_or_an_inverse_goes_through_normalize_edge_name():
+    from app.operazioni import canonical_relation
+
+    assert canonical_relation("is_bonded_to") == ("bonded_to", "symmetric")
+    assert canonical_relation("is_physically_equal_to") == ("equals", "symmetric")
+    assert canonical_relation("is_overlain_by") == ("overlies", "swap")
+    assert canonical_relation("is_before") == ("is_after", "swap")
+    assert canonical_relation("overlies") == ("overlies", "forward")
 
 
 # ── 2 · LE REGOLE, senza modello — che sul campo è un martedì ──────────────
@@ -373,3 +429,71 @@ def test_the_act_records_what_was_said_and_not_only_what_was_written(writer):
     assert d7[0]["data"]["created_by"] == ORCID
     assert result.delta.author == ORCID
     assert result.delta.edges[0]["edge_type"] == "overlies"
+
+
+# ── 4 · LE RELAZIONI DEL DATAMODEL, dette a voce (21 ottobre) ───────────────
+
+def _said(writer, registry, sentence):
+    understood = understand(sentence, registry)
+    assert understood.tool == "relate_su" and understood.via == "rules", \
+        understood.as_dict()
+    return invoke(registry.get("relate_su"), understood.slots, ORCID,
+                  registry=registry)
+
+
+def test_contemporanea_lands_has_same_time_through_the_same_generator(
+        writer, registry):
+    """«la US 12 è contemporanea alla US 14»: nessuna casella della US ICCD, una
+    relazione che il datamodel dichiara. Un arco `has_same_time`, simmetrico
+    (capi ordinati), con l'id della convenzione; nessun marcatore di
+    autorialità inventato per una casella che non c'è."""
+    units(writer, 12)
+    result = _said(writer, registry, "la US 12 è contemporanea alla US 14")
+    assert result.ok, result.message
+    edges = [e for e in edges_of(writer) if e["edge_type"] == "has_same_time"]
+    assert [(e["source"], e["target"]) for e in edges] == [("US12", "US14")]
+    assert edges[0]["id"] == edge_id_for("US12", "has_same_time", "US14")
+    assert result.data["field"] is None and result.data["physical"] is False
+    assert result.data["direction"] == "symmetric"
+    # l'altra unità non c'era: segnata, come per una casella
+    assert [s["id"] for s in result.data["stubs"]] == ["US14"]
+    unit = next(n for n in graph_of(writer)["nodes"] if n["id"] == "US12")
+    assert not [k for k in (unit.get("data") or {}).get("authorship", {})
+                if "relazione" in k]
+    # detta dall'altra parte, è LO STESSO arco
+    again = _said(writer, registry, "la US 14 è contemporanea alla US 12")
+    assert again.ok
+    assert len([e for e in edges_of(writer)
+                if e["edge_type"] == "has_same_time"]) == 1
+
+
+def test_si_lega_lands_the_canonical_bonded_to(writer, registry):
+    units(writer, 12, 14)
+    result = _said(writer, registry, "la US 12 si lega alla US 14")
+    assert result.ok, result.message
+    kinds = {e["edge_type"] for e in edges_of(writer)}
+    assert "bonded_to" in kinds and "is_bonded_to" not in kinds
+
+
+def test_COPRE_is_physical_and_POSTERIORE_A_is_not_and_they_stay_two(writer,
+                                                                     registry):
+    units(writer, 12, 14)
+    assert _said(writer, registry, "la US 12 copre la US 14").data["physical"] is True
+    assert {e["edge_type"] for e in edges_of(writer)} == {"overlies"}
+    assert _said(writer, registry,
+                 "la US 12 è posteriore alla US 14").data["physical"] is False
+    assert {e["edge_type"] for e in edges_of(writer)} == {"overlies", "is_after"}
+
+
+def test_an_old_spelling_in_the_graph_is_READ_as_the_box():
+    """Un lettore riconosce ogni grafia (`spellings`): un `is_bonded_to` di un
+    grafo vecchio è la casella SI LEGA A."""
+    from app import operazioni as O
+    from app.tools import reference_scheda
+
+    section = {"nodes": [{"id": "US12", "node_type": "US", "name": "US 12"},
+                         {"id": "US14", "node_type": "US", "name": "US 14"}],
+               "edges": [{"id": "x", "source": "US14", "edge_type": "is_bonded_to",
+                          "target": "US12"}]}
+    back = O.values_from_graph(reference_scheda(), section, "US12")["values"]
+    assert back["si_lega_a"] == ["14"]

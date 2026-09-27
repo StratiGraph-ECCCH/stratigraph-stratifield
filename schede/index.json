@@ -19,9 +19,25 @@
             "qualia": "1.6.1",
             "em_ttl": "1.6.2"
           }
+        },
+        "0.1.1": {
+          "path": "es-ue-demo-2026/0.1.1.json",
+          "digest": "sha256:05882dca5a3cf81591bb345d7786706bed6350de30bbea3d3af0fbe1b1b3f67f",
+          "standard": {
+            "authority": "DEMO",
+            "code": "UE",
+            "version": "2026-demo",
+            "invented": true
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
         }
       },
-      "latest": "0.1.0"
+      "latest": "0.1.1"
     },
     "hu-rl-demo-2026": {
       "versions": {
@@ -35,10 +51,10 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.8",
-            "connections": "1.6.19",
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.2"
+            "em_ttl": "1.6.5"
           }
         }
       },
@@ -61,9 +77,25 @@
             "qualia": "1.6.1",
             "em_ttl": "1.6.2"
           }
+        },
+        "1.0.1": {
+          "path": "iccd-us-2021/1.0.1.json",
+          "digest": "sha256:730bdde7e61e727727c21dcab1d254ab657d119b79aa5dcf1cfbc7f20ce29aaf",
+          "standard": {
+            "authority": "ICCD",
+            "code": "US",
+            "version": "2021",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
         }
       },
-      "latest": "1.0.0"
+      "latest": "1.0.1"
     }
   }
 }

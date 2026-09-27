@@ -157,27 +157,36 @@ def test_the_sentence_becomes_a_field_in_the_graph(writer, registry):
     assert "colore" not in writer.node("US12")["data"]
 
 
-def test_DEFINIZIONE_is_heard_and_does_NOT_land_and_the_answer_says_why(
-        writer, registry):
-    """LA CONSEGUENZA PIÙ SCOMODA DI STANOTTE, detta e non nascosta.
+@pytest.mark.parametrize("said", ["la us 12 è uno strato di crollo",
+                                  "definizione della us 12 strato di crollo"])
+def test_DEFINIZIONE_is_heard_AND_lands_on_the_unit_since_2026_10_21(
+        writer, registry, said):
+    """ERA «capita e non scrive» (19 ottobre): la ricetta ICCD 1.0.0 teneva
+    `definizione` in `recipe.open`, e ogni posto sarebbe stato inventato.
 
-    La ricetta ICCD 1.0.0 dichiara `definizione` fra le cose che la
-    definizione NON decide (`recipe.open`: «which property the concept is the
-    value of»). Senza sapere di quale proprietà quel concetto sia il valore,
-    ogni posto in cui scriverlo sarebbe inventato — e il posto di prima,
-    `data.definizione`, è il difetto dell'audit. Quindi la frase è capita, non
-    scrive, e la risposta lo dice: la correzione va nella definizione
-    (proposta nel referto del 19 ottobre)."""
+    Decisione di E.D. (21 ottobre): la definizione è un ELEMENTO DEL NODO US,
+    dichiarato da s3Dgraphy (`StratigraphicNode.properties.definition`, nodi
+    1.6.9), e la ricetta 1.0.1 scrive `update_field data.definition`. La parola
+    detta è un termine senza concetto: `{label}`, nessun URI inventato. Niente
+    PropertyNode e niente `data.definizione` (il difetto dell'audit)."""
     from app.contract import invoke
+    from app.operazioni import values_from_graph
+    from app.scheda import find
 
-    understood = understand("la us 12 è uno strato di crollo", registry)
+    understood = understand(said, registry)
+    assert understood.slots["fields"] == {"definizione": {"label": "strato di crollo"}}
     result = invoke(registry.get(understood.tool), understood.slots, ORCID,
                     registry=registry)
-    assert result.ok
-    assert result.data["updated"] == []
-    assert "definizione" in result.data["silent"]
-    assert "Fuori dal grafo per la definizione: definizione" in result.message
-    assert "definizione" not in writer.node("US12")["data"]
+    assert result.ok, result.message
+    assert result.data["updated"] == ["definizione"]
+    assert "definizione" not in result.data["silent"]
+    unit = writer.node("US12")
+    assert unit["data"]["definition"] == {"label": "strato di crollo"}
+    assert "definizione" not in unit["data"]
+    assert not [n for n in writer.section()["nodes"]
+                if n.get("node_type") == "property" and n.get("name") == "definition"]
+    back = values_from_graph(find("iccd-us-2021", {}), writer.section(), "US12")
+    assert back["values"]["definizione"] == {"label": "strato di crollo"}
 
 
 def test_a_spoken_field_is_authored_by_the_person_not_by_a_model(writer,

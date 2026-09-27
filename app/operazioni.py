@@ -478,8 +478,17 @@ def _ordered_fields(recipe: Dict[str, Any], scheda: Scheda,
 def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
          section: Optional[Dict[str, Any]], ts: str, create: bool = False,
          authored_by: Optional[Dict[str, str]] = None,
-         model: Optional[str] = None, additive: bool = False) -> Plan:
+         model: Optional[str] = None, additive: bool = False,
+         relations: Optional[List[Tuple[str, str, str]]] = None) -> Plan:
     """Valori + identità + ricetta → la lista di operazioni, in ordine.
+
+    `relations` = `[(edge_type, direzione, altra unità)]`: i rapporti detti a
+    voce che la scheda NON ha come casella ma il datamodel dichiara fra unità
+    stratigrafiche («contemporaneo a» → `has_same_time`). Passano per la
+    stessa via di una casella di rapporto (stub, simmetrici ordinati, id,
+    `noop`), sempre additivi, e non portano un marcatore di autorialità:
+    non c'è una casella di cui essere l'autore — l'autore è quello
+    dell'operazione.
 
     `section` è lo stato attuale (la sezione attiva della stanza o del
     container), letto e mai scritto. `values` sono SOLO i campi che si
@@ -633,6 +642,24 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
             continue
         out.written.append(fid)
 
+    # ── 2ter · i rapporti senza casella, dal datamodel ─────────────────────
+    said_relations: List[str] = []
+    for edge_type, direction, other in relations or []:
+        fid = f"{RELATION_PREFIX}{edge_type}"
+        before = len(out.ops)
+        current["field"] = fid
+        try:
+            _expand(out, ctx, op, drop, scheda, fid,
+                    _relation_entry(scheda, edge_type, direction), [str(other)], values,
+                    field_props, template_id, additive=True)
+        except OperazioniError as wrong:
+            del out.ops[before:]
+            del out.op_fields[before:]
+            out.refused[fid] = str(wrong)
+            continue
+        out.written.append(fid)
+        said_relations.append(fid)
+
     # ── 2bis · le rimozioni, in fondo, tolto ciò che la lista stessa vuole ──
     added_edges = {(o["source"], o["edge_type"], o["target"])
                    for o in out.ops if o["op"] == "add_edge"}
@@ -655,7 +682,8 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
 
     # ── 3 · chi ha composto ogni valore, accanto al valore ─────────────────
     current["field"] = "~authorship"
-    marks = authorship.marks_for(out.written, authored_by, model=model)
+    marks = authorship.marks_for([f for f in out.written if f not in said_relations],
+                                 authored_by, model=model)
     for key, mark in marks.items():
         op("update_field", node_id=unit_id, field=f"data.{key}", value=mark)
     return out
@@ -703,15 +731,25 @@ def _expand(out: Plan, ctx: _Context, op, drop, scheda: Scheda, fid: str,
                      edge_type=triple[1], target=triple[2])
         return
 
-    # ── una proprietà nativa del nodo (`description`) ──────────────────────
+    # ── un campo del nodo: `description`, o un ELEMENTO del nodo ───────────
+    # (`definition` → `data.definition`, dichiarato dal datamodel dei nodi e
+    # letto dalla ricetta: `entry.element`). `description` è una stringa;
+    # l'elemento tiene il valore INTERO — un termine resta {concept, label},
+    # senza le chiavi vuote (una parola detta a voce è {label}: nessun concetto
+    # inventato).
     native = [s for s in steps if s["emit"]["op"] == "update_field"]
     if native and len(steps) == 1:
         emit = native[0]["emit"]
         if value is _EMPTY:
             op("update_field", node_id=unit_id, field=emit["field"], remove=True)
         else:
-            op("update_field", node_id=unit_id, field=emit["field"],
-               value=_text(_resolve(emit["value"], {"unit": unit_id, "value": value})))
+            said = _resolve(emit["value"], {"unit": unit_id, "value": value})
+            if entry.get("element"):
+                said = ({k: v for k, v in said.items() if not _is_empty(v)}
+                        if isinstance(said, dict) else said)
+            else:
+                said = _text(said)
+            op("update_field", node_id=unit_id, field=emit["field"], value=said)
         return
 
     minted_key = "$prop" if "$prop" in resolve else (
@@ -916,8 +954,13 @@ def _edge_footprint(ctx: _Context, unit_id: str, emit: Dict[str, Any],
     stesso capo, e dall'altro capo qualcosa del tipo giusto."""
     out = []
     unit_is_source = emit["source"] == "$unit"
+    # UN LETTORE riconosce ogni grafia che il datamodel accetta (`spellings`):
+    # un `is_bonded_to` di un grafo vecchio È la casella SI LEGA A. Chi
+    # scrive, scrive la canonica — e riscrivendo la casella la grafia vecchia
+    # esce e la canonica entra.
+    names = spellings(emit["edge_type"])
     for edge in ctx.edges:
-        if edge.get("edge_type") != emit["edge_type"]:
+        if edge.get("edge_type") not in names:
             continue
         ends = (edge.get("source"), edge.get("target"))
         if symmetric:
@@ -990,6 +1033,7 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
     """
     from . import authorship
     from .tools import number_from_unit_id
+    from s3dgraphy.crdt import get_field
 
     if scheda.recipe is None:
         raise OperazioniError(f"«{scheda.id}» non è compilata: non ha una ricetta "
@@ -1052,7 +1096,9 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
             continue
         native = [s for s in steps if s["emit"]["op"] == "update_field"]
         if native and len(steps) == 1:
-            said = unit.get(native[0]["emit"]["field"])
+            # `description` in cima al nodo, un elemento in `data.<nome>`: lo
+            # stesso indirizzo del CRDT, letto come lo legge il CRDT
+            said = get_field(unit, native[0]["emit"]["field"])
             if said not in (None, ""):
                 values[fid] = _typed(ftype, said)
             continue
@@ -1188,9 +1234,149 @@ def relation_phrases(scheda: Scheda, lang: str) -> Dict[str, Tuple[str, str, str
         label = str(((scheda.field(fid).get("labels") or {}).get(lang)) or "").strip().lower()
         if not label:
             continue
+        # il nome passa per il datamodel: una ricetta compilata prima del
+        # 2026-10-21 può ancora dire una grafia vecchia, e la voce scrive la
+        # canonica
+        edge_type, direction = canonical_relation(emit["edge_type"], direction)
         for phrase in _variants(label):
-            out[phrase] = (emit["edge_type"], direction, fid)
+            out[phrase] = (edge_type, direction, fid)
     return out
+
+
+# ── le relazioni stratigrafiche che il DATAMODEL dichiara ────────────────────
+#
+# Decisione di E.D. (2026-10-21): la voce accetta i rapporti della ricetta PIÙ
+# le relazioni che s3Dgraphy dichiara fra unità stratigrafiche, anche senza
+# casella. L'elenco si LEGGE dal datamodel delle connessioni (chi le dichiara,
+# fra quali classi, simmetriche o no, quale inverso, quale grafia vecchia): qui
+# non c'è nessun elenco di relazioni. Le parole con cui si dicono sono del
+# frasario del nodo (`tools.RELATION_WORDS`), perché il datamodel non ne ha in
+# nessuna lingua di comando.
+
+#: il segno dei campi sintetici dei rapporti senza casella nel `Plan`
+RELATION_PREFIX = "~relazione:"
+
+#: la classe da cui discendono le unità stratigrafiche, nel datamodel
+STRATIGRAPHIC_CLASS = "StratigraphicNode"
+
+
+def _connections():
+    from s3dgraphy.edges.connections_loader import get_connections_datamodel
+    return get_connections_datamodel()
+
+
+def spellings(edge_type: str) -> frozenset:
+    """Ogni nome che il datamodel accetta per questa relazione (lettura)."""
+    return _connections().spellings(edge_type)
+
+
+def canonical_relation(edge_type: str, direction: str = "forward") -> Tuple[str, str]:
+    """`(nome canonico, direzione)` per un nome che il datamodel accetta.
+
+    `normalize_edge_name` porta una grafia vecchia alla canonica (stessa
+    direzione) e un inverso al canonico: allora i capi si scambiano. Un arco
+    simmetrico è `symmetric` qualunque cosa si sia detto. Un nome che il
+    datamodel non ha è un errore, non un arco.
+    """
+    dm = _connections()
+    canonical = dm.normalize_edge_name(edge_type, prefer_canonical=True)
+    if canonical is None:
+        raise OperazioniError(f"«{edge_type}» non è un arco del datamodel "
+                              f"delle connessioni {dm.get_version()}")
+    if dm.is_symmetric(canonical):
+        return canonical, "symmetric"
+    same_way = edge_type == canonical or edge_type in dm.spellings(canonical)
+    flipped = {"forward": "swap", "swap": "forward"}.get(direction, direction)
+    return canonical, (direction if same_way else flipped)
+
+
+def datamodel_relations() -> Dict[str, Dict[str, Any]]:
+    """Le relazioni canoniche che il datamodel dichiara FRA UNITÀ STRATIGRAFICHE.
+
+    `nome → {symmetric, reverse, physical, label}`. `physical` è ciò che il
+    datamodel stesso distingue: la famiglia AP11 (`AP11_has_physical_relation_to`:
+    il contatto — copre, taglia, si lega…) o no (`is_after`, `has_same_time`,
+    `changed_from`, ciascuna con la sua mappatura). Non si inventa una terza
+    etichetta: COPRE è `overlies` (fisica) e POSTERIORE A è `is_after` (no),
+    due righe, mai una.
+    """
+    dm = _connections()
+    out: Dict[str, Dict[str, Any]] = {}
+    for name in sorted(dm.get_all_edge_names()):
+        if not dm.is_canonical(name):
+            continue                      # un inverso o una grafia vecchia
+        definition = dm.get_edge_definition(name) or {}
+        if definition.get("deprecated") or definition.get("spelling_of"):
+            continue
+        if not (STRATIGRAPHIC_CLASS in (dm.get_allowed_sources(name) or [])
+                and STRATIGRAPHIC_CLASS in (dm.get_allowed_targets(name) or [])):
+            continue
+        mapping = definition.get("mapping") or {}
+        physical = str(mapping.get("extension_mapping") or "").startswith("AP11")
+        out[name] = {"symmetric": dm.is_symmetric(name),
+                     "reverse": dm.get_reverse_name(name) if not dm.is_symmetric(name) else None,
+                     "physical": physical,
+                     "label": definition.get("label")}
+    return out
+
+
+def datamodel_relation_phrases(words: Dict[str, str]) -> Dict[str, Tuple[str, str, str]]:
+    """`frase → (edge_type, direzione, "")` per le parole del frasario che
+    nominano una relazione del datamodel fra unità stratigrafiche (o il suo
+    inverso). Una parola legata a un nome che il datamodel non dichiara
+    così non entra: la sua assenza la dice `unsayable_words`."""
+    declared = datamodel_relations()
+    out: Dict[str, Tuple[str, str, str]] = {}
+    for phrase, name in words.items():
+        try:
+            edge_type, direction = canonical_relation(name)
+        except OperazioniError:
+            continue
+        if edge_type not in declared:
+            continue
+        for variant in _variants(phrase.strip().lower()):
+            out[variant] = (edge_type, direction, "")
+    return out
+
+
+def unsayable_words(words: Dict[str, str]) -> Dict[str, str]:
+    """Le parole del frasario che NON nominano una relazione stratigrafica
+    del datamodel — e perché."""
+    declared = datamodel_relations()
+    out: Dict[str, str] = {}
+    for phrase, name in words.items():
+        try:
+            edge_type, _ = canonical_relation(name)
+        except OperazioniError as wrong:
+            out[phrase] = str(wrong)
+            continue
+        if edge_type not in declared:
+            out[phrase] = (f"«{edge_type}» non è dichiarato fra "
+                           f"{STRATIGRAPHIC_CLASS} e {STRATIGRAPHIC_CLASS}")
+    return out
+
+
+def _relation_entry(scheda: Scheda, edge_type: str, direction: str) -> Dict[str, Any]:
+    """La voce di ricetta di un rapporto senza casella: una casella di rapporto
+    VERA della stessa ricetta (fra unità stratigrafiche), con il nome e i capi
+    cambiati. La forma resta quella che il compilatore scrive (SPEC §9.3), e
+    il rapporto passa per lo stesso ramo di `_expand`: nessuna seconda via e
+    nessun passo scritto qui."""
+    import copy
+
+    for entry in ((scheda.recipe or {}).get("fields") or {}).values():
+        find = ((entry.get("resolve") or {}).get("$item") or {}).get("find") or {}
+        if entry.get("verdict") == "edge" and find.get("kind") == "stratigraphic_unit":
+            made = copy.deepcopy(entry)
+            emit = made["steps"][0]["emit"]
+            emit["edge_type"] = edge_type
+            emit["source"], emit["target"] = (("$item", "$unit") if direction == "swap"
+                                              else ("$unit", "$item"))
+            made["edge"] = {"symmetric": direction == "symmetric"}
+            return made
+    raise OperazioniError(
+        f"«{scheda.id}» non ha nessuna casella di rapporto fra unità: non so in "
+        f"che forma la sua ricetta scriva un rapporto")
 
 
 def _variants(label: str) -> Iterable[str]:

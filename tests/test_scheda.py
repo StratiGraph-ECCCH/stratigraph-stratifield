@@ -14,6 +14,7 @@ Le due prove che contano stanno in fondo:
 
 from __future__ import annotations
 
+import json
 import pathlib
 import sys
 
@@ -357,7 +358,9 @@ def test_no_variable_means_THE_VENDORED_COPY_since_2026_10_19():
     found = {s.id: s for s in schede.available({})}
     assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026"}
     assert all(s.compiled and s.recipe for s in found.values())
-    assert found["iccd-us-2021"].version == "1.0.0"
+    # la più recente che l'indice vendorato dichiara, non un numero scritto qui
+    index = json.loads((schede.VENDORED_DIR / "index.json").read_text(encoding="utf-8"))
+    assert found["iccd-us-2021"].version == index["schede"]["iccd-us-2021"]["latest"]
 
 
 def test_no_copy_and_no_variable_means_no_schede_and_that_is_not_broken(no_vendored):
