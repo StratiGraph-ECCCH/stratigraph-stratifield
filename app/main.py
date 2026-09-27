@@ -582,6 +582,31 @@ def get_scheda(scheda_id: str, lang: str = "it") -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(problem)) from problem
 
 
+@public.get("/v1/vocabolario/{scheme_id}", tags=["scheda"])
+def get_vocabulary(scheme_id: str, lang: str = "it") -> Dict[str, Any]:
+    """The CONCEPTS of one scheme, labelled in ONE language — what a `term` box
+    offers (2026-10-22).
+
+    Public like the definitions: a vocabulary is not somebody's record, and the
+    phone has to cache it before it goes into the trench. Vendored by
+    `sync-schede.sh`, resolved by `stratigraph-templates` (own scheme, then
+    alignment): a concept with no word in `lang` comes back with `label: null`
+    and the word it has elsewhere, never with a translation made up here.
+
+    A `declared` scheme answers too, with no concepts and its status: the norm
+    prescribes a vocabulary that nobody has published as SKOS, and the widget
+    then says so and writes a word without a concept.
+    """
+    from . import scheda as schede
+
+    found = schede.vocabulary(scheme_id, lang)
+    if found is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"questo nodo non ha il vocabolario «{scheme_id}»")
+    return found
+
+
 # ── the act ───────────────────────────────────────────────────────────────────
 
 class Say(BaseModel):
@@ -1266,6 +1291,25 @@ def room_units(request: Request) -> Dict[str, Any]:
     return {"units": elenco, "total": len(elenco),
             "room": getattr(WRITER, "room_id", None),
             "where": writer_describe(WRITER)}
+
+
+@v1.get("/room/choices", tags=["room"])
+def room_choices(request: Request) -> Dict[str, Any]:
+    """FRA CHE COSA SI SCEGLIE in questa stanza: periodi, attività, foto.
+
+    È ciò che i widget di una scheda offrono (22 ottobre) — «scelta fra quelli
+    della stanza» per PERIODO, FASE e ATTIVITÀ, «dalle foto della stanza» per
+    FOTOGRAFIE — letto dal grafo e non da un elenco di questa pagina. Una
+    lettura sola; scrivere resta di `POST /v1/scheda`.
+    """
+    _author(request)                   # firma valida, o 401 dall'autenticatore
+    try:
+        scelte = WRITER.choices()
+    except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
+        raise HTTPException(
+            status_code=502,
+            detail=f"Non riesco a leggere la stanza: {chiusa}") from None
+    return {**scelte, "room": getattr(WRITER, "room_id", None)}
 
 
 @v1.delete("/room", tags=["room"])

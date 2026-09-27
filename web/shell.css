@@ -408,3 +408,63 @@
   box-shadow: none;
   cursor: pointer;
 }
+/* I FILTRI dell'elenco (22 ottobre): si combinano, e il contatore dice «n di t»
+   perché un elenco filtrato che sembra l'elenco intero è una bugia per
+   omissione. Il gettone premuto ha l'accento, come i chip del modo. */
+.indice-filtri {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sg-space-2); margin: 0 0 var(--sg-space-3);
+}
+.indice-filtri input[type="search"] {
+  flex: 1 1 14em; min-width: 0; margin: 0; font: inherit;
+  padding: var(--sg-space-2) var(--sg-space-3);
+  background: var(--sg-surface); color: var(--sg-text);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+}
+.indice-chip {
+  width: auto; margin: 0; box-shadow: none; cursor: pointer; font: inherit;
+  font-size: var(--sg-text-sm);
+  padding: var(--sg-space-1) var(--sg-space-3);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-pill);
+  background: var(--sg-surface); color: var(--sg-text);
+}
+.indice-chip[aria-pressed="true"] {
+  border-color: var(--sg-accent); background: var(--sg-surface-sunk);
+  font-weight: var(--sg-weight-subtitle);
+}
+.indice-conta {
+  margin-left: auto; font-family: var(--sg-font-mono);
+  font-size: var(--sg-text-xs); color: var(--sg-muted);
+}
+.indice-elenco { display: flex; flex-direction: column; }
+.indice-ai {
+  display: inline-block; margin-left: var(--sg-space-2);
+  font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); color: var(--sg-warn);
+}
+
+/* ── ‹ US 3014 [vai alla…] › — muoversi fra le unità (22 ottobre) ──────────
+   Su ogni soglia; sul telefono i bersagli sono da pollice (44 px), perché è
+   lì che si passa da un'unità all'altra con i guanti. */
+.unav {
+  display: flex; align-items: center; gap: var(--sg-space-1);
+  margin: 0 0 var(--sg-space-2);
+}
+.unav button {
+  width: auto; margin: 0; box-shadow: none; cursor: pointer; text-align: center;
+  min-width: 34px; min-height: 34px; padding: 0 var(--sg-space-2);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface); color: var(--sg-text); font-size: var(--sg-text-lg);
+  line-height: 1;
+}
+.unav button:disabled { color: var(--sg-muted); cursor: default; opacity: .5; }
+.unav-here {
+  font-family: var(--sg-font-mono); font-weight: var(--sg-weight-subtitle);
+  font-size: var(--sg-text-lg); padding: 0 var(--sg-space-2); white-space: nowrap;
+}
+.unav input[type="text"] {
+  flex: 0 1 12em; width: auto; min-width: 6em; margin: 0;
+  padding: var(--sg-space-1) var(--sg-space-2);
+}
+.unav.big button { min-width: 48px; min-height: 48px; font-size: var(--sg-text-xl); }
+.unav.big input[type="text"] { flex: 1 1 auto; min-height: 48px; }
+.unav.big .unav-here { font-size: var(--sg-text-xl); }

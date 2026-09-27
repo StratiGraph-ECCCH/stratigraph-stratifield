@@ -330,6 +330,24 @@
   letter-spacing: -.03em;
 }
 .fo input.fo-val { overflow: visible; text-overflow: ellipsis; }
+/* UN VALORE STRUTTURATO SULLA CARTA (22 ottobre): la casella mostra il
+   risultato — chip, righe di misura — e si scrive nel pannello a destra. È un
+   bottone per la tastiera, non per l'occhio: niente bordo, niente sfondo, il
+   valore allineato come quello di una casella di testo. */
+.fo .fo-val.fo-struct { text-align: left; cursor: pointer; box-shadow: none; }
+/* SULLA CARTA l'inchiostro è quello della carta, in tutti e due i temi: il
+   chip del tema scuro (testo chiaro) sul foglio chiaro non si leggeva —
+   misurato, rgb(241,235,227) su carta. «Da compilare» col colore del bollo. */
+.fo .fo-struct .w-chip {
+  font-size: max(calc(var(--mm) * 2.2), 11px);
+  padding: 0 calc(var(--mm) * 0.8);
+  background: transparent;
+  color: var(--sf-paper-value);
+  border-color: var(--sf-paper-rule);
+}
+.fo .fo-struct .w-chip.w-new { border-color: var(--sf-paper-ai); }
+.fo .fo-struct .w-ref { color: var(--sf-paper-label); }
+.fo .fo-struct .w-qline { font-size: max(calc(var(--mm) * 2.3), 11px); line-height: 1.25; }
 
 .fo-checks {
   display: flex;

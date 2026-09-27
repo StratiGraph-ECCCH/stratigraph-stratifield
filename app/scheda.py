@@ -386,9 +386,41 @@ class Scheda:
             # The SCHEME's name only: resolving a vocabulary is the authoring
             # engine's job and needs a server. The form says which controlled
             # list a box belongs to, and a node with the vocabulary can offer
-            # it; a node without it still shows the box.
+            # it (`GET /v1/vocabolario/{scheme}`); a node without it still
+            # shows the box.
             out["vocabulary"] = str(vocabulary["scheme"])
+        if out["type"] == "quantity_list":
+            out["measures"] = self._measures_for_browser(fid)
         return out
+
+    def _measures_for_browser(self, fid: str) -> Dict[str, Any]:
+        """WHAT a row of a measurement box may say it measures (2026-10-22).
+
+        A `quantity_list` value is rows of `{qualia, label, value, unit}` (SPEC
+        §1.5): the QUALIA is part of the value, so the row widget has to offer
+        the qualia by name. They are read from the datamodel
+        (`em_qualia_types.json`, the ones that measure: a number with units),
+        not written here — and not from the verdict either, which stays behind.
+
+        The one thing the recipe adds is the box's DEFAULT (`defaults
+        .$item.qualia`: QUOTE is `elevation` when a row says nothing), and it
+        is offered first. The names are the datamodel's: it has no Italian for
+        «Thickness», and a word nobody wrote for the datamodel is not invented
+        here — the row's own `label` is where a person writes «spessore max».
+        """
+        entry = ((self.recipe or {}).get("fields") or {}).get(fid) or {}
+        default = str((entry.get("defaults") or {}).get("$item.qualia") or "")
+        if not default and self.recipe is None:
+            # un sorgente YAML (la sovrascrittura di sviluppo) non ha ricetta:
+            # il default è dove la ricetta lo compila, `graph.qualia`. Le due
+            # forme devono disegnare lo stesso modulo (test_scheda).
+            source = self._by_id.get(fid) or {}
+            default = str(((source.get("graph") or {}).get("qualia")) or "")
+        qualia = measuring_qualia()
+        if default:
+            qualia = ([q for q in qualia if q["id"] == default]
+                      + [q for q in qualia if q["id"] != default])
+        return {"qualia": qualia, "default": default or None}
 
 
 def labels_for(labels: Dict[str, Any], lang: str, what: str) -> str:
@@ -420,6 +452,9 @@ INDEX_FORMAT = COMPILED_FORMAT + "/index"
 #: WHERE THE VENDORED COPY LIVES — `schede/` beside `app/`, filled by
 #: `sync-schede.sh` and committed. The Dockerfile copies it into the image.
 VENDORED_DIR = pathlib.Path(__file__).resolve().parent.parent / "schede"
+#: The concepts of the schemes the vendored schede name (`sync-schede.sh`).
+#: Beside `schede/` and not inside: every `*.json` there is read as a scheda.
+VOCABULARY_DIR = pathlib.Path(__file__).resolve().parent.parent / "vocabolari"
 
 _log = logging.getLogger("stratigraph-chatbot.scheda")
 _said_override: set = set()
@@ -596,3 +631,65 @@ def find(scheda_id: str, environ: Optional[Dict[str, str]] = None, *,
     # form: the compiled one is the one with a recipe, so it wins
     matches.sort(key=lambda s: not s.compiled)
     return matches[0] if matches else None
+
+
+# ── i vocabolari e le qualia, per i widget (2026-10-22) ────────────────────────
+
+#: I tipi di dato del datamodel che MISURANO: un numero con un'unità.
+_MEASURING = ("float", "integer", "percentage")
+
+
+def measuring_qualia() -> List[Dict[str, Any]]:
+    """Le qualia che una riga di misura può dichiarare, DAL DATAMODEL.
+
+    `em_qualia_types.json` di s3Dgraphy, nell'ordine in cui le dichiara: id,
+    nome, unità, e il gruppo (la sottocategoria: dimensional, spatial…) perché
+    trenta voci in fila non si leggono. Solo quelle con un tipo numerico e delle
+    unità: «colore» è una qualia, ma non si misura in metri.
+    """
+    from s3dgraphy.nodes.base_node import load_json_mapping
+
+    out: List[Dict[str, Any]] = []
+    for category in load_json_mapping("em_qualia_types.json").get("qualia_categories") or []:
+        for group, sub in (category.get("subcategories") or {}).items():
+            for q in sub.get("qualia") or []:
+                if q.get("data_type") in _MEASURING and q.get("units"):
+                    out.append({"id": str(q["id"]), "name": str(q.get("name") or q["id"]),
+                                "units": [str(u) for u in q["units"]],
+                                "group": str(group)})
+    return out
+
+
+def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
+    """I concetti di uno schema, con l'etichetta in UNA lingua — o None.
+
+    Da `vocabolari/<schema>.json`, che `sync-schede.sh` risolve col risolutore
+    di `stratigraph-templates` (schema proprio → allineamento). Un concetto
+    senza parola in quella lingua torna con `label: null` e la lingua in cui
+    una parola c'è (`label_lang`): il widget lo mostra per quello che è,
+    invece di inventare una traduzione.
+
+    Uno schema `declared` torna con zero concetti e lo dice (`status`): la norma
+    prescrive un vocabolario che non esiste in SKOS, e il widget scrive allora
+    una parola senza concetto — che è ciò che SPEC §3 chiama `uncontrolled`.
+    """
+    safe = "".join(ch for ch in str(scheme_id or "") if ch.isalnum() or ch in "-_.")
+    if not safe or safe != scheme_id:
+        return None
+    path = VOCABULARY_DIR / f"{safe}.json"
+    if not path.is_file():
+        return None
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    concepts = []
+    for c in doc.get("concepts") or []:
+        labels = c.get("labels") or {}
+        here = labels.get(lang)
+        other = next(((k, v) for k, v in sorted(labels.items()) if v), (None, None))
+        concepts.append({"concept": c["concept"], "label": here or None,
+                         **({} if here else {"label_lang": other[0],
+                                             "label_there": other[1]})})
+    return {"scheme": doc.get("scheme"), "status": doc.get("status"),
+            "authority": doc.get("authority"), "fixture": bool(doc.get("fixture")),
+            "label": (doc.get("labels") or {}).get(lang), "lang": lang,
+            "concepts": concepts}
+

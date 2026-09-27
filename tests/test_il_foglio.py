@@ -243,7 +243,7 @@ def _named(code: str, words):
                   if re.search(rf"(?<![\w-]){re.escape(w.lower())}(?![\w-])", low))
 
 
-@pytest.mark.parametrize("name", ["foglio.js", "foglio.css"])
+@pytest.mark.parametrize("name", ["foglio.js", "foglio.css", "widgets.js"])
 def test_no_standard_is_named_in_the_sheet(name):
     """Il foglio disegna QUALSIASI definizione dichiari un `sheet`: la griglia,
     le etichette e i nomi dei campi vengono dal dato. Una parola di uno

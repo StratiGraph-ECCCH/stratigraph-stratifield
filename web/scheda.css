@@ -573,3 +573,113 @@
   border-left: 3px solid var(--sg-quiet);
   font-size: var(--sg-text-sm);
 }
+
+/* ── i widget strutturati (22 ottobre) ─────────────────────────────────────
+ *
+ * Un elemento per tipo di valore (`widgets.js`), lo stesso nel pannello del
+ * Foglio, nella vista «Campi» e nel passo del telefono. Zero colori letterali:
+ * ruoli del tema. Un'unità «da compilare» è TRATTEGGIATA e col colore
+ * dell'avviso, perché è la regola già decisa (creata minima e segnata) e deve
+ * vedersi, non perché sia un errore. */
+.w { display: grid; gap: var(--sg-space-2); }
+/* la conchiglia dà a OGNI bottone e campo la larghezza piena e il padding da
+   guanto del microfono: dentro un widget no, le misure le dice il widget */
+.w button { width: auto; margin: 0; box-shadow: none; text-align: center; }
+.w input[type="text"], .w input[type="search"], .w select { width: 100%; margin: 0; }
+.w .w-term, .w .w-btn.wide { width: 100%; }
+.w .w-term { text-align: left; }
+.w-chips { display: flex; flex-wrap: wrap; gap: var(--sg-space-1); }
+.w-chips:empty { display: none; }
+.w-chip {
+  display: inline-flex; align-items: center; gap: var(--sg-space-1);
+  padding: 2px 2px 2px var(--sg-space-2);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-pill);
+  background: var(--sg-bg); color: var(--sg-text);
+  font-family: var(--sg-font-mono); font-size: var(--sg-text-xs);
+}
+.w-chip em { font-style: normal; font-family: var(--sg-font-sans); color: var(--sg-warn); }
+.w-chip.w-new { border-style: dashed; border-color: var(--sg-warn); }
+.w-x {
+  border: 0; background: none; box-shadow: none; margin: 0;
+  width: 24px; height: 24px; min-height: 0; padding: 0; border-radius: 50%;
+  color: var(--sg-muted); font-size: var(--sg-text-base); line-height: 1; cursor: pointer;
+}
+.w .w-x { width: 24px; height: 24px; padding: 0; }
+.w-x:hover, .w-x:focus-visible { background: var(--sg-surface-sunk); color: var(--sg-text); }
+.w-add { display: flex; gap: var(--sg-space-1); }
+.w-add input, .w-search, .w-host .w-lab + input, .w-qrow input, .w-qrow select {
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-bg); color: var(--sg-text);
+  padding: var(--sg-space-1) var(--sg-space-2); font: inherit; min-width: 0;
+}
+.w-add input { flex: 1; }
+.w-search { width: 100%; }
+.w-btn {
+  border: 1px solid var(--sg-line); background: var(--sg-surface); color: var(--sg-text);
+  border-radius: var(--sg-radius-sm); padding: var(--sg-space-1) var(--sg-space-2);
+  cursor: pointer; font: inherit; margin: 0; box-shadow: none;
+}
+.w-btn.wide { width: 100%; }
+.w-sugg { display: flex; flex-wrap: wrap; gap: var(--sg-space-1); }
+.w-sugg button {
+  border: 1px dashed var(--sg-line); background: none; box-shadow: none; margin: 0;
+  border-radius: var(--sg-radius-pill); padding: 2px var(--sg-space-2);
+  font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); color: var(--sg-muted);
+  cursor: pointer; min-height: 0;
+}
+.w-sugg button:hover, .w-sugg button:focus-visible { border-style: solid; color: var(--sg-text); }
+.w-note { font-size: var(--sg-text-xs); color: var(--sg-muted); margin: 0; }
+.w-note.w-bad { color: var(--sg-warn); }
+.w-terms { display: grid; gap: var(--sg-space-1); max-height: 280px; overflow: auto; }
+.w-term {
+  display: flex; justify-content: space-between; align-items: baseline; gap: var(--sg-space-2);
+  border: 1px solid var(--sg-line); background: var(--sg-bg); color: var(--sg-text);
+  border-radius: var(--sg-radius-sm); padding: var(--sg-space-1) var(--sg-space-2);
+  cursor: pointer; text-align: left; font: inherit; margin: 0; box-shadow: none;
+}
+.w-term small { color: var(--sg-muted); font-size: var(--sg-text-xs); }
+.w-term code {
+  font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); color: var(--sg-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%;
+}
+.w-term.on { border-color: var(--sg-accent); background: var(--sg-surface-sunk);
+             font-weight: var(--sg-weight-subtitle); }
+.w-qty { display: grid; gap: var(--sg-space-1); }
+.w-qty:empty { display: none; }
+.w-qrow {
+  display: grid; gap: var(--sg-space-1); align-items: center;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, .8fr) auto auto;
+}
+.w-lab { font-size: var(--sg-text-xs); font-weight: var(--sg-weight-subtitle); color: var(--sg-muted); }
+.w-pics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sg-space-1); }
+.w-pics button {
+  aspect-ratio: 4 / 3; border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface-sunk); color: var(--sg-muted); margin: 0; box-shadow: none;
+  display: flex; align-items: flex-end; justify-content: flex-start; padding: 2px 4px;
+  font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); cursor: pointer;
+  overflow: hidden; word-break: break-all; text-align: left;
+}
+.w-view { display: flex; flex-wrap: wrap; gap: 2px 4px; align-items: baseline; }
+.w-view .w-chip { padding: 0 var(--sg-space-1); }
+.w-qline { display: block; width: 100%; font-family: var(--sg-font-mono); }
+.w-ref { font-family: var(--sg-font-mono); color: var(--sg-muted); }
+
+/* SUL TELEFONO, bersagli da pollice: 44 px è il minimo che le linee guida delle
+ * due piattaforme danno per un tocco, e con i guanti è poco. */
+.w.w-big .w-x { width: 44px; height: 44px; }
+.w-big .w-chip { font-size: var(--sg-text-sm); padding-left: var(--sg-space-3); }
+.w-big input, .w-big select, .w-big .w-btn, .w-big .w-term, .w-big .w-sugg button {
+  min-height: 44px; font-size: var(--sg-text-base);
+}
+.w-big .w-sugg button { padding: 0 var(--sg-space-3); }
+.w.w-big .w-btn { min-width: 44px; }   /* misurato: il «+» era largo 28 px */
+.w-big .w-qrow {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "what what del" "val unit unit" "lab lab lab";
+  padding-bottom: var(--sg-space-2); border-bottom: 1px solid var(--sg-line);
+}
+.w-big .w-qwhat { grid-area: what; }
+.w-big .w-qdel { grid-area: del; }
+.w-big .w-qval { grid-area: val; }
+.w-big .w-qunit { grid-area: unit; }
+.w-big .w-qlab { grid-area: lab; }

@@ -10,8 +10,9 @@
 # THE RULE for editing this file: open the Dockerfile and read the `COPY` lines
 # first. Everything they name must stay reachable; everything else is weight.
 # What this image copies:
-#   pyproject.toml · README.md · LICENSE · app/ · web/ · schede/
-#   (web/ IS the PWA, not an accessory; schede/ are the compiled definitions)
+#   pyproject.toml · README.md · LICENSE · app/ · web/ · schede/ · vocabolari/
+#   (web/ IS the PWA, not an accessory; schede/ are the compiled definitions,
+#   vocabolari/ the concepts of the schemes they name)
 
 # ── the big one ──────────────────────────────────────────────────────────────
 .venv/

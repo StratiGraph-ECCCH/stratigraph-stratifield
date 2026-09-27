@@ -20,6 +20,7 @@ import { mount as mountPhotos } from "./photos.js";
 import { mount as mountRoom, postureOf, roomOf } from "./room.js";
 import { mount as mountIndex } from "./indice.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
+import { bareNumber, loadRoom, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 
 const $ = (id) => document.getElementById(id);
@@ -104,6 +105,13 @@ const state = {
   postureForced: null,
   // La casella selezionata sul Foglio: il pannello a destra la mostra.
   selected: null,
+  // QUALCOSA SCRITTO E NON ANCORA MANDATO (22 ottobre). Lo accende
+  // `writeValue`, lo spegne `save()`: è ciò che decide se cambiare unità deve
+  // salvare prima.
+  dirty: false,
+  // Dopo un salvataggio, mandato o in coda: la stanza ha un'unità in più, e
+  // l'indirizzo impara il numero di una scheda nuova.
+  onSaved: (sent, body) => afterSave(body),
   onChange: () => paintCompleteness(),
   onStep: (i, n) => { $("tb-step").textContent = n ? `${i + 1}/${n}` : ""; },
   onValidate: (field) => validateField(field),
@@ -211,6 +219,7 @@ function paintThumbbar() {
     $(id).hidden = !plan.steps;
   }
   paintWayBack();
+  paintUnav();
 }
 
 /* LA VIA D'USCITA, VISIBILE SENZA SAPERE GIÀ DOV'È.
@@ -317,6 +326,10 @@ function cardLanguageFor(id, wanted) {
 
 async function openScheda(id, su = null, lang = null) {
   const says = $("scheda-says");
+  // LA STANZA SI RILEGGE a ogni apertura, insieme alla definizione: il
+  // completamento delle unità, «da compilare» e ‹ › guardano quello che c'è
+  // ADESSO, non quello che c'era quando la pagina è partita.
+  const reading = loadRoom();
   state.panel = "scheda";
   $("scheda").hidden = false;
   $("work").hidden = true;
@@ -341,7 +354,14 @@ async function openScheda(id, su = null, lang = null) {
       state.us = "";
       state.model = "";
       state.selected = null;
+      // …E UNA SCHEDA SENZA UNITÀ È NUOVA. Trovato il 22 ottobre: aperta la
+      // US 3020 (esistente, `create` falso) e poi un'altra definizione vuota,
+      // `create` restava falso e il primo salvataggio tornava «non posso
+      // aggiornare una scheda che non esiste». C'era già prima, dalla colonna;
+      // il salto per indirizzo lo rendeva facile da incontrare.
+      if (!su) state.create = true;
     }
+    if (!state.def || state.def.id !== def.id || su) state.dirty = false;
     state.def = def;
     state.keyField = keyField(def);
     state.step = 0;
@@ -371,7 +391,9 @@ async function openScheda(id, su = null, lang = null) {
       says.textContent = "Definizione dalla cache: il nodo non risponde, " +
         "ma questa scheda l'avevi già aperta.";
     }
+    await reading;
     draw();
+    writeHash(def.id, state.us);
   } catch (err) {
     // LA DEFINIZIONE CHE IL TELEFONO NON HA MAI VISTO E NON PUÒ SCARICARE **SI
     // DICE**. Improvvisare un modulo per una scheda di cui non si conoscono le
@@ -473,6 +495,8 @@ function draw() {
 
 function paintCompleteness() {
   if (!state.def) return;
+  const here = document.querySelector("#scheda-unav .unav-here");
+  if (here) here.textContent = `${unitPrefix(state.def)}${state.us || "…"}`;
   if (sheetActive()) refreshSheet($("scheda-host"), state.def, state);
   else refreshCompleteness($("scheda-host"), state.def, state);
 }
@@ -551,6 +575,208 @@ function paintStrip() {
   }
 }
 
+/* ── MUOVERSI FRA LE UNITÀ senza tornare all'elenco (22 ottobre) ───────────
+ *
+ * E.D., 27 settembre: «da dentro la scheda US poter cercare le altre per
+ * saltarvi dentro per numero, oppure andare alla prossima o alla precedente».
+ * Tre gesti, una via: `goUnit`. L'ordine è quello NUMERICO delle unità della
+ * stanza (`orderedUnits`), il salto accetta il numero o la definizione, e ‹ ›
+ * si fermano ai due estremi invece di ricominciare dall'altro capo — arrivare
+ * in fondo si deve vedere.
+ *
+ * CAMBIARE UNITÀ NON PERDE NIENTE. Chiudere una scheda oggi la lascia in
+ * memoria; cambiare unità invece ne rilegge un'altra, quindi quello che non è
+ * ancora partito parte PRIMA (`save`, cioè la stanza o la coda). Una scheda
+ * che non si può salvare — senza numero — non si lascia: lo dice `save`.
+ *
+ * La vista, la lingua della scheda e le facciate restano: sono stato di questa
+ * superficie, non dell'unità. */
+
+async function leaveUnit() {
+  if (!state.dirty || !state.def) return true;
+  if (document.activeElement && $("scheda").contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+  await save(state.def, state);
+  return !state.dirty;
+}
+
+/** Il numero o la definizione di un'unità della stanza → l'unità, o null. */
+function unitFor(asked) {
+  const said = String(asked || "").trim();
+  if (!said || !state.def) return null;
+  const units = orderedUnits();
+  const number = bareNumber(said, state.def);
+  const exact = units.find((u) => u.number === number);
+  if (exact) return exact;
+  const q = said.toLowerCase();
+  const byWords = units.filter((u) =>
+    String(u.definition || "").toLowerCase().includes(q)
+    || String(u.name || "").toLowerCase() === q);
+  return byWords.length === 1 ? byWords[0] : null;
+}
+
+async function goUnit(asked) {
+  if (!state.def) return false;
+  const found = unitFor(asked);
+  if (!found) {
+    const t = SG().t || ((k) => k);
+    SG().show(false, `${t("nav.no_unit")} ${bareNumber(asked, state.def)}.`, "",
+              SG().locale);
+    return false;
+  }
+  if (found.number === state.us && !state.create) return true;
+  if (!(await leaveUnit())) return false;
+  await openScheda(state.def.id, { us: found.number }, state.def.lang);
+  return true;
+}
+
+async function stepUnit(delta) {
+  const order = orderedUnits();
+  if (!order.length || !state.def) return false;
+  const at = order.findIndex((u) => u.number === state.us);
+  const target = at < 0 ? (delta > 0 ? order[0] : order[order.length - 1])
+    : order[at + delta];
+  if (!target) return false;             // un estremo: ci si ferma
+  return goUnit(target.number);
+}
+
+const TEXTY = new Set(["text", "search", "number", "email", "url", "tel",
+                       "password", "date", "datetime-local", "time", ""]);
+function typing(target) {
+  if (!target || !target.tagName) return false;
+  if (target.isContentEditable || target.tagName === "TEXTAREA") return true;
+  return target.tagName === "INPUT"
+    && TEXTY.has(String(target.getAttribute("type") || "").toLowerCase());
+}
+
+function paintUnav() {
+  const bar = $("scheda-unav");
+  if (!bar) return;
+  bar.hidden = !state.def || state.panel !== "scheda";
+  bar.replaceChildren();
+  if (bar.hidden) return;
+  const t = SG().t || ((k) => k);
+  const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+  bar.classList.toggle("big", state.mode === "phone");
+  const order = orderedUnits();
+  const at = order.findIndex((u) => u.number === state.us);
+
+  const arrow = (delta, glyph, key) => {
+    const b = make("button", { type: "button", textContent: glyph });
+    b.dataset.unav = String(delta);
+    b.setAttribute("aria-label", t(key));
+    b.title = t(key);
+    // AGLI ESTREMI il bottone c'è e non fa niente, e lo dice
+    b.disabled = !order.length
+      || (at >= 0 && !order[at + delta]);
+    b.addEventListener("click", () => { void stepUnit(delta); });
+    return b;
+  };
+  const here = make("span", { className: "unav-here",
+                              textContent: `${unitPrefix(state.def)}${state.us || "…"}` });
+  const listId = "unav-units";
+  const jump = make("input", { type: "text", placeholder: t("nav.jump"),
+                               autocomplete: "off" });
+  jump.setAttribute("list", listId);
+  jump.setAttribute("aria-label", t("nav.jump"));
+  jump.setAttribute("enterkeyhint", "go");
+  const options = make("datalist", { id: listId });
+  for (const u of order) {
+    const o = make("option", { value: u.number });
+    o.label = u.definition || u.name || "";
+    options.append(o);
+  }
+  let going = false;
+  const go = async () => {
+    if (going || !jump.value.trim()) return;
+    going = true;
+    const ok = await goUnit(jump.value);
+    going = false;
+    if (!ok) { jump.select(); }
+  };
+  jump.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { event.preventDefault(); void go(); }
+  });
+  // SCEGLIERE DAL COMPLETAMENTO È SALTARE: il browser mette il valore senza un
+  // tasto (`insertReplacementText`, o nessun `inputType`), e un secondo gesto
+  // sarebbe un gesto in più con i guanti.
+  jump.addEventListener("input", (event) => {
+    if (!event.inputType || event.inputType === "insertReplacementText") {
+      if (order.some((u) => u.number === jump.value.trim())) void go();
+    }
+  });
+  bar.append(arrow(-1, "‹", "nav.prev_unit"), here, jump, options,
+             arrow(1, "›", "nav.next_unit"));
+}
+
+/* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────
+ *
+ * `#scheda=<definizione>&us=<numero>`, così avanti/indietro del browser e un
+ * link riaprono la stessa scheda; `#unita` è l'elenco. Nell'hash e non nella
+ * query: la query è del link della stanza (`?server=…&room=…`, `arrivo.js`),
+ * e cambiarla ricaricherebbe la pagina. Un numero, non un nome: un link non
+ * porta mai il valore di una casella. */
+function hashFor(id, number) {
+  const p = new URLSearchParams();
+  p.set("scheda", id);
+  if (number) p.set("us", number);
+  return `#${p.toString()}`;
+}
+
+function writeHash(id, number, replace = false) {
+  const want = hashFor(id, number);
+  if (window.location.hash === want) return;
+  if (replace) history.replaceState(null, "", want);
+  else history.pushState(null, "", want);
+}
+
+function readHash() {
+  const raw = window.location.hash.replace(/^#/, "");
+  if (raw === "unita") return { index: true };
+  const p = new URLSearchParams(raw);
+  return { scheda: p.get("scheda") || "", us: p.get("us") || "" };
+}
+
+async function followHash() {
+  const asked = readHash();
+  if (asked.index) { await showIndex(false); return; }
+  if (!asked.scheda) return;
+  const same = state.def && state.def.id === asked.scheda
+    && state.panel === "scheda" && (state.us || "") === asked.us;
+  if (same) return;
+  if (!(await leaveUnit())) return;
+  if (!asked.us && state.def && state.def.id === asked.scheda && state.us) {
+    // DA UN'UNITÀ A UNA SCHEDA NUOVA: la stessa definizione, ma non gli stessi
+    // valori — riaprirla «com'era» porterebbe i valori di un'altra unità.
+    clearScheda();
+    state.us = "";
+    state.create = true;
+  }
+  await openScheda(asked.scheda, asked.us ? { us: asked.us } : null);
+}
+
+/** L'ELENCO, con i filtri com'erano (vivono in `indice.js`). */
+async function showIndex(push = true) {
+  state.panel = "index";
+  $("work").hidden = true;
+  $("scheda").hidden = true;
+  $("index").hidden = false;
+  markNav("");
+  $("nav-voice").removeAttribute("aria-current");
+  $("nav-units").setAttribute("aria-current", "true");
+  paintThumbbar();
+  if (push && window.location.hash !== "#unita") history.pushState(null, "", "#unita");
+  await repaintIndex();
+}
+
+function afterSave(body) {
+  // La stanza ora ha l'unità (o la coda ce l'ha): il completamento e ‹ › la
+  // devono vedere, e una scheda NUOVA diventa, nell'indirizzo, la sua unità.
+  if (state.def && body && body.us) writeHash(state.def.id, body.us, true);
+  void loadRoom().then(() => paintUnav());
+}
+
 /* ── validare ────────────────────────────────────────────────────────────── */
 
 async function validateField(field) {
@@ -616,6 +842,21 @@ function wireShell() {
     $("nav-voice").setAttribute("aria-current", "true");
   });
 
+  $("nav-units").addEventListener("click", () => { void showIndex(); });
+  $("nav-units").textContent = SG().t ? SG().t("nav.units") : "Units";
+
+  // ‹ › DA TASTIERA: Alt+← / Alt+→, quando il fuoco non è in un campo di testo
+  // (lì Alt+freccia sposta il cursore di una parola, ed è di chi scrive).
+  document.addEventListener("keydown", (event) => {
+    if (!event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (state.panel !== "scheda" || !state.def || typing(event.target)) return;
+    event.preventDefault();
+    void stepUnit(event.key === "ArrowLeft" ? -1 : 1);
+  });
+  // AVANTI E INDIETRO DEL BROWSER, e un link: l'indirizzo dice quale unità.
+  window.addEventListener("hashchange", () => { void followHash(); });
+
   $("nav-all").addEventListener("click", () => {
     state.showAll = !state.showAll;
     state.step = 0;
@@ -651,6 +892,9 @@ function wireShell() {
   repaintIndex = mountIndex({
     t: (k, v) => SG().t(k, v),
     openScheda,
+    // la definizione aperta: su quanti campi si misura «meno della metà» per
+    // un'unità che non dichiara con quale è stata compilata
+    current: () => (state.def ? state.def.id : null),
     schede: () => {
       try { return (JSON.parse(localStorage.getItem("sg.schede.v1") || "null")
                     || {}).schede || []; } catch { return []; }
@@ -711,17 +955,14 @@ async function land() {
     return;
   }
 
-  state.panel = "index";
-  $("work").hidden = true;
-  $("scheda").hidden = true;
-  $("index").hidden = false;
-  paintThumbbar();
-  await repaintIndex();
+  await showIndex(false);
 }
 
 wireShell();
 loadSchede();
-void land();
+// L'INDIRIZZO VINCE sull'arrivo: un link a una scheda (`#scheda=…&us=…`) la
+// riapre, anche se il link della stanza avrebbe mostrato l'elenco.
+void land().then(() => followHash());
 
 // Esposto per la verifica dal browser: è quello che una cattura non può
 // dimostrare (dove stanno i bersagli, quale modo è attivo, quanti campi).
@@ -733,6 +974,11 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                      state.postureForced = p === "desk" || p === "field" ? p : null;
                      if (state.def) draw();
                    },
-                   onLocale: () => { if (state.def) draw(); },
+                   onLocale: () => {
+                     $("nav-units").textContent = SG().t("nav.units");
+                     if (state.def) draw();
+                   },
+                   goUnit: (n) => goUnit(n), stepUnit: (d) => stepUnit(d),
+                   showIndex: () => showIndex(),
                    repaintPhotos: () => repaintPhotos(),
                    repaintIndex: () => repaintIndex() };

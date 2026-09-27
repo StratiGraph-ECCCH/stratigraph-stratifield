@@ -52,6 +52,7 @@
  */
 
 import { authorshipOf, isFilled, shown as asText, writeValue } from "./scheda.js";
+import { isStructured, mountWidget, valueView } from "./widgets.js";
 
 const SG = () => (typeof window !== "undefined" && window.SG) || {};
 const tr = (key, values) => (SG().t ? SG().t(key, values) : key);
@@ -149,9 +150,9 @@ export function headKey(pattern, values) {
  *
  * LA SOLA DECISIONE DI PRESENTAZIONE, come `ELEMENT` in `scheda.js`: quale
  * elemento per quale tipo. I tipi che non sono qui prendono un'area di testo,
- * che è il ripiego onesto — il vocabolario (`term`) e le liste di riferimenti
- * oggi si scrivono come testo, con il valore corrente dentro, finché non c'è
- * un selettore. */
+ * che è il ripiego onesto. I valori STRUTTURATI (termini, liste, misure,
+ * persone, periodi) dal 22 ottobre hanno il loro widget (`widgets.js`): la
+ * casella ne mostra il risultato, il pannello a destra lo scrive. */
 const CONTROL = {
   choice: "checks",
   checkbox: "checkbox",
@@ -413,6 +414,23 @@ function controlFor(field, id, named, ctx) {
   const current = state.values[field.id];
   const aria = named ? {} : { "aria-label": field.label };
 
+  if (isStructured(field)) {
+    // UN VALORE STRUTTURATO (22 ottobre): la casella MOSTRA il risultato —
+    // chip, righe, l'etichetta del concetto — e si scrive nel pannello a
+    // destra, dove il widget ha lo spazio. Un bottone vero: da tastiera la si
+    // raggiunge e Invio la apre, come un clic.
+    const shows = el("button", { class: "fo-val fo-struct", id, type: "button",
+                                 "data-struct": field.type, ...aria });
+    shows.append(valueView(field, current, state.def));
+    shows.addEventListener("click", (event) => {
+      event.stopPropagation();
+      select(shows.closest(".fo"), ctx, field.id);
+      const first = document.querySelector(".fo-insp .w input, .fo-insp .w select, .fo-insp .w button");
+      if (first) first.focus();
+    });
+    return shows;
+  }
+
   if (kind === "checks") {
     // Le caselle da barrare, mutuamente esclusive, con l'etichetta
     // dell'opzione: come sulla carta. Ribarrare quella segnata la toglie.
@@ -568,6 +586,29 @@ function paintField(insp, field, ctx) {
   if (tags.childElementCount) top.append(tags);
   if (field.help) top.append(el("p", { text: field.help }));
   insp.append(top);
+
+  if (isStructured(field)) {
+    // IL WIDGET, nel pannello: lo stesso di «Campi» e del telefono. Scrivendo,
+    // la casella del foglio si ridisegna col risultato.
+    const write = el("section", { class: "fo-write" },
+      el("p", { class: "fo-eyebrow", text: tr("insp.write") }));
+    const host = el("div", { class: "w-host", "data-field": field.id });
+    mountWidget(host, field, state, {
+      onWrite: () => {
+        const cell = document.getElementById(`fo-${field.id}`);
+        if (cell) cell.replaceChildren(valueView(field, state.values[field.id], state.def));
+      },
+    });
+    write.append(host);
+    if (who === "ai") {
+      const confirm = el("button", { class: "fo-confirm", type: "button",
+                                     text: tr("act.confirm") });
+      confirm.addEventListener("click", () => state.onValidate(field.id));
+      write.append(confirm);
+    }
+    insp.append(write);
+    return;
+  }
 
   if (TEXTS.has(field.type)) {
     const write = el("section", { class: "fo-write" },

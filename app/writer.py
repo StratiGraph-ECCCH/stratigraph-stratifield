@@ -301,6 +301,11 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     fuori: List[Dict[str, Any]] = []
     for section in (document.get("graphs") or {}).values():
+        #: i nomi dei nodi della sezione, per dire l'AREA di un'unità dal suo
+        #: puntatore per ruolo (`scheda_links.area`) e non dall'arco: lo stesso
+        #: arco `is_in_location` porta località, area e saggio.
+        nomi = {str(n.get("id")): str(n.get("name") or "")
+                for n in section.get("nodes") or []}
         for node in section.get("nodes") or []:
             if is_message(node):
                 continue              # una frase non è una scheda
@@ -350,9 +355,83 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                             if compilata.get(k)}
                            if compilata and not compilata.get("stub") else None),
                 "stub": bool(compilata.get("stub")),
+                # ── PER MUOVERSI FRA LE UNITÀ E FILTRARLE (22 ottobre) ──────
+                #: la DEFINIZIONE, che è ciò che si cerca insieme al numero: un
+                #: elemento del nodo (`data.definition`, ricetta ICCD 1.0.1),
+                #: letto all'indirizzo del CRDT
+                "definition": _definition_of(node),
+                #: le aree dal puntatore per ruolo, per i gettoni dei filtri
+                "area": [nomi[i] for i in _links(data, "area") if nomi.get(i)],
+                #: quante caselle un MODELLO ha proposto e nessuno ha validato
+                "ai": sum(1 for k, v in data.items()
+                          if k.startswith("authorship.") and isinstance(v, dict)
+                          and v.get("by") == "ai" and not v.get("validated_by")),
             })
     fuori.sort(key=lambda u: (u["node_type"], u["name"], u["id"]))
     return fuori
+
+
+def _links(data: Dict[str, Any], role: str) -> List[str]:
+    said = data.get(f"scheda_links.{role}")
+    if said is None and isinstance(data.get("scheda_links"), dict):
+        said = data["scheda_links"].get(role)
+    return [str(x) for x in said] if isinstance(said, list) else []
+
+
+def _definition_of(node: Dict[str, Any]) -> str:
+    """L'etichetta della definizione di un'unità, o `""`."""
+    from s3dgraphy.crdt import get_field
+
+    said = get_field(node, "data.definition")
+    if isinstance(said, dict):
+        return str(said.get("label") or said.get("concept") or "")
+    return str(said or "")
+
+
+def choices_of(document: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """CIÒ FRA CUI SI SCEGLIE in una scheda, da quello che la stanza ha già.
+
+    Periodi e fasi (`EpochNode`), attività (`ActivityNodeGroup`), e le FOTO: i
+    `resource` che `attach_photo_to_su` lega a un'unità e i `document` che una
+    casella FOTOGRAFIE ha scritto. Di una foto conta `data.url`, perché è ciò
+    che la ricetta cerca (`find: {node_type: document, url: $item}`): scegliere
+    una foto della stanza scrive lo stesso riferimento che il grafo ha già.
+
+    Una lettura e nient'altro: non c'è una gemella che scrive.
+    """
+    from .conversazione import is_message
+
+    out: Dict[str, List[Dict[str, Any]]] = {"epochs": [], "activities": [],
+                                            "photos": []}
+    seen = set()
+    for section in (document.get("graphs") or {}).values():
+        dove: Dict[str, str] = {}
+        for edge in section.get("edges") or []:
+            if edge.get("edge_type") in ("has_linked_resource", "has_documentation"):
+                dove.setdefault(str(edge.get("target")), str(edge.get("source")))
+        for node in section.get("nodes") or []:
+            if is_message(node):
+                continue
+            data = node.get("data") if isinstance(node.get("data"), dict) else {}
+            if data.get("removed"):
+                continue
+            kind = str(node.get("node_type") or "")
+            nid = str(node.get("id"))
+            if kind == "EpochNode":
+                out["epochs"].append({"id": nid, "name": str(node.get("name") or nid)})
+            elif kind == "ActivityNodeGroup":
+                out["activities"].append({"id": nid, "name": str(node.get("name") or nid)})
+            elif kind in ("resource", "document") and data.get("url"):
+                url = str(data["url"])
+                if url in seen:
+                    continue
+                seen.add(url)
+                out["photos"].append({"id": nid, "url": url,
+                                      "name": str(node.get("name") or url),
+                                      "unit": dove.get(nid, "")})
+    for key in ("epochs", "activities"):
+        out[key].sort(key=lambda x: x["name"])
+    return out
 
 
 class LocalWriter:
@@ -400,6 +479,10 @@ class LocalWriter:
         che parte headless e uno che arriva da un link rispondono la stessa
         cosa, e la superficie non deve sapere quale dei due sta parlando."""
         return units_of(self._read())
+
+    def choices(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Periodi, attività e foto del CONTAINER (`choices_of`)."""
+        return choices_of(self._read())
 
     # ── the seam ─────────────────────────────────────────────────────────────
 
@@ -1308,6 +1391,10 @@ class RoomWriter:
     def units(self) -> List[Dict[str, Any]]:
         """Le unità della STANZA. La forma la decide `units_of`."""
         return units_of(self._document())
+
+    def choices(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Periodi, attività e foto della STANZA (`choices_of`)."""
+        return choices_of(self._document())
 
     def section(self) -> Dict[str, Any]:
         """La sezione attiva della STANZA; il container locale se non risponde.

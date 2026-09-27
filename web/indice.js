@@ -21,8 +21,55 @@
  * Zero colori letterali: tutto dalle variabili del tema.
  */
 
+import { room } from "./widgets.js";
+
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
+
+/* ── I FILTRI (22 ottobre) ─────────────────────────────────────────────────
+ *
+ * E.D., 27 settembre: «nelle liste di US i filtri sono molto utili». Quattro,
+ * che si COMBINANO: la ricerca su numero e definizione, un gettone per area
+ * (le aree dello scavo, lette dalle unità e non da un elenco scritto qui), «AI
+ * da confermare», «compilate meno della metà». Vivono QUI, al livello del
+ * modulo e non del disegno: aprire una scheda e tornare li ritrova com'erano.
+ *
+ * Pure le due funzioni che decidono (`matches`, `filled`), perché sono quelle
+ * che si possono sbagliare in silenzio: un contatore giusto su un elenco
+ * sbagliato sembra giusto. */
+export const filters = { q: "", area: null, ai: false, inc: false };
+
+/** Quanto è piena un'unità, da 0 a 1 — o null se non si sa su quanti campi.
+ *
+ *  Il totale è quello della definizione con cui l'unità è stata compilata
+ *  (`scheda.template`, audit B5b); un'unità che non lo dice (dettata,
+ *  importata) si misura sulla definizione di `fallback` — quella aperta, o la
+ *  prima che il nodo serve — ed è una stima dichiarata, non un fatto. */
+export function filled(u, listing, fallback) {
+  const declared = u.scheda && u.scheda.template;
+  const item = (listing || []).find((x) => x.id === declared)
+    || (listing || []).find((x) => x.id === fallback) || (listing || [])[0];
+  const total = item && Number(item.fields);
+  return total ? Number(u.fields || 0) / total : null;
+}
+
+export function matches(u, f, listing, fallback) {
+  const q = String(f.q || "").trim().toLowerCase();
+  if (q) {
+    const bare = q.replace(/^[^\d]*(?=\d)/, "");
+    const hit = String(u.number || "").toLowerCase().startsWith(bare || q)
+      || String(u.name || "").toLowerCase().includes(q)
+      || String(u.definition || "").toLowerCase().includes(q);
+    if (!hit) return false;
+  }
+  if (f.area && !(u.area || []).includes(f.area)) return false;
+  if (f.ai && !(Number(u.ai) > 0)) return false;
+  if (f.inc) {
+    const share = filled(u, listing, fallback);
+    if (share === null || share >= 0.5) return false;
+  }
+  return true;
+}
 
 /** Quante schede si mostrano prima di dire che ce n'è altre. Uno scavo vero ne
  *  ha migliaia, e una lista lunga su un telefono è una lista che non si legge. */
@@ -50,6 +97,23 @@ function line(u, t, onPick) {
   quanti.title = (u.field_names || []).join(", ");
 
   riga.append(nome, quanti);
+  // LA DEFINIZIONE E L'AREA, sotto il nome: sono le due cose su cui si filtra,
+  // e un filtro che sceglie per qualcosa che non si vede non si capisce.
+  const detto = [u.definition, (u.area || []).join(", ")].filter(Boolean).join(" · ");
+  if (detto) {
+    const def = document.createElement("span");
+    def.className = "indice-cosa indice-def";
+    def.textContent = detto;
+    riga.append(def);
+  }
+  if (Number(u.ai) > 0) {
+    // accanto al nome, dove l'occhio lo trova scorrendo l'elenco
+    const ai = document.createElement("span");
+    ai.className = "indice-ai";
+    ai.textContent = `AI ${u.ai}`;
+    ai.title = t("flt.ai");
+    nome.after(ai);
+  }
   if (u.description) {
     const cosa = document.createElement("span");
     cosa.className = "indice-cosa";
@@ -72,7 +136,7 @@ function line(u, t, onPick) {
   return riga;
 }
 
-export function mount({ t, openScheda, schede }) {
+export function mount({ t, openScheda, schede, current = () => null }) {
   const host = $("index-list");
   const nota = $("index-note");
   const titolo = $("index-title");
@@ -130,14 +194,93 @@ export function mount({ t, openScheda, schede }) {
         ? t("index.head.room", { room: letto.room }) : t("index.head.local");
     }
     const unita = letto.units || [];
-    host.replaceChildren(...unita.slice(0, SHOWN)
-      .map((u) => line(u, t, askStandard)));
+    // LE STESSE UNITÀ del completamento e di ‹ ›: una lettura, condivisa.
+    room.units = unita;
+    room.read = true;
     if (!unita.length) { nota.textContent = t("index.empty"); return; }
-    const oltre = unita.length - Math.min(unita.length, SHOWN);
-    nota.textContent = oltre > 0
-      ? t("index.more", { n: oltre, total: unita.length })
-      : t(unita.length === 1 ? "index.total.one" : "index.total.many",
-          { n: unita.length });
+    paintList(unita);
+  }
+
+  /** La barra dei filtri e l'elenco filtrato. Ridisegnare la barra a ogni
+   *  tasto toglierebbe il cursore dalla ricerca: si ridisegna l'elenco, e la
+   *  barra solo quando cambia un gettone. */
+  function paintList(unita) {
+    const listing = schede();
+    const fallback = current();
+    const bar = document.createElement("div");
+    bar.className = "indice-filtri";
+    const cerca = document.createElement("input");
+    cerca.type = "search";
+    cerca.id = "index-search";
+    cerca.value = filters.q;
+    cerca.placeholder = t("flt.search");
+    cerca.setAttribute("aria-label", t("flt.search"));
+    cerca.autocomplete = "off";
+    bar.append(cerca);
+    const chip = (text, pressed, onClick, extra) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "indice-chip";
+      b.textContent = text;
+      b.setAttribute("aria-pressed", String(Boolean(pressed)));
+      if (extra) b.dataset.filter = extra;
+      b.addEventListener("click", () => { onClick(); paintList(unita); });
+      bar.append(b);
+      return b;
+    };
+    const aree = [...new Set(unita.flatMap((u) => u.area || []))]
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    if (aree.length) {
+      chip(t("photos.all"), !filters.area, () => { filters.area = null; }, "area:");
+      for (const a of aree) {
+        chip(a, filters.area === a,
+             () => { filters.area = filters.area === a ? null : a; }, `area:${a}`);
+      }
+    }
+    chip(t("flt.ai"), filters.ai, () => { filters.ai = !filters.ai; }, "ai");
+    chip(t("flt.incomplete"), filters.inc, () => { filters.inc = !filters.inc; }, "inc");
+    const conta = document.createElement("span");
+    conta.className = "indice-conta";
+    conta.id = "index-count";
+    bar.append(conta);
+
+    const elenco = document.createElement("div");
+    elenco.className = "indice-elenco";
+    const riempi = () => {
+      const visti = unita.filter((u) => matches(u, filters, listing, fallback));
+      conta.textContent = t("flt.count", { n: visti.length, t: unita.length });
+      elenco.replaceChildren(...visti.slice(0, SHOWN).map((u) => line(u, t, pick)));
+      if (!visti.length) {
+        const vuoto = document.createElement("p");
+        vuoto.className = "hint";
+        vuoto.textContent = t("flt.none");
+        elenco.append(vuoto);
+        nota.textContent = "";
+        return;
+      }
+      const oltre = visti.length - Math.min(visti.length, SHOWN);
+      nota.textContent = oltre > 0
+        ? t("index.more", { n: oltre, total: visti.length })
+        : t(unita.length === 1 ? "index.total.one" : "index.total.many",
+            { n: unita.length });
+    };
+    cerca.addEventListener("input", () => { filters.q = cerca.value; riempi(); });
+    const focused = document.activeElement && document.activeElement.id === "index-search";
+    host.replaceChildren(bar, elenco);
+    riempi();
+    if (focused) cerca.focus();
+  }
+
+  /** Un'unità che DICHIARA con quale definizione è stata compilata si riapre
+   *  con quella, se il nodo la serve: è il motivo per cui la dichiara (audit
+   *  B5b). Le altre chiedono, come prima — il secondo tocco resta dove serve. */
+  function pick(u) {
+    const declared = u.scheda && u.scheda.template;
+    if (declared && schede().some((x) => x.id === declared)) {
+      openScheda(declared, { us: u.number });
+      return;
+    }
+    askStandard(u);
   }
 
   return repaint;

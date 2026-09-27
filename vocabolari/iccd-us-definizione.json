@@ -1,0 +1,18 @@
+{
+ "authority": "ICCD",
+ "concepts": [],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Terms for «Definition» (US field model)",
+  "it": "Termini per «DEFINIZIONE» (scheda US da campo)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+ "scheme": "iccd-us-definizione",
+ "status": "declared",
+ "uri": null
+}

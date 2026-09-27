@@ -67,3 +67,64 @@ for sid, entry in sorted(index["schede"].items()):
           f"datamodel nodes {dm['nodes']} · connections {dm['connections']}")
 EOF
 echo "  vendored size    $(du -sh "$DST" | cut -f1)"
+
+# ── THE VOCABULARIES THE VENDORED SCHEDE NAME (2026-10-22) ────────────────────
+#
+# A `term` box offers the concepts of ITS scheme (SPEC §3), and the phone has to
+# offer them in a trench. A compiled scheda names its schemes in the header but
+# does not carry their concepts — a vocabulary has a life and a licence of its
+# own — so they are resolved HERE, once, with `stratigraph-templates`' own
+# resolver (own scheme → alignment, SPEC §3.1), and vendored beside the schede:
+# `vocabolari/<scheme>.json`, one per scheme, in every language the schede that
+# name it declare.
+#
+# A `declared` scheme (the ICCD field models: the norm prescribes a vocabulary
+# and no SKOS exists) is vendored TOO, with no concepts: the node then SAYS it
+# is declared instead of looking like a node that lost the file. Nothing here
+# invents a concept.
+#
+# Beside `schede/` and not inside it: every `*.json` under `schede/` is read as
+# a definition.
+VOC="$HERE/vocabolari"
+PY="$SRC/.venv/bin/python"
+[ -x "$PY" ] || PY="python3"
+rm -rf "$VOC"
+mkdir -p "$VOC"
+PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" - "$DST" "$VOC" <<'EOF'
+import json, pathlib, sys
+from stratigraph_templates.vocab import Vocabularies, VocabularyError
+
+schede, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+vocab = Vocabularies.load()
+wanted = {}                                   # scheme -> languages asked for
+for path in sorted(schede.rglob("*.json")):
+    if path.name == "index.json":
+        continue
+    header = json.loads(path.read_text(encoding="utf-8"))["header"]
+    for entry in header.get("vocabularies") or []:
+        wanted.setdefault(entry["id"], set()).update(header.get("languages") or [])
+for sid, langs in sorted(wanted.items()):
+    scheme = vocab.schemes.get(sid)
+    if scheme is None:
+        sys.exit(f"  a vendored scheda names scheme '{sid}', which stratigraph-templates does not declare")
+    concepts = []
+    for uri, labels in sorted(vocab.concepts(sid).items()):
+        if scheme.uri and uri == scheme.uri:
+            continue                          # the ConceptScheme, not a concept
+        said = {}
+        for lang in sorted(langs):
+            try:
+                said[lang] = vocab.resolve(sid, uri, lang).label
+            except VocabularyError:
+                pass                          # no word in that language: none invented
+        concepts.append({"concept": uri, "labels": said})
+    doc = {"format": 1, "scheme": sid, "authority": scheme.authority,
+           "status": scheme.status, "fixture": bool(scheme.fixture),
+           "uri": scheme.uri, "license": scheme.license,
+           "labels": scheme.labels, "languages": sorted(langs),
+           "concepts": concepts}
+    (out / f"{sid}.json").write_text(
+        json.dumps(doc, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
+        encoding="utf-8")
+    print(f"  vocabulary {sid:<28} {scheme.status:<10} {len(concepts)} concepts")
+EOF

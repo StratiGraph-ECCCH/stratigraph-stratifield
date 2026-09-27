@@ -1,0 +1,54 @@
+{
+ "authority": "FIXTURE",
+ "concepts": [
+  {
+   "concept": "https://example.invalid/fixture/ue-definicion-es/derrumbe",
+   "labels": {
+    "es": "estrato de derrumbe",
+    "it": "strato di crollo"
+   }
+  },
+  {
+   "concept": "https://example.invalid/fixture/ue-definicion-es/estrato",
+   "labels": {
+    "es": "estrato",
+    "it": "strato"
+   }
+  },
+  {
+   "concept": "https://example.invalid/fixture/ue-definicion-es/fosa",
+   "labels": {
+    "es": "fosa",
+    "it": "fossa"
+   }
+  },
+  {
+   "concept": "https://example.invalid/fixture/ue-definicion-es/muro",
+   "labels": {
+    "es": "muro",
+    "it": "muro"
+   }
+  },
+  {
+   "concept": "https://example.invalid/fixture/ue-definicion-es/relleno",
+   "labels": {
+    "es": "relleno",
+    "it": "riempimento"
+   }
+  }
+ ],
+ "fixture": true,
+ "format": 1,
+ "labels": {
+  "es": "FIXTURE — definición de la UE (español)",
+  "it": "FIXTURE — definizione dell'UE (spagnolo)"
+ },
+ "languages": [
+  "es",
+  "it"
+ ],
+ "license": null,
+ "scheme": "fx-ue-definicion-es",
+ "status": "resolvable",
+ "uri": "https://example.invalid/fixture/ue-definicion-es/"
+}

@@ -92,6 +92,9 @@
   <nav class="sidenav" id="sidenav" aria-label="Navigazione">
     <h3>Stanza</h3>
     <button class="navitem" type="button" id="nav-voice" aria-current="true">Detta</button>
+    <!-- L'ELENCO DELLE UNITÀ, raggiungibile anche da chi non è arrivato da un
+         link: è dove si torna da una scheda, con i filtri com'erano. -->
+    <button class="navitem" type="button" id="nav-units">Units (US)</button>
     <h3>Schede</h3>
     <div id="nav-schede"></div>
     <!-- DOVE FINISCE QUELLO CHE DICI. Nella colonna e non sotto il bottone
@@ -182,6 +185,11 @@
            (alla scrivania) o Facciata · Solo i campi da trincea (in campo). La
            dipinge `shell.js`, che tiene lo stato; sul telefono resta vuota e
            nascosta, perché lì non c'è foglio. -->
+      <!-- DI QUALE UNITÀ È LA SCHEDA, e le altre: ‹ precedente, il salto per
+           numero o definizione, successiva ›. Su ogni soglia, perché muoversi
+           fra le unità senza tornare all'elenco serve in trincea come al
+           tavolo; sul telefono coi bersagli grandi. La dipinge `shell.js`. -->
+      <div class="unav" id="scheda-unav" hidden></div>
       <div class="fo-strip" id="scheda-strip" hidden></div>
       <p class="saysit" id="scheda-says" hidden></p>
       <div id="scheda-host"></div>
@@ -376,6 +384,46 @@ const STRINGS = {
     //    NOT in the xlsx yet — the one sentence the sheet needs that the file
     //    does not have. To be added there under this key.
     "view.sheet.none": "This definition declares no paper sheet: here are its fields.",
+    // ── the structured widgets and moving between units, 22 October: SAME
+    //    KEYS as the mockup E.D. approved (object `UI`), values en/it from there.
+    "w.add_unit": "Add a unit",
+    "w.to_fill": "to be filled in",
+    "w.remove": "Remove",
+    "w.unit_note": "A unit that does not exist yet is created, marked, and completed when it gets its own sheet.",
+    "w.search": "Search the vocabulary",
+    "w.term_note": "The graph keeps the concept, not the word: the label comes back in every language.",
+    "w.what": "What",
+    "w.value": "Value",
+    "w.add_row": "Add a measurement",
+    "w.pick_photos": "From the room's photos",
+    "w.orcid_note": "16 digits, as on orcid.org",
+    "w.new_epoch": "New period or phase",
+    "exc.name": "Name",
+    "photos.all": "All",
+    "nav.units": "Units (US)",
+    "nav.prev_unit": "Previous unit",
+    "nav.next_unit": "Next unit",
+    "nav.jump": "Go to unit…",
+    "nav.no_unit": "No unit in this room with the number",
+    "flt.search": "Search by number or definition",
+    "flt.ai": "AI to confirm",
+    "flt.incomplete": "Less than half filled in",
+    "flt.count": "{n} of {t}",
+    "flt.none": "No unit matches these filters.",
+    //    NOT in the mockup — the sentences the real data needed and the drawing
+    //    did not: a vocabulary the norm declares and nobody published, a word
+    //    with no concept, an ORCID that fails its check digit, a room with no
+    //    periods or photos yet. To be added to the xlsx under these keys.
+    "w.declared": "«{scheme}» is declared by the norm but not published: what you write stays a word, with no concept.",
+    "w.no_vocab": "This node does not have the vocabulary «{scheme}»: what you write stays a word, with no concept.",
+    "w.free_word": "word, no concept",
+    "w.free_add": "Write it as a word",
+    "w.label": "Label",
+    "w.unit": "Unit of measure",
+    "w.add_file": "Add a file or reference",
+    "w.no_photos": "No photos in this room yet.",
+    "w.orcid_bad": "Not an ORCID: the format or the check digit is wrong. The name is kept, the ORCID is not.",
+    "w.none_in_room": "None in this room yet.",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -504,6 +552,40 @@ const STRINGS = {
     "f.trench_only": "Solo i campi da trincea",
     "f.later": "si compila dopo",
     "view.sheet.none": "Questa definizione non dichiara un foglio: ecco i suoi campi.",
+    "w.add_unit": "Aggiungi unità",
+    "w.to_fill": "da compilare",
+    "w.remove": "Togli",
+    "w.unit_note": "Un'unità che non esiste ancora viene creata segnata e si completa quando riceve la sua scheda.",
+    "w.search": "Cerca nel vocabolario",
+    "w.term_note": "Nel grafo va il concetto, non la parola: l'etichetta torna in ogni lingua.",
+    "w.what": "Cosa",
+    "w.value": "Valore",
+    "w.add_row": "Aggiungi una misura",
+    "w.pick_photos": "Dalle foto della stanza",
+    "w.orcid_note": "16 cifre, come su orcid.org",
+    "w.new_epoch": "Nuovo periodo o fase",
+    "exc.name": "Nome",
+    "photos.all": "Tutte",
+    "nav.units": "Unità (US)",
+    "nav.prev_unit": "US precedente",
+    "nav.next_unit": "US successiva",
+    "nav.jump": "Vai alla US…",
+    "nav.no_unit": "Nessuna unità in questa stanza con il numero",
+    "flt.search": "Cerca per numero o definizione",
+    "flt.ai": "AI da confermare",
+    "flt.incomplete": "Compilate meno della metà",
+    "flt.count": "{n} di {t}",
+    "flt.none": "Nessuna unità con questi filtri.",
+    "w.declared": "«{scheme}» è dichiarato dalla norma ma non pubblicato: quello che scrivi resta una parola, senza concetto.",
+    "w.no_vocab": "Questo nodo non ha il vocabolario «{scheme}»: quello che scrivi resta una parola, senza concetto.",
+    "w.free_word": "parola, senza concetto",
+    "w.free_add": "Scrivila come parola",
+    "w.label": "Etichetta",
+    "w.unit": "Unità di misura",
+    "w.add_file": "Aggiungi un file o un riferimento",
+    "w.no_photos": "In questa stanza non ci sono ancora foto.",
+    "w.orcid_bad": "Non è un ORCID: il formato o la cifra di controllo non tornano. Il nome resta, l'ORCID no.",
+    "w.none_in_room": "In questa stanza non ce n'è ancora nessuno.",
   },
   // ── the partners' slots: same keys, empty values, falling back to `en` ──────
   ro: {}, el: {}, es: {}, pl: {},
@@ -952,7 +1034,17 @@ function signOut() {
 // ── what the screen shows ───────────────────────────────────────────────────
 function render() {
   const signed = Boolean(TOKEN);
-  $("work").hidden = !signed;
+  // LA VOCE SOLO SE È LEI DAVANTI: una scheda aperta da un link (`#scheda=…`,
+  // 22 ottobre) arriva prima che questa riga giri, e riaccendere il pannello
+  // della voce qui metteva i due uno sopra l'altro. Quale sia davanti lo sa la
+  // conchiglia (`state.panel`), non questa funzione.
+  const elsewhere = Boolean(window.SGShell) && window.SGShell.state.panel !== "voice";
+  $("work").hidden = !signed || elsewhere;
+  // …e L'ELENCO, se è lui davanti, si ridipinge quando la firma arriva: aperto
+  // da `#unita` prima della firma diceva «Firma per vedere» anche dopo.
+  if (signed && window.SGShell && window.SGShell.state.panel === "index") {
+    void window.SGShell.repaintIndex();
+  }
   $("gate").hidden = signed;
   $("signature").hidden = !signed;
   if (signed) {

@@ -41,6 +41,8 @@
  * una scheda in aereo.
  */
 
+import { isStructured, mountWidget, sendable } from "./widgets.js";
+
 const SG = () => window.SG || {};
 
 /* ── il modo, e come si decide ─────────────────────────────────────────────
@@ -382,8 +384,16 @@ export function writeValue(state, fieldId, value) {
   // un modello, l'autorialità torna alla persona nel momento in cui lo
   // riscrive, senza bisogno di validarlo.
   if (state.authored[fieldId] === "ai") delete state.authored[fieldId];
+  // QUALCOSA NON È ANCORA PARTITO: cambiare unità con ‹ › o col salto lo manda
+  // prima (22 ottobre), come chiudere la scheda. Lo spegne solo `save()`.
+  state.dirty = true;
   state.onChange();
 }
+
+/** IL NUMERO DELL'UNITÀ della scheda aperta — quello che `writeValue` tiene
+ *  d'accordo con la casella-identità. Una funzione e non una lettura sparsa,
+ *  perché i widget lo chiedono e non devono conoscere il nome di quel campo. */
+export const unitNumber = (state) => String((state && state.us) || "").trim();
 
 /* ── una casella ───────────────────────────────────────────────────────────── */
 
@@ -395,6 +405,31 @@ function boxFor(field, state) {
     "data-field": field.id,
     "data-recorded-in": field.recorded_in,
   });
+  // UN VALORE STRUTTURATO HA IL SUO WIDGET (22 ottobre), qui come nel pannello
+  // del Foglio: lo stesso `mountWidget`, e sul telefono con i bersagli grandi.
+  // Al posto della textarea, che mandava «3018, 3020» dove il generatore vuole
+  // una lista — e lo rifiutava.
+  if (isStructured(field)) {
+    const labelId = `${id}-label`;
+    box.append(el("label", { id: labelId, text: field.label }));
+    const host = el("div", { class: "w-host", id, role: "group",
+                             "aria-labelledby": labelId });
+    // la funzione che lo ridisegna resta attaccata: sul telefono il passo che
+    // diventa corrente si ridisegna, perché i suggerimenti dipendono dal numero
+    // dell'unità, che al primo disegno spesso non c'era ancora
+    host.sgRedraw = mountWidget(host, field, state, { big: state.mode === "phone" });
+    box.append(host);
+    if (field.help) box.append(el("p", { class: "help", text: field.help }));
+    const strip = el("div", { class: "authored" });
+    const said = el("span", {});
+    const button = el("button", { class: "validate", type: "button",
+                                  text: "Ho controllato" });
+    button.addEventListener("click", () => state.onValidate(field.id));
+    strip.append(said, button);
+    box.append(strip);
+    paintAuthorship(box, said, field, state);
+    return box;
+  }
   box.append(el("label", { for: id, text: field.label }));
 
   let input;
@@ -632,6 +667,8 @@ export function stepTo(container, state, where) {
   focusStep(container, state);
   const current = boxes[state.step];
   if (current) {
+    const widget = current.querySelector(".w-host");
+    if (widget && widget.sgRedraw) widget.sgRedraw();
     const input = current.querySelector("input, textarea, select");
     if (input) input.focus({ preventScroll: false });
   }
@@ -644,7 +681,10 @@ export function payloadFor(def, state) {
   const empty = (v) => v === undefined || v === null
     || (typeof v === "string" && v.trim() === "")
     || (Array.isArray(v) && v.length === 0);
-  for (const [key, value] of Object.entries(state.values)) {
+  const fieldOf = new Map((def.fields || []).map((f) => [f.id, f]));
+  for (const [key, raw] of Object.entries(state.values)) {
+    // le righe a metà di un widget restano a schermo e non partono (`sendable`)
+    const value = sendable(fieldOf.get(key), raw);
     if (empty(value)) continue;
     values[key] = value;
   }
@@ -652,7 +692,7 @@ export function payloadFor(def, state) {
   // il server non tocca un campo che non riceve, quindi senza questa riga
   // svuotare una casella di un'unità riaperta non l'avrebbe svuotata mai.
   for (const key of state.loaded || []) {
-    if (empty(state.values[key])) values[key] = null;
+    if (empty(sendable(fieldOf.get(key), state.values[key]))) values[key] = null;
   }
   // Il campo-identità NON viaggia fra i valori: è `us`, e mandarlo anche come
   // `data.us` scriverebbe due volte la stessa cosa in due posti del nodo.
@@ -692,5 +732,10 @@ export async function save(def, state) {
   // `SG.send` E NON `fetch`: è ciò che mette una richiesta fallita nella coda
   // offline. Un fetch diretto funzionerebbe online e perderebbe una scheda in
   // aereo, che è il caso per cui questo servizio esiste.
-  return SG().send(`/v1/scheda/${encodeURIComponent(def.id)}`, body, def.id);
+  const sent = await SG().send(`/v1/scheda/${encodeURIComponent(def.id)}`, body, def.id);
+  // MANDATO O IN CODA, non si perde più: la coda lo ha, o la stanza. È ciò che
+  // lascia cambiare unità senza chiedere (22 ottobre).
+  state.dirty = false;
+  if (state.onSaved) state.onSaved(sent, body);
+  return sent;
 }

@@ -50,6 +50,9 @@ COPY web ./web
 # this service was the dev-stack's bind-mount of a checkout, and the image on
 # GHCR served no scheda at all (audit 2026-10-17, B5a).
 COPY schede ./schede
+# …and the VOCABULARIES they name (`sync-schede.sh`, 2026-10-22): a `term` box
+# offers its scheme's concepts in a trench, where the node is the only server.
+COPY vocabolari ./vocabolari
 
 # The licence text travels WITH the software, and not only in the repository.
 # Publishing an image IS distributing, which is the act the GPL's obligations
