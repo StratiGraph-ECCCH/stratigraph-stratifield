@@ -92,6 +92,12 @@ _DATA_PREFIX = "data."
 def addressable(name: str) -> str:
     """A field name as an operation must spell it.
 
+    **Not the road of a scheda any more (2026-10-19).** A scheda's boxes go
+    through the recipe (`app/operazioni.py`), which spells its own fields —
+    `description`, `data.scheda`, `data.authorship.<box>`. This stays for
+    `update`, which `validate_field` uses for the authorship marks: metadata
+    ABOUT a box, never the box's value.
+
     `descrizione` → `data.descrizione`; `description` → `description`. Not a
     convenience: the CRDT's own refusal list is the authority, and a second
     spelling of it somewhere else would be a rule that agrees today.
@@ -102,6 +108,26 @@ def addressable(name: str) -> str:
     if clean in _DIRECT_FIELDS or clean.startswith(_DATA_PREFIX):
         return clean
     return f"{_DATA_PREFIX}{clean}"
+
+
+#: The room door's default batch (`stratigraph-server` `OPS_BATCH_MAX`).
+OPS_BATCH_DEFAULT = 1000
+
+
+class BatchTooLarge(RuntimeError):
+    """The door said 413 and named its limit: send smaller, same order."""
+
+    def __init__(self, limit: int) -> None:
+        super().__init__(f"the room accepts {limit} operations per request")
+        self.limit = limit
+
+
+def _declared_batch(detail: str) -> Optional[int]:
+    """The number in «…and this node accepts N.» — the door's own words."""
+    import re
+
+    found = re.search(r"accepts (\d+)", detail or "")
+    return int(found.group(1)) if found else None
 
 
 class FieldRefused(RuntimeError):
@@ -161,6 +187,43 @@ def _raise_if_absent(node_id: str, outcomes: List[Dict[str, Any]]) -> None:
             f"una scheda che non esiste. Creala prima.", outcomes)
 
 
+def outcome_of(op: Dict[str, Any], applied: bool, reason: Any,
+               fields: Any = None) -> Dict[str, Any]:
+    """One operation's answer, in ONE shape for the three transports.
+
+    A MERGE NEEDS READING. `add_node` on an id that is there answers
+    `applied: True, merged` whether it changed anything or not, and with the
+    fields the clocks had to decide: when every one of them was won by the
+    state already there (`winner.side == "mine"`), the operation arrived
+    OLDER than what somebody else wrote — which is `stale`, said as such, not
+    a success. No decided field at all is «it was already so».
+    """
+    reason = str(reason or "")
+    changed = bool(applied)
+    # `fields=None`: the transport did not say (the relay's `op_result` carries
+    # no merge detail). Unknown is not «unchanged»: the plan's own `noop`
+    # (decided against the state it read) is what tells the two apart there.
+    if applied and reason == "merged" and fields is not None:
+        sides = [((f.get("winner") if isinstance(f, dict) else f.winner) or {}).get("side")
+                 for f in (fields or [])]
+        if not sides:
+            changed = False
+        elif all(side == "mine" for side in sides):
+            changed, reason = False, "stale"
+    return {"op": op.get("op"),
+            "id": op.get("id") or op.get("node_id"),
+            "field": op.get("field"),
+            "applied": bool(applied), "reason": reason,
+            "changed": changed}
+
+
+def active_section(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """The active graph of a container (`{graphs: {…}, active_graph_id}`)."""
+    graphs = (doc or {}).get("graphs") or {}
+    key = (doc or {}).get("active_graph_id") or next(iter(graphs), None)
+    return graphs.get(key) or {"nodes": [], "edges": []}
+
+
 class GraphWriter(Protocol):
     def apply(self, delta: GraphDelta) -> None: ...
     #: THE SECOND VERB OF THE SAME SEAM, and why it has to exist.
@@ -184,6 +247,19 @@ class GraphWriter(Protocol):
     def update(self, node_id: str, fields: Dict[str, Any], *,
                author: Optional[str],
                process: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]: ...
+    #: THE THIRD VERB, and since 2026-10-19 the one a scheda uses: A LIST OF
+    #: OPERATIONS, already built (`app/operazioni.py`), delivered as they are.
+    #: The two above are kept for what is not a scheda (a photo, a D7, the
+    #: authorship marks of a validation), and they are the same five
+    #: operations underneath. One list, three transports — seated on the
+    #: socket, correspondent through the bridge and the room's REST door, or
+    #: the local container — and no `if` for the transport in whoever built it.
+    def send(self, ops: List[Dict[str, Any]], *,
+             author: Optional[str]) -> List[Dict[str, Any]]: ...
+    #: THE STATE A RECIPE RESOLVES AGAINST: the active graph section, read.
+    #: The generator finds the other unit of a relation, a place, an author in
+    #: here before minting one.
+    def section(self) -> Dict[str, Any]: ...
     def has_node(self, node_id: str) -> bool: ...
     #: THE READING VERB. Validating a field has to know how the value arrived
     #: — a validation that did not read the previous authorship would erase
@@ -209,11 +285,17 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
     Una sola funzione per i due scrivani: la forma di un'unità è una sola, e due
     copie sarebbero due risposte il giorno che qualcuno ne tocca una.
 
-    Un'unità non registra con quale scheda è stata compilata, e non si inventa
-    qui: si dice quanti campi porta, e quale standard riaprirla lo decide chi la
-    riapre. Una US registrata con l'ICCD non è una US registrata col foglio
-    ungherese, e indovinarlo sarebbe la stessa famiglia di errori del numero
-    mistypato che `update_su` esiste per rifiutare.
+    **Dal 19 ottobre un'unità REGISTRA con quale scheda è stata compilata**
+    (`data.scheda = {template, version, digest}`, audit B5b), e qui lo si dice
+    (`scheda`): riaprirla con la definizione giusta non è più un'indovinello.
+    Un'unità che nessuna scheda ha compilato (dettata, importata) torna senza,
+    e quale standard riaprirla lo decide ancora chi la riapre. Uno STUB — una
+    unità che esiste solo perché un rapporto la nomina — si dice (`stub`).
+
+    I CAMPI SCRITTI non sono più le chiavi di `data` (una casella è un nodo,
+    un arco, `description`): sono i marcatori di chi li ha composti
+    (`authorship.<casella>`), che il generatore scrive per ogni casella che
+    tocca, più ciò che un'unità vecchia porta ancora in `data`.
     """
     from .conversazione import is_message
 
@@ -222,19 +304,31 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
         for node in section.get("nodes") or []:
             if is_message(node):
                 continue              # una frase non è una scheda
+            if not _is_unit(node):
+                # SOLO LE UNITÀ (19 ottobre). Una scheda ora scrive quello che
+                # la ricetta dice — misurato sulla US 3014: 65 nodi, fra
+                # proprietà, luoghi, documenti, autori — e l'elenco li avrebbe
+                # mostrati tutti come «schede». Lo faceva già coi `dtc_process`
+                # di ogni atto, che nessuno riapre.
+                continue
             data = node.get("data") if isinstance(node.get("data"), dict) else {}
             if data.get("removed"):
                 continue              # un tombstone non è un'unità
             #: i campi CHE QUALCUNO HA SCRITTO: i timbri e gli orologi sono del
             #: sistema, e contarli direbbe che una scheda vuota è piena
-            scritti = sorted(k for k in data
-                             if k not in _META and not k.startswith("_"))
+            scritti = sorted({k.split(".", 1)[1] if k.startswith("authorship.") else k
+                              for k in data
+                              if k not in _META and not k.startswith("_")
+                              and not k.startswith("scheda_links.")
+                              and k not in ("scheda", "source_fields")})
             #: `description` sta sul NODO e non in `data` (misurato in
             #: `create_su`): contarlo lì e non qui direbbe che un'unità
             #: dettata in tre parole è vuota, che è il contrario di vero.
-            if str(node.get("description") or "").strip():
+            if (str(node.get("description") or "").strip()
+                    and not any(k.startswith("authorship.") for k in data)):
                 scritti.append("description")
                 scritti.sort()
+            compilata = data.get("scheda") if isinstance(data.get("scheda"), dict) else {}
             #: IL NUMERO, che è quello che gli attrezzi vogliono — e non si
             #: indovina qui: lo ricava l'inverso di `unit_id_for`, che vive
             #: accanto a lui. `""` quando l'id viene da un grafo importato, e
@@ -252,6 +346,10 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "field_names": scritti,
                 "created_by": data.get("created_by"),
                 "modified_at": data.get("modified_at") or data.get("created_at"),
+                "scheda": ({k: compilata[k] for k in ("template", "version")
+                            if compilata.get(k)}
+                           if compilata and not compilata.get("stub") else None),
+                "stub": bool(compilata.get("stub")),
             })
     fuori.sort(key=lambda u: (u["node_type"], u["name"], u["id"]))
     return fuori
@@ -380,6 +478,35 @@ class LocalWriter:
             self._write(doc)
         return outcomes
 
+    def send(self, ops: List[Dict[str, Any]], *,
+             author: Optional[str]) -> List[Dict[str, Any]]:
+        """The list, into the node's own container — through the CRDT itself.
+
+        One read, the ops in order, one write: `apply_op_to_section` decides
+        each one (clocks, merge, tombstones) exactly as the room would, which is
+        what makes the local copy and the room converge on the same list.
+        The author is stamped HERE because there is no token doing it: it is
+        the identity this process was handed, the same one `update` stamps.
+        """
+        from s3dgraphy.crdt import apply_op_to_section
+
+        outcomes: List[Dict[str, Any]] = []
+        with self._lock:
+            doc = self._read()
+            section = self._section(doc)
+            for op in ops:
+                stamped = dict(op)
+                if author:
+                    stamped["author"] = author
+                result = apply_op_to_section(section, stamped)
+                outcomes.append(outcome_of(op, result.applied, result.reason,
+                                           result.fields))
+            self._write(doc)
+        return outcomes
+
+    def section(self) -> Dict[str, Any]:
+        return self._section(self._read())
+
     def has_node(self, node_id: str) -> bool:
         section = self._section(self._read())
         return any(n.get("id") == node_id for n in section.get("nodes") or [])
@@ -507,6 +634,13 @@ class RoomWriter:
         #: WHY the last write did not go through, if it did not. `describe()`
         #: reads it: "degraded" without a reason is a status light with no label.
         self.last_refusal: Optional[str] = None
+        #: HOW MANY OPERATIONS ONE REST REQUEST MAY CARRY — the room's door
+        #: declares it (`OPS_BATCH_MAX`, 1000 by default, `stratigraph-server/
+        #: app/main.py`) and says the number in its 413. Started at the
+        #: default and LOWERED to what a 413 says, never guessed upward.
+        self.ops_batch = OPS_BATCH_DEFAULT
+        #: what the last REST delivery did, for `/health` and for the tests
+        self.last_rest: Optional[Dict[str, Any]] = None
 
     def _post(self, path: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         import urllib.error
@@ -1032,6 +1166,129 @@ class RoomWriter:
             f"no answer from the room for {op.get('op')} "
             f"{op.get('node_id') or op.get('id')} within {self.timeout}s")
 
+    # ── LA LISTA DI OPERAZIONI: seduti, o da corrispondente ────────────────
+
+    @property
+    def posture(self) -> str:
+        """`desk` se la sessione è tenuta, `field` altrimenti — la stessa
+        lettura di `postureOf` (web/room.js) su `/health.seated`."""
+        return "desk" if self.session.seated else "field"
+
+    def send(self, ops: List[Dict[str, Any]], *,
+             author: Optional[str]) -> List[Dict[str, Any]]:
+        """La lista, nella stanza — per la via che la postura consente.
+
+        **Seduti**: sul socket della sessione tenuta, un `op` per volta e il suo
+        `op_result` letto prima del successivo, come `update`. Un rifiuto per
+        campo (`stale`, `idempotent`) torna nell'esito e non interrompe: è il
+        merge che funziona. `denied` solleva: riguarda la persona.
+
+        **Corrispondente** (la sessione non si apre: rete, relay giù): la lista
+        va IN CODA sul ponte — pari pari, con il suo `ts` —, nel container
+        locale perché il nodo sappia rispondere su ciò che ha appena scritto, e
+        poi si prova a consegnare la coda dalla porta REST della stanza
+        (`POST /v1/rooms/{id}/ops`) a pacchi della dimensione che la porta
+        dichiara. Se nemmeno la porta risponde, la coda aspetta il prossimo
+        rientro, che la attraversa prima di ogni cosa nuova.
+
+        Nessuna delle due vie cambia la lista: è la stessa, e la stanza la
+        applica con lo stesso `em.apply_op`.
+        """
+        if not ops:
+            return []
+        try:
+            outcomes = self._send_seated(ops)
+        except RoomRefused as refusal:
+            self.degraded = True
+            self.last_refusal = str(refusal)
+            raise
+        except Exception as exc:                      # unreachable, timeout, TLS
+            self.degraded = True
+            self.last_refusal = f"{type(exc).__name__}: {exc}"
+            return self._send_as_correspondent(ops, author=author,
+                                               why=self.last_refusal)
+        self.degraded = False
+        self.last_refusal = None
+        return outcomes
+
+    def _send_seated(self, ops: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        self._seated()
+        self._bytes_before_words()
+        outcomes: List[Dict[str, Any]] = []
+        for op in ops:
+            self.session.send("op", op)
+            payload = self._outcome_of(op)
+            outcomes.append(outcome_of(op, payload.get("applied"),
+                                       payload.get("reason"),
+                                       payload.get("fields")))
+        return outcomes
+
+    def _send_as_correspondent(self, ops: List[Dict[str, Any]], *,
+                               author: Optional[str],
+                               why: str) -> List[Dict[str, Any]]:
+        """In coda, nel container, e poi dalla porta REST se risponde."""
+        self._to_the_bridge(ops, why=why)
+        outcomes: List[Dict[str, Any]] = []
+        if self.fallback is not None:
+            outcomes = self.fallback.send(ops, author=author)
+        else:
+            outcomes = [outcome_of(op, False, "queued") for op in ops]
+        try:
+            self.last_rest = self.deliver_by_rest()
+        except Exception as exc:          # noqa: BLE001 — la coda resta lì
+            log.info("la porta REST non ha preso la coda: %s", exc)
+            self.last_rest = {"delivered": 0, "stopped": f"{type(exc).__name__}: {exc}"}
+        for item in outcomes:
+            item["queued"] = True
+        return outcomes
+
+    def deliver_by_rest(self) -> Optional[Dict[str, Any]]:
+        """Consegna la coda del ponte dalla porta REST, a pacchi, in ordine.
+
+        La porta risponde 200 anche per ciò che rifiuta (`refused` nel corpo:
+        «a refusal is not an error» — `stale` e `idempotent` SONO la risposta
+        convergente, e rimandarli li farebbe rifiutare per sempre). Quindi un
+        pacco che ha avuto un 200 esce dalla coda tutto; un 413 abbassa la
+        dimensione al numero che la porta dice e riprova; qualunque altra
+        cosa ferma la coda dov'è.
+        """
+        if self.bridge is None or not len(self.bridge):
+            return None
+        if self._byte_in_attesa():
+            # PRIMA I BYTE, POI LE PAROLE — la stessa regola del socket
+            return {"delivered": 0, "stopped": "bytes first"}
+
+        def post(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+            return self._post_ops(batch)
+
+        return self.bridge.deliver_batches(post, size=lambda: self.ops_batch)
+
+    def _post_ops(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+        import urllib.error
+
+        url = (f"{self.base_url}/v1/rooms/"
+               f"{urllib.parse.quote(self.room_id)}/ops")
+        request = urllib.request.Request(
+            url, method="POST",
+            data=json.dumps({"ops": batch}).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {self._token}"})
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as answer:
+                raw = answer.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as refusal:
+            detail = refusal.read().decode("utf-8", "replace")
+            if refusal.code == 413:
+                declared = _declared_batch(detail)
+                if declared and declared < len(batch):
+                    self.ops_batch = declared
+                    raise BatchTooLarge(declared) from None
+            if refusal.code in (401, 403):
+                raise RoomRefused(f"la porta REST della stanza ha rifiutato "
+                                  f"({refusal.code}): {detail[:200]}") from None
+            raise
+
     def has_node(self, node_id: str) -> bool:
         """Asks the ROOM first — see `node` for the round trip that showed why."""
         return self.node(node_id) is not None
@@ -1051,6 +1308,19 @@ class RoomWriter:
     def units(self) -> List[Dict[str, Any]]:
         """Le unità della STANZA. La forma la decide `units_of`."""
         return units_of(self._document())
+
+    def section(self) -> Dict[str, Any]:
+        """La sezione attiva della STANZA; il container locale se non risponde.
+
+        È lo stato su cui la ricetta si risolve: la 3018 che una scheda cita
+        si cerca dove la 3018 è — nella stanza.
+        """
+        try:
+            return active_section(self._document())
+        except Exception:                             # unreachable, refused
+            if self.fallback is not None:
+                return self.fallback.section()
+            raise
 
     def _snapshot_node(self, node_id: str) -> Optional[Dict[str, Any]]:
         """Un nodo, letto dal documento della stanza.

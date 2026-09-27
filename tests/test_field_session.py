@@ -307,18 +307,30 @@ def test_the_description_lands_on_the_librarys_own_field(node):
     assert _unit(writer)["description"] == "Muro in opus mixtum, due filari."
 
 
-def test_the_interpretation_lands_as_a_FIELD_NOTE_not_as_a_property(node):
-    """Measured decision (STEP 0): the datamodel has no interpretation field,
-    and a dictated reading has no evidence chain — so it is a note, and NOT a
-    PropertyNode, which would claim a paradata chain nobody built."""
+def test_the_interpretation_lands_where_the_RECIPE_says(node):
+    """A DECISION REVERSED, where it is decided (2026-10-19).
+
+    Until tonight this test was «…lands as a FIELD NOTE not as a property»: the
+    STEP 0 decision was that a dictated reading has no evidence chain, so it
+    went in `data.interpretation` and no PropertyNode was made. Since the voice
+    passes through the recipe of the node's reference scheda, the ICCD
+    definition decides — `interpretazione` → PropertyNode `interpretation`,
+    `has_property` from the unit — and the service stops having an opinion of
+    its own about it. `data.interpretation` is gone, and that is the check."""
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+
     writer, _, registry = node
     _say(registry, "crea una nuova scheda, US 12",
          interpretation="Fondazione del portico, prima fase.")
     unit = _unit(writer)
-    assert unit["data"]["interpretation"] == "Fondazione del portico, prima fase."
-    # …and no property node was manufactured for it
-    nodes = writer._section(writer._read())["nodes"]
-    assert not [n for n in nodes if n.get("node_type") == "property"]
+    assert "interpretation" not in unit["data"]
+    props = [n for n in writer._section(writer._read())["nodes"]
+             if n.get("node_type") == "property"]
+    assert [(p["name"], p["description"]) for p in props] == [
+        ("interpretation", "Fondazione del portico, prima fase.")]
+    back = values_from_graph(reference_scheda(), writer.section(), "US12")
+    assert back["values"]["interpretazione"] == "Fondazione del portico, prima fase."
 
 
 def test_the_fields_nobody_mapped_are_CARRIED_under_one_key(node):
@@ -334,10 +346,18 @@ def test_the_fields_nobody_mapped_are_CARRIED_under_one_key(node):
 def test_where_the_record_came_from_survives(node):
     """A unit number is only unique inside its area; losing that makes two
     trenches one."""
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+
     writer, _, registry = node
     _say(registry, "crea una nuova scheda, US 12", sito="Saggio B", area="1")
+    # not `data.sito` any more: two places, reached by `is_in_location`, the
+    # way the recipe of the reference scheda says (sito → its first context
+    # field, `localita`)
     unit = _unit(writer)
-    assert (unit["data"]["sito"], unit["data"]["area"]) == ("Saggio B", "1")
+    assert "sito" not in unit["data"] and "area" not in unit["data"]
+    back = values_from_graph(reference_scheda(), writer.section(), "US12")["values"]
+    assert (back["localita"], back["area"]) == ("Saggio B", "1")
 
 
 def test_the_enrichment_did_not_cost_the_attribution(node):

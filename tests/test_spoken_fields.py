@@ -45,14 +45,22 @@ def registry(writer):
 
 # ── 1 · LE FRASI, riconosciute DALLE REGOLE e senza modello ────────────────
 
+def _row(v):
+    return [{"label": v, "value": v}]
+
+
+# NELLA FORMA DEL CAMPO (19 ottobre): la ricetta vuole righe per le quote e le
+# misure, un termine per colore e consistenza. La voce sa di aver sentito UNA
+# cosa, e la dà in quella forma (`operazioni.spoken_value`); il generatore
+# rifiuterebbe una stringa dove serve una lista.
 @pytest.mark.parametrize("said, field, value", [
-    ("la us 12 è uno strato di crollo", "definizione", "strato di crollo"),
-    ("la definizione della us 12 è muro", "definizione", "muro"),
-    ("us 12 quota 145,30", "quote", "145,30"),
-    ("la quota della us 7 è -1,25", "quote", "-1,25"),
-    ("la us 12 misura 2 per 1,5 metri", "misure", "2 per 1,5 metri"),
-    ("il colore della us 12 è bruno scuro", "colore", "bruno scuro"),
-    ("la consistenza della us 12 è friabile", "consistenza", "friabile"),
+    ("la us 12 è uno strato di crollo", "definizione", {"label": "strato di crollo"}),
+    ("la definizione della us 12 è muro", "definizione", {"label": "muro"}),
+    ("us 12 quota 145,30", "quote", _row("145,30")),
+    ("la quota della us 7 è -1,25", "quote", _row("-1,25")),
+    ("la us 12 misura 2 per 1,5 metri", "misure", _row("2 per 1,5 metri")),
+    ("il colore della us 12 è bruno scuro", "colore", {"label": "bruno scuro"}),
+    ("la consistenza della us 12 è friabile", "consistenza", {"label": "friabile"}),
 ])
 def test_a_field_said_out_loud_reaches_update_su(registry, said, field, value):
     understood = understand(said, registry)              # NESSUN modello
@@ -130,17 +138,46 @@ def test_the_phrases_and_the_map_are_ONE_list(registry):
 
 # ── 4 · e la frase ATTERRA nel grafo ───────────────────────────────────────
 
+def _back(writer):
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+    return values_from_graph(reference_scheda(), writer.section(), "US12")["values"]
+
+
 def test_the_sentence_becomes_a_field_in_the_graph(writer, registry):
+    from app.contract import invoke
+
+    understood = understand("il colore della us 12 è bruno", registry)
+    result = invoke(registry.get(understood.tool), understood.slots, ORCID,
+                    registry=registry)
+    assert result.ok, result.message
+    assert result.data["updated"] == ["colore"]
+    # una PropertyNode `color` appesa all'unità, come dice la ricetta ICCD
+    assert _back(writer)["colore"] == {"label": "bruno"}
+    assert "colore" not in writer.node("US12")["data"]
+
+
+def test_DEFINIZIONE_is_heard_and_does_NOT_land_and_the_answer_says_why(
+        writer, registry):
+    """LA CONSEGUENZA PIÙ SCOMODA DI STANOTTE, detta e non nascosta.
+
+    La ricetta ICCD 1.0.0 dichiara `definizione` fra le cose che la
+    definizione NON decide (`recipe.open`: «which property the concept is the
+    value of»). Senza sapere di quale proprietà quel concetto sia il valore,
+    ogni posto in cui scriverlo sarebbe inventato — e il posto di prima,
+    `data.definizione`, è il difetto dell'audit. Quindi la frase è capita, non
+    scrive, e la risposta lo dice: la correzione va nella definizione
+    (proposta nel referto del 19 ottobre)."""
     from app.contract import invoke
 
     understood = understand("la us 12 è uno strato di crollo", registry)
     result = invoke(registry.get(understood.tool), understood.slots, ORCID,
                     registry=registry)
-    assert result.ok, result.message
-
-    node = writer.node("US12")
-    assert node["data"]["definizione"] == "strato di crollo"
-    assert result.data["updated"] == ["data.definizione"]
+    assert result.ok
+    assert result.data["updated"] == []
+    assert "definizione" in result.data["silent"]
+    assert "Fuori dal grafo per la definizione: definizione" in result.message
+    assert "definizione" not in writer.node("US12")["data"]
 
 
 def test_a_spoken_field_is_authored_by_the_person_not_by_a_model(writer,
@@ -162,12 +199,15 @@ def test_a_spoken_field_is_authored_by_the_person_not_by_a_model(writer,
 def test_two_things_said_in_two_sentences_are_two_fields(writer, registry):
     from app.contract import invoke
 
-    for phrase in ("la us 12 è uno strato di crollo",
+    for phrase in ("il colore della us 12 è bruno",
                    "la us 12 misura 2 per 1,5 metri"):
         understood = understand(phrase, registry)
         assert invoke(registry.get("update_su"), understood.slots, ORCID,
                       registry=registry).ok
 
-    data = writer.node("US12")["data"]
-    assert data["definizione"] == "strato di crollo"
-    assert data["misure"] == "2 per 1,5 metri"
+    values = _back(writer)
+    assert values["colore"] == {"label": "bruno"}
+    # una riga senza qualia: la ricetta non ne dà una di difetto per `misure`,
+    # e la riga porta il nome della casella (`measurements`) e lo DICE
+    assert values["misure"] == [{"label": "2 per 1,5 metri",
+                                 "value": "2 per 1,5 metri"}]

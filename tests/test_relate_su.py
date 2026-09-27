@@ -6,6 +6,14 @@ voce, e per questo le dieci caselle dei rapporti di quella scheda sono rimaste
 `unknown` — marcarle `trench` senza un intento che le copra sarebbe stato
 inventare il criterio.
 
+**Dal 19 ottobre la mappa non è più di questo servizio:** `RELATIONS` è
+DERIVATO dalla ricetta della scheda di riferimento del nodo (la US ICCD
+compilata), le frasi sono le etichette delle sue caselle, e l'arco è quello
+che la ricetta dichiara. E.D.: **COPRE è `overlies`, POSTERIORE A è
+`is_after`, e non si mescolano.** Fino a ieri questo file pinnava `copre →
+is_after` per allinearsi a pyarchinit-mini; l'audit del 17 ottobre ha misurato
+che la stessa frase, detta a voce o scritta sulla scheda, faceva due archi.
+
 **La cosa che questo file difende sopra tutte:** gli inversi NON esistono come
 tipi di arco. Misurato in `s3Dgraphy_connections_datamodel.json` 1.6.13:
 `is_after` c'è, `is_before` no; `cuts` c'è, `is_cut_by` no. Esistono solo come
@@ -74,9 +82,18 @@ def test_the_inverse_edge_types_do_not_exist():
         .read_text(encoding="utf-8"))
     declared = model["edge_types"]
 
-    assert model["s3Dgraphy_connections_model_version"] == "1.6.13"
-    for present in ("is_after", "cuts", "fills", "abuts", "is_bonded_to",
-                    "is_physically_equal_to", "has_same_time"):
+    # LA VERSIONE NON È PIÙ UN NUMERO SCRITTO QUI (19 ottobre): è quella che la
+    # scheda compilata e vendorata dichiara di aver verificato
+    # (`header.datamodel.connections`). Il test era rosso da quando s3Dgraphy
+    # è passato da 1.6.13 a 1.6.19 senza che niente qui fosse sbagliato.
+    from app.tools import reference_scheda
+    compiled = reference_scheda().datamodel["connections"]
+    assert model["s3Dgraphy_connections_model_version"] == compiled, (
+        f"s3Dgraphy dichiara le connessioni "
+        f"{model['s3Dgraphy_connections_model_version']}, la scheda compilata "
+        f"è stata verificata contro {compiled}: ricompila e rivendora")
+    for present in ("is_after", "overlies", "cuts", "fills", "abuts",
+                    "bonded_to", "equals", "has_same_time"):
         assert present in declared, present
     for absent in ("is_before", "is_overlain_by", "is_cut_by"):
         assert absent not in declared, (
@@ -99,18 +116,36 @@ def test_every_verb_maps_to_a_type_the_datamodel_declares():
         assert edge_type in declared, f"{verb} → {edge_type} non esiste"
 
 
-def test_the_map_is_the_same_one_the_ecosystem_already_uses():
-    """Lo stesso rapporto, detto a voce o importato da una tabella, deve
-    diventare LO STESSO arco: altrimenti la porta da cui è entrato si vede nel
-    grafo. La mappa di riferimento è quella di
-    `pyarchinit-mini/pyarchinit_mini/connector/us_ops.py`."""
-    assert RELATIONS["copre"][0] == "is_after"
+def test_the_map_IS_the_recipe_of_the_reference_scheda():
+    """Lo stesso rapporto, detto a voce o scritto sulla scheda, deve diventare
+    LO STESSO arco: altrimenti la porta da cui è entrato si vede nel grafo.
+
+    La mappa di riferimento NON è più `pyarchinit-mini/…/us_ops.py`: è la
+    ricetta. Frase per frase, l'arco e la direzione sono il passo della casella
+    che porta quell'etichetta."""
+    from app.tools import RELATION_FIELDS, reference_scheda
+
+    recipe = reference_scheda().recipe["fields"]
+    assert RELATIONS["copre"] == ("overlies", "forward")
+    assert RELATIONS["coperto da"] == ("overlies", "swap")
+    assert RELATIONS["posteriore a"] == ("is_after", "forward")
+    assert RELATIONS["anteriore a"] == ("is_after", "swap")
     assert RELATIONS["taglia"][0] == "cuts"
     assert RELATIONS["riempie"][0] == "fills"
     assert RELATIONS["si appoggia a"][0] == "abuts"
-    assert RELATIONS["si lega a"][0] == "is_bonded_to"
-    assert RELATIONS["uguale a"][0] == "is_physically_equal_to"
-    assert RELATIONS["contemporaneo a"][0] == "has_same_time"
+    assert RELATIONS["si lega a"] == ("bonded_to", "symmetric")
+    assert RELATIONS["uguale a"] == ("equals", "symmetric")
+    for phrase, (edge_type, _direction) in RELATIONS.items():
+        step = recipe[RELATION_FIELDS[phrase]]["steps"][0]["emit"]
+        assert step["edge_type"] == edge_type, phrase
+
+
+def test_what_the_derivation_lost_is_said():
+    """«contemporaneo a» (`has_same_time`) e «appoggia a» non sono caselle
+    della US ICCD: una frase che non ha una casella non ha una ricetta, e il
+    rifiuto lo dice con le parole che conosce invece di inventare un arco."""
+    assert "contemporaneo a" not in RELATIONS
+    assert "appoggia a" not in RELATIONS
 
 
 # ── 2 · LE REGOLE, senza modello — che sul campo è un martedì ──────────────
@@ -131,8 +166,6 @@ def test_the_map_is_the_same_one_the_ecosystem_already_uses():
      {"us": "12", "relation": "si lega a", "other": "18"}),
     ("la 12 è uguale alla 21",
      {"us": "12", "relation": "uguale a", "other": "21"}),
-    ("la 12 è contemporanea alla 18",
-     {"us": "12", "relation": "contemporanea a", "other": "18"}),
     ("la 12 è posteriore alla 18",
      {"us": "12", "relation": "posteriore a", "other": "18"}),
     ("la 12 è anteriore alla 18",
@@ -156,8 +189,7 @@ def test_the_feminine_forms_are_the_ones_people_actually_say(registry):
     impedisce alle due di divergere di nuovo.
     """
     descriptor = registry.get("relate_su")
-    for feminine in ("coperta da", "tagliata da", "riempita da",
-                     "contemporanea a"):
+    for feminine in ("coperta da", "tagliata da", "riempita da"):
         assert feminine in RELATIONS
         assert feminine in descriptor.intents, (
             f"«{feminine}» è nella mappa e non fra gli intenti: la frase non "
@@ -191,7 +223,7 @@ def test_copre_lands_one_edge_in_the_canonical_direction(writer):
     assert len(edges) == 1
     assert edges[0]["source"] == "US12"
     assert edges[0]["target"] == "US18"
-    assert edges[0]["edge_type"] == "is_after"
+    assert edges[0]["edge_type"] == "overlies"
 
 
 def test_the_inverse_swaps_the_ends_and_does_not_invent_a_type(writer):
@@ -203,7 +235,7 @@ def test_the_inverse_swaps_the_ends_and_does_not_invent_a_type(writer):
     assert result.ok, result.message
 
     edge = edges_of(writer)[0]
-    assert edge["edge_type"] == "is_after", "non si inventa un tipo inverso"
+    assert edge["edge_type"] == "overlies", "non si inventa un tipo inverso"
     assert edge["source"] == "US18", "i capi non sono stati scambiati"
     assert edge["target"] == "US12"
     assert result.data["direction"] == "swap"
@@ -225,7 +257,7 @@ def test_the_two_ways_of_saying_it_produce_the_SAME_edge(writer):
     assert len(edges_of(writer)) == 1, edges_of(writer)
 
 
-@pytest.mark.parametrize("verb", ["uguale a", "si lega a", "contemporaneo a"])
+@pytest.mark.parametrize("verb", ["uguale a", "si lega a"])
 def test_a_symmetric_relation_is_one_edge_whichever_end_you_name(writer, verb):
     """I capi si ORDINANO. Senza, i simmetrici sarebbero il solo posto che
     raddoppia ancora — che è precisamente il difetto che `us_ops._oriented`
@@ -243,8 +275,8 @@ def test_the_edge_id_follows_the_convention_the_ecosystem_composes(writer):
     units(writer, 12, 18)
     make_relate_su(writer).handler(
         {"us": "12", "other": "18", "relation": "copre"}, ORCID)
-    assert edges_of(writer)[0]["id"] == "US12__is_after__US18"
-    assert edge_id_for("US12", "is_after", "US18") == "US12__is_after__US18"
+    assert edges_of(writer)[0]["id"] == "US12__overlies__US18"
+    assert edge_id_for("US12", "overlies", "US18") == "US12__overlies__US18"
 
 
 def test_saying_it_twice_does_not_double_the_arrow(writer):
@@ -257,23 +289,36 @@ def test_saying_it_twice_does_not_double_the_arrow(writer):
 
 # ── 4 · quello che rifiuta ─────────────────────────────────────────────────
 
-def test_an_edge_to_a_unit_that_does_not_exist_is_refused(writer):
-    """Un arco verso un id che nessuno può risolvere è peggio di un arco che
-    manca: la matrice lo disegna, e la freccia punta nel vuoto."""
+def test_the_OTHER_unit_that_does_not_exist_is_marked_not_refused(writer):
+    """UNA DECISIONE CAMBIATA (19 ottobre), la stessa della scheda.
+
+    Era: «un arco verso un'unità che non c'è è una freccia nel vuoto, rifiuta».
+    La freccia nel vuoto resta vietata — e non c'è: la 18 viene creata MINIMA
+    e SEGNATA (`data.scheda.stub`), perché chi dice «la 12 copre la 18» sta
+    dicendo che la 18 esiste, e rimandare l'arco vorrebbe dire tenerlo in un
+    posto che non c'è. Quando la 18 avrà la sua scheda, la scheda la promuove
+    (`app/operazioni.py`, decisione 1)."""
     units(writer, 12)
     result = make_relate_su(writer).handler(
         {"us": "12", "other": "18", "relation": "copre"}, ORCID)
-    assert not result.ok
-    assert "18" in result.message
-    assert result.data["missing"] == ["18"]
-    assert edges_of(writer) == []
+    assert result.ok, result.message
+    assert "segnata da compilare" in result.message
+    stub = next(n for n in graph_of(writer)["nodes"] if n["id"] == "US18")
+    assert stub["data"]["scheda"]["stub"] is True
+    assert stub["data"]["scheda"]["declared_by"] == "US12"
+    assert [(e["source"], e["edge_type"], e["target"])
+            for e in edges_of(writer)] == [("US12", "overlies", "US18")]
 
 
-def test_both_missing_units_are_named(writer):
+def test_the_unit_that_ACTS_must_exist(writer):
+    """Chi fa l'azione no: è un aggiornamento, e un numero sbagliato non
+    diventa un'unità nuova — la stessa regola di `update_su`."""
     result = make_relate_su(writer).handler(
         {"us": "12", "other": "18", "relation": "copre"}, ORCID)
     assert not result.ok
-    assert result.data["missing"] == ["12", "18"]
+    assert "non è in questo grafo" in result.message
+    assert result.data["missing"] == ["12"]
+    assert edges_of(writer) == []
 
 
 def test_a_unit_cannot_be_in_a_relation_with_itself(writer):
@@ -314,7 +359,7 @@ def test_a_relation_with_nobody_behind_it_is_refused(writer):
 # ── 5 · l'atto resta registrato ────────────────────────────────────────────
 
 def test_the_act_records_what_was_said_and_not_only_what_was_written(writer):
-    """Chi rilegge deve poter vedere che «coperta da» è diventata un `is_after`
+    """Chi rilegge deve poter vedere che «coperta da» è diventata un `overlies`
     a capi scambiati, e non un tipo inverso che non esiste."""
     units(writer, 12, 18)
     result = make_relate_su(writer).handler(
@@ -327,4 +372,4 @@ def test_the_act_records_what_was_said_and_not_only_what_was_written(writer):
     assert "coperta da" in d7[0]["description"]
     assert d7[0]["data"]["created_by"] == ORCID
     assert result.delta.author == ORCID
-    assert result.delta.edges[0]["edge_type"] == "is_after"
+    assert result.delta.edges[0]["edge_type"] == "overlies"

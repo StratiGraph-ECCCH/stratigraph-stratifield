@@ -1,0 +1,512 @@
+{
+  "format": "stratigraph-templates/compiled-definition",
+  "format_version": "1",
+  "header": {
+    "id": "hu-rl-demo-2026",
+    "version": "0.1.0",
+    "standard": {
+      "authority": "DEMO",
+      "code": "RL",
+      "version": "2026-demo",
+      "kind": "field_model",
+      "title": {
+        "hu": "Rétegleírás (demo)",
+        "it": "Scheda di strato (demo)"
+      },
+      "license": "CC BY-SA 4.0",
+      "attribution": "stratigraph-templates (scheda demo)",
+      "source": "inventata per la prova — nessuna normativa reale è stata citata",
+      "invented": true
+    },
+    "source_language": "hu",
+    "languages": [
+      "hu",
+      "it"
+    ],
+    "vocabularies": [],
+    "digest": "sha256:dcadbf81f7f41b0837bb20df17f3fd1a836c9b9f1702db113dc197a7fc0ae68b",
+    "datamodel": {
+      "nodes": "1.6.8",
+      "connections": "1.6.19",
+      "qualia": "1.6.1",
+      "em_ttl": "1.6.2",
+      "s3dgraphy": "1.6.0.dev20",
+      "taken_from": {
+        "git_commit": "8b91867aef7443a7de37fed46812d5f1bba39327",
+        "git_dirty": false
+      },
+      "snapshot": "registry/s3dgraphy-snapshot.json"
+    },
+    "compiled_by": {
+      "name": "stratigraph-templates",
+      "version": "0.1.0"
+    }
+  },
+  "visual": {
+    "identity": {
+      "human_key": [
+        "retegszam",
+        "lelohely"
+      ],
+      "pattern": "Réteg {retegszam} · {lelohely}",
+      "unit_field": "retegszam",
+      "uid": {
+        "policy": "minted_by_creator",
+        "opaque": true,
+        "display": "on_request",
+        "derive_from_human_key": false
+      },
+      "deduplication": "by_human_key_in_context"
+    },
+    "provenance": {
+      "per_field": true,
+      "authors": [
+        "human",
+        "ai"
+      ],
+      "states": [
+        "asserted",
+        "ai_drafted",
+        "human_validated"
+      ],
+      "clock": "s3dgraphy_crdt_field_clock"
+    },
+    "paragraphs": [
+      {
+        "id": "fejlec",
+        "labels": {
+          "hu": "Fejléc",
+          "it": "Intestazione"
+        },
+        "fields": [
+          "lelohely",
+          "retegszam",
+          "leiras"
+        ]
+      },
+      {
+        "id": "ertelmezes",
+        "labels": {
+          "hu": "Értelmezés",
+          "it": "Interpretazione"
+        },
+        "fields": [
+          "ertelmezes",
+          "biztossag"
+        ]
+      },
+      {
+        "id": "meret",
+        "labels": {
+          "hu": "Méretek",
+          "it": "Misure"
+        },
+        "fields": [
+          "melyseg"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "lelohely",
+        "paragraph": "fejlec",
+        "type": "text",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "hu": "LELŐHELY",
+          "it": "SITO"
+        }
+      },
+      {
+        "id": "retegszam",
+        "paragraph": "fejlec",
+        "type": "identifier",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "hu": "RÉTEGSZÁM",
+          "it": "NUMERO DI STRATO"
+        }
+      },
+      {
+        "id": "leiras",
+        "paragraph": "fejlec",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "hu": "LEÍRÁS",
+          "it": "DESCRIZIONE"
+        },
+        "help": {
+          "hu": "Amit látsz, nem amit gondolsz.",
+          "it": "Quello che vedi, non quello che pensi."
+        }
+      },
+      {
+        "id": "ertelmezes",
+        "paragraph": "ertelmezes",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "hu": "ÉRTELMEZÉS",
+          "it": "INTERPRETAZIONE"
+        }
+      },
+      {
+        "id": "biztossag",
+        "paragraph": "ertelmezes",
+        "type": "choice",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "lab",
+        "labels": {
+          "hu": "BIZTOSSÁG",
+          "it": "AFFIDABILITÀ"
+        },
+        "options": [
+          {
+            "value": "biztos",
+            "labels": {
+              "hu": "biztos",
+              "it": "certa"
+            }
+          },
+          {
+            "value": "valoszinu",
+            "labels": {
+              "hu": "valószínű",
+              "it": "probabile"
+            }
+          }
+        ]
+      },
+      {
+        "id": "melyseg",
+        "paragraph": "meret",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "lab",
+        "labels": {
+          "hu": "MÉLYSÉG",
+          "it": "PROFONDITÀ"
+        }
+      }
+    ],
+    "sheet": {
+      "page": "A4",
+      "margins_mm": {
+        "top": 12,
+        "right": 12,
+        "bottom": 12,
+        "left": 12
+      },
+      "sides": [
+        {
+          "id": "recto",
+          "labels": {
+            "hu": "előlap",
+            "it": "fronte"
+          },
+          "rows": [
+            {
+              "h": 12.0,
+              "cells": [
+                {
+                  "field": "lelohely",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 60.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "retegszam",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 40.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 45.0,
+              "cells": [
+                {
+                  "field": "leiras",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 45.0,
+              "cells": [
+                {
+                  "field": "ertelmezes",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "biztossag",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "melyseg",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": {
+      "designator": "Il designatore è il PRIMO campo della chiave umana, non l'ultimo: è il caso che rende necessaria la dichiarazione esplicita di SPEC §1.2.\n"
+    }
+  },
+  "recipe": {
+    "operations": [
+      "add_node",
+      "update_field",
+      "remove_node",
+      "add_edge",
+      "remove_edge"
+    ],
+    "unit": {
+      "resolve": {
+        "$unit": {
+          "find": {
+            "human_key": [
+              "retegszam",
+              "lelohely"
+            ],
+            "rule": "by_human_key_in_context"
+          },
+          "create": true
+        }
+      },
+      "steps": [
+        {
+          "emit": {
+            "op": "add_node",
+            "node": {
+              "id": "$unit",
+              "node_type": "$unit.node_type",
+              "name": "$unit.name"
+            }
+          },
+          "when": "created"
+        }
+      ],
+      "name": {
+        "pattern": "Réteg {retegszam} · {lelohely}",
+        "unit_field": "retegszam"
+      },
+      "node_type": {
+        "decided_by": null,
+        "table": {},
+        "when_empty": "not decided by the definition",
+        "note": "decided when the unit is CREATED: update_field addresses name, description and data.* only, so an existing unit's node_type cannot be changed by an operation of this vocabulary"
+      }
+    },
+    "fields": {
+      "lelohely": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "retegszam": {
+        "verdict": "identity",
+        "steps": [],
+        "names": "$unit",
+        "designator": true
+      },
+      "leiras": {
+        "verdict": "property",
+        "each": false,
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "description",
+              "value": "$value"
+            }
+          }
+        ]
+      },
+      "ertelmezes": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "interpretation",
+                "description": "$value",
+                "data": {
+                  "property_type": "interpretation"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "interpretation",
+          "registered_qualia": false
+        }
+      },
+      "biztossag": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "melyseg": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "depth"
+        },
+        "defaults": {
+          "$item.qualia": "depth"
+        }
+      }
+    },
+    "anchors": {},
+    "open": [
+      {
+        "field": "",
+        "what": "no field has verdict 'node_type': the definition does not say which node type the unit is, so the creator has to"
+      }
+    ]
+  }
+}

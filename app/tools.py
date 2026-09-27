@@ -122,6 +122,151 @@ def _process_node(kind: str, author: Optional[str], about: str,
     }
 
 
+
+# ── LA RICETTA: la via unica da una scheda (o da una frase) alla stanza ─────
+#
+# Dal 19 ottobre `create_su`, `update_su` e `relate_su` non costruiscono più
+# `data.<id_campo>`: passano i valori al generatore (`app/operazioni.py`) con la
+# ricetta della scheda, e mandano la lista di operazioni che ne esce con
+# `graph_writer.send`. Il vecchio percorso — `writer.addressable` che prefissava
+# `data.` al nome della casella — è quello che l'audit del 17 ottobre ha
+# misurato: 58 chiavi, 0 archi, e una proiezione RDF senza valori.
+
+#: La scheda con cui la VOCE compila, quando l'unità non ne dichiara una sua.
+#: Una cosa del NODO, come la lingua dei comandi: un nodo che serve la ficha
+#: spagnola la nomina qui.
+REFERENCE_SCHEDA_VARIABLE = "STRATIGRAPH_SCHEDA_RIFERIMENTO"
+REFERENCE_SCHEDA_DEFAULT = "iccd-us-2021"
+
+
+def reference_scheda():
+    """La scheda di riferimento del nodo, o None se il nodo non ne serve."""
+    import os
+
+    from . import scheda as schede
+    wanted = (os.environ.get(REFERENCE_SCHEDA_VARIABLE) or "").strip()
+    return schede.find(wanted or REFERENCE_SCHEDA_DEFAULT)
+
+
+def scheda_for(graph_writer, number: str, *, scheda_id: str = "",
+               version: str = ""):
+    """Con quale definizione si compila questa unità.
+
+    Chiesta esplicitamente (la scheda aperta nel modulo) vince; altrimenti
+    quella che l'unità DICHIARA (`data.scheda`, B5b) se il nodo la serve;
+    altrimenti la scheda di riferimento del nodo. Torna `(scheda, perché)`.
+    """
+    from . import scheda as schede
+    from .operazioni import MARK
+
+    if scheda_id:
+        return schede.find(scheda_id, version=version or None), "chiesta"
+    node = graph_writer.node(unit_id_for(number)) if number else None
+    declared = ((node or {}).get("data") or {}).get(MARK) or {}
+    if isinstance(declared, dict) and declared.get("template") and not declared.get("stub"):
+        found = schede.find(str(declared["template"]),
+                            version=str(declared.get("version") or "") or None)
+        if found is not None:
+            return found, "dichiarata dall'unità"
+    return reference_scheda(), "di riferimento del nodo"
+
+
+def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
+                        number: str, create: bool, author: Optional[str],
+                        kind: str, detail: str,
+                        authored_by: Optional[Dict[str, str]] = None,
+                        model: Optional[str] = None, additive: bool = False,
+                        extra_ops: Optional[List[Dict[str, Any]]] = None):
+    """Valori → operazioni → stanza, e l'esito per campo. Una sola via.
+
+    Il D7 dell'atto va IN CODA alla lista, per la ragione che `LocalWriter.update`
+    racconta: un atto che la stanza rifiuta non deve lasciare un verbale che
+    dice che è avvenuto.
+    """
+    from s3dgraphy import api
+
+    from .operazioni import plan as make_plan
+
+    stamp = _now()
+    made = make_plan(scheda, values, number=number,
+                     section=graph_writer.section(), ts=stamp, create=create,
+                     authored_by=authored_by, model=model, additive=additive)
+    process = _process_node(kind, author, made.unit_id, detail)
+    ops = list(made.ops) + list(extra_ops or [])
+    fields_of = list(made.op_fields) + [""] * len(extra_ops or [])
+    ops.append(api.make_op("add_node", id=process["id"], node=process, ts=stamp))
+    fields_of.append("")
+    outcomes = graph_writer.send(ops, author=author)
+
+    landed, already, held = [], [], []
+    for fid in made.written:
+        mine = [o for i, (o, f) in enumerate(zip(outcomes, fields_of))
+                if f == fid and i not in made.noop]
+        if any(o["applied"] and o.get("changed", True) for o in mine):
+            landed.append(fid)
+        elif any(o.get("reason") == "stale" for o in mine):
+            held.append({"field": fid, "applied": False, "reason": "stale"})
+        else:
+            already.append(fid)
+    return made, process, outcomes, landed, already, held
+
+
+def _what_happened(made, landed, already, held, number: str) -> str:
+    """La frase, per chi ha salvato: che cosa è entrato, che cosa no, e perché."""
+    said = f"US {number}: {len(landed)} campi aggiornati."
+    if made.created:
+        said += f" Creata come {made.node_type}."
+    if already:
+        said += f" {len(already)} erano già così."
+    if held:
+        said += (f" {len(held)} non applicati (qualcun altro li ha scritti più "
+                 f"di recente): {', '.join(h['field'] for h in held)}.")
+    if made.refused:
+        said += " Non scritti: " + "; ".join(
+            f"{k} ({v})" for k, v in sorted(made.refused.items())) + "."
+    outside = sorted(k for k, v in made.silent.items()
+                     if not v.startswith(("compone", "decide")))
+    if outside:
+        said += (" Fuori dal grafo per la definizione: " + ", ".join(outside) + ".")
+    if made.stubs:
+        said += (" Segnate da compilare, perché un rapporto le nomina: "
+                 + ", ".join(s["name"].split(" — ")[0] for s in made.stubs) + ".")
+    for note in made.notes:
+        said += f" ({note}.)"
+    return said
+
+
+def _plan_data(made, outcomes, landed, already, held) -> Dict[str, Any]:
+    return {"us": made.number, "node_id": made.unit_id,
+            "created": made.created, "node_type": made.node_type,
+            "updated": landed, "already": already, "not_applied": held,
+            "refused": dict(made.refused), "silent": dict(made.silent),
+            "stubs": list(made.stubs), "notes": list(made.notes),
+            "operations": made.counts(),
+            "queued": any(o.get("queued") for o in outcomes)}
+
+
+def _box_for_slot(scheda, slot: str) -> str:
+    """La casella della scheda che uno slot della voce riempie — dalla ricetta."""
+    entries = (scheda.recipe or {}).get("fields") or {}
+    if slot == "description":
+        for fid, entry in entries.items():
+            steps = entry.get("steps") or []
+            if (len(steps) == 1 and steps[0]["emit"]["op"] == "update_field"
+                    and steps[0]["emit"].get("field") == "description"):
+                return fid
+        return ""
+    if slot == "sito":
+        context = [f for f in scheda.human_key if f != scheda.unit_field]
+        return context[0] if context else ""
+    if slot in scheda._by_id:
+        return slot
+    for fid, entry in entries.items():
+        if (entry.get("property") or {}).get("property_type") == slot:
+            return fid
+    return ""
+
+
 # ── 1 · create_su ────────────────────────────────────────────────────────────
 
 def make_create_su(graph_writer) -> ToolDescriptor:
@@ -133,81 +278,102 @@ def make_create_su(graph_writer) -> ToolDescriptor:
     """
 
     def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from .operazioni import MARK, OperazioniError
+
         number = str(slots.get("us") or "").strip()
         unit_id = unit_id_for(number)
+        if not number:
+            return ToolResult(ok=False, message="Mi manca il numero dell'unità.")
 
-        # The library decides what a StratigraphicUnit IS. We ask it, then read
-        # what it produced — rather than writing a dict shaped like one.
-        # `description` is the library's own field (the datamodel maps it to
-        # crm:P3_has_note), so it is passed to the CONSTRUCTOR and not bolted on.
-        from s3dgraphy.graph import Graph
-        from s3dgraphy.nodes import StratigraphicUnit
-
-        description = str(slots.get("description") or "").strip()
-        scratch = Graph(graph_id="chatbot-scratch")
-        scratch.add_node(StratigraphicUnit(unit_id, name=f"US {number}",
-                                           description=description))
-        made = next(n for n in scratch.nodes if n.node_id == unit_id)
-
-        node = {"id": made.node_id, "node_type": made.node_type,
-                "name": made.name,
-                "data": {"created_by": author, "created_at": _now()}}
-        if made.description:
-            node["description"] = made.description
-
-        # ── the interpretation, and why it lives where it does ──────────────
+        # ── GIÀ PRESENTE — a meno che sia soltanto SEGNATA da un rapporto ────
         #
-        # Measured first (the datamodel, not a guess): `description` exists on a
-        # stratigraphic unit; an INTERPRETATION does not — the `functional/telic`
-        # qualia are about function, which is a different claim.
-        #
-        # So the decision, taken deliberately and stated here so nobody has to
-        # rediscover it: a dictated interpretation is a **field note**, and it
-        # goes in `data["interpretation"]`. It is NOT made a PropertyNode,
-        # because a PropertyNode carries an evidence chain (source → extractor →
-        # property) and a sentence spoken into a microphone has none —
-        # manufacturing one would put a paradata chain in the graph that nobody
-        # built.
-        #
-        # One place, not two: this field is what somebody said in the trench;
-        # when that reading acquires evidence it becomes a property WITH its
-        # chain, and that is a different act, done at the desk.
-        interpretation = str(slots.get("interpretation") or "").strip()
-        if interpretation:
-            node["data"]["interpretation"] = interpretation
+        # Una US che un'altra scheda ha nominato («copre 3018») esiste come
+        # stub (`app/operazioni.py`, decisione 1). Crearla davvero non è
+        # crearne una seconda: è darle la sua scheda, e il generatore la
+        # promuove.
+        present = graph_writer.node(unit_id)
+        if present is not None and not (
+                ((present.get("data") or {}).get(MARK) or {}).get("stub")):
+            return ToolResult(
+                ok=True,
+                message=f"US {number} già presente, non l'ho creata di nuovo.",
+                delta=GraphDelta(),
+                data={"us": number, "node_id": unit_id, "created": False})
 
-        # ── everything the adapters carried and nobody mapped ───────────────
+        scheda = reference_scheda()
+        if scheda is None:
+            return ToolResult(
+                ok=False,
+                message=("Questo nodo non serve una scheda di riferimento "
+                         f"({REFERENCE_SCHEDA_VARIABLE}): senza una ricetta "
+                         "non so che tipo di nodo sia un'unità, né dove vadano "
+                         "le cose che mi dici."),
+                data={"us": number, "reason": "no-scheda"})
+
+        # ── GLI SLOT DELLA VOCE (e degli adattatori), come caselle della scheda
+        #
+        # Derivati dalla ricetta, non da una tabella scritta qui:
+        #   description    → la casella che la ricetta scrive in `description`
+        #   interpretation → la casella la cui proprietà è `interpretation`
+        #   sito           → il primo campo di contesto della chiave umana
+        #                    (localita · yacimiento · lelohely: il più largo)
+        #   area           → la casella che si chiama `area`, se c'è
+        #
+        # Il 21 agosto `interpretation` era stata decisa NOTA DI CAMPO
+        # (`data.interpretation`) perché una frase non ha una catena di
+        # evidenza. La ricetta ICCD dice invece `interpretazione` →
+        # PropertyNode `interpretation`, e la ricetta è la fonte: la decisione
+        # si è rovesciata DOVE si decide, nella definizione, non qui.
+        values: Dict[str, Any] = {}
+        for slot, value in (("description", slots.get("description")),
+                            ("interpretation", slots.get("interpretation")),
+                            ("sito", slots.get("sito")),
+                            ("area", slots.get("area"))):
+            if value in (None, ""):
+                continue
+            box = _box_for_slot(scheda, slot)
+            if box:
+                values[box] = str(value).strip()
+
+        # ── ciò che gli adattatori portano e nessuno ha mappato ──────────────
         #
         # PyArchInit's `rapporti`, its `unita_misura`, whatever ATRIUM adds next
         # release. Kept under one key rather than spread across `data`, so a
         # reader can always tell what this service UNDERSTOOD from what it
-        # merely carried. Dropping it would make the graph a lossy copy of
-        # somebody's database, which is the one thing an ingest must not be.
+        # merely carried. NOT a scheda field — which is why it is the one
+        # `update_field data.…` this tool still writes by name.
+        extra_ops: List[Dict[str, Any]] = []
         extra = slots.get("extra")
         if isinstance(extra, dict) and extra:
-            node["data"]["source_fields"] = dict(extra)
-
-        # Where the record came from, when the caller knows: a unit number is
-        # only unique inside its area, and losing that makes two trenches one.
-        for key in ("sito", "area"):
-            value = slots.get(key)
-            if value not in (None, ""):
-                node["data"][key] = str(value).strip()
-        process = _process_node("create_su", author, unit_id,
-                                f"US {number} creata a voce sul campo")
-        delta = GraphDelta(nodes=[node], process=process, author=author)
-
-        existed = graph_writer.has_node(unit_id)
-        if not existed:
-            graph_writer.apply(delta)
+            from s3dgraphy import api
+            extra_ops.append(api.make_op("update_field", node_id=unit_id,
+                                         field="data.source_fields",
+                                         value=dict(extra), ts=_now()))
+        try:
+            made, process, outcomes, landed, already, held = _through_the_recipe(
+                graph_writer, scheda, values, number=number, create=True,
+                author=author, kind="create_su",
+                detail=f"US {number} creata a voce sul campo",
+                extra_ops=extra_ops)
+        except OperazioniError as wrong:
+            return ToolResult(ok=False, message=str(wrong),
+                              data={"us": number, "node_id": unit_id})
+        unit_node = next((o["node"] for o in made.ops
+                          if o["op"] == "add_node" and o.get("id") == unit_id), None)
+        message = f"Ho creato la US {number}."
+        if made.refused or made.stubs:
+            message += " " + _what_happened(made, landed, already, held,
+                                            number).split(": ", 1)[1]
+        data = _plan_data(made, outcomes, landed, already, held)
+        data["created"] = True
         return ToolResult(
             ok=True,
             # Said out loud. "US 12 creata" is what a person needs to hear to
             # know the record exists and keep digging.
-            message=(f"US {number} già presente, non l'ho creata di nuovo."
-                     if existed else f"Ho creato la US {number}."),
-            delta=GraphDelta() if existed else delta,
-            data={"us": number, "node_id": unit_id, "created": not existed})
+            message=message,
+            delta=GraphDelta(nodes=[unit_node] if unit_node else [],
+                             process=process, author=author),
+            data=data)
 
     return ToolDescriptor(
         name="create_su",
@@ -271,6 +437,8 @@ def make_update_su(graph_writer) -> ToolDescriptor:
     """
 
     def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from .operazioni import OperazioniError
+
         number = str(slots.get("us") or "").strip()
         if not number:
             return ToolResult(ok=False, message="Mi manca il numero dell'unità.")
@@ -289,77 +457,63 @@ def make_update_su(graph_writer) -> ToolDescriptor:
                          f"un'unità è un altro atto, perché tocca ogni posto "
                          f"che la nomina."))
 
-        unit_id = unit_id_for(number)
-        process = _process_node("update_su", author, unit_id,
-                                f"US {number}: {len(fields)} campi aggiornati")
+        # ── QUALE RICETTA ────────────────────────────────────────────────────
+        #
+        # Fino al 19 ottobre qui i nomi dei campi diventavano `data.<nome>` e
+        # basta. Adesso i nomi sono le caselle di UNA definizione, e la sua
+        # ricetta dice che cosa ciascuna è nel grafo: la scheda aperta nel
+        # modulo, oppure quella che l'unità dichiara, oppure quella di
+        # riferimento del nodo (la voce).
+        scheda, why = scheda_for(graph_writer, number,
+                                 scheda_id=str(slots.get("scheda") or ""),
+                                 version=str(slots.get("version") or ""))
+        if scheda is None:
+            return ToolResult(
+                ok=False,
+                message=("Questo nodo non serve la scheda con cui compilare "
+                         f"la US {number}" + (f" («{slots.get('scheda')}» "
+                                              f"{slots.get('version') or ''})"
+                                              if slots.get("scheda") else "")
+                         + ": senza una ricetta non so che cosa siano le "
+                           "caselle nel grafo."),
+                data={"us": number, "reason": "no-scheda"})
 
         # ── CHI HA COMPOSTO OGNI VALORE, accanto al valore ──────────────────
         #
-        # Scritta nella STESSA operazione dei campi, non in un secondo giro:
-        # un valore e la sua autorialità che atterrano separatamente sono due
-        # scritture di cui una può fallire, e un campo AI senza il suo
+        # Scritta nella STESSA lista di operazioni dei campi, non in un secondo
+        # giro: un valore e la sua autorialità che atterrano separatamente sono
+        # due scritture di cui una può fallire, e un campo AI senza il suo
         # marcatore ha l'aria di un campo qualunque — che è precisamente ciò
-        # che non deve avere.
+        # che non deve avere. È un `update_field data.authorship.<campo>` sul
+        # nodo dell'unità: l'orologio per campo del CRDT, che c'era già.
         #
         # Il default è `human`: chi non dice niente ha scritto lui. Marcare AI
         # per difetto attribuirebbe a una macchina il lavoro di chi scava.
-        marks = authorship.marks_for(fields, slots.get("authored_by"),
-                                     model=slots.get("model"))
         try:
-            outcomes = graph_writer.update(unit_id, {**fields, **marks},
-                                           author=author, process=process)
+            made, process, outcomes, landed, already, held = _through_the_recipe(
+                graph_writer, scheda, dict(fields), number=number,
+                create=bool(slots.get("create")), author=author,
+                kind="update_su",
+                detail=f"US {number}: {len(fields)} campi · {scheda.id} "
+                       f"{scheda.version}",
+                authored_by=slots.get("authored_by"), model=slots.get("model"))
+        except OperazioniError as wrong:
+            return ToolResult(ok=False, message=str(wrong),
+                              data={"us": number, "node_id": unit_id_for(number)})
         except Exception as exc:                                 # noqa: BLE001
-            # `FieldRefused` («non esiste») and `RoomRefused` («non puoi
-            # scrivere») both arrive here, and both already carry a sentence
-            # meant for a person: it is passed on rather than replaced.
+            # `RoomRefused` («non puoi scrivere») arriva qui, e porta già una
+            # frase per una persona: la si passa invece di sostituirla.
             return ToolResult(ok=False, message=str(exc),
-                              data={"us": number, "node_id": unit_id})
+                              data={"us": number, "node_id": unit_id_for(number)})
 
-        # I marcatori di autorialità NON si contano fra i campi: una persona
-        # che ha compilato due caselle deve leggere «2 campi aggiornati», non
-        # quattro.
-        def _is_mark(name: str) -> bool:
-            return f".{authorship.PREFIX}." in f".{name}"
-
-        landed = [o for o in outcomes
-                  if o.get("applied") and not _is_mark(o["field"])]
-        # `idempotent` E `stale` NON sono la stessa risposta, e trattarli
-        # insieme diceva una cosa falsa. Trovato nel giro vero: una scheda
-        # salvata subito dopo la creazione riportava «la stanza ha un valore
-        # più recente» per `area`, quando il valore era **identico** — il
-        # merge aveva risposto `idempotent`, cioè «ce l'ho già così».
-        #
-        #   idempotent → il valore è già quello. Non è un conflitto e non si
-        #                dice: nessuno ha perso niente.
-        #   stale      → qualcun altro ha scritto quella casella più
-        #                recentemente. QUESTO si dice, perché è la cosa che
-        #                una persona più ha bisogno di sapere.
-        already = [o for o in outcomes
-                   if not o.get("applied") and not _is_mark(o["field"])
-                   and o.get("reason") == "idempotent"]
-        held = [o for o in outcomes
-                if not o.get("applied") and not _is_mark(o["field"])
-                and o.get("reason") != "idempotent"]
-        # A field the room kept somebody else's value for is NOT a failure of
-        # this act, and it is not silence either: it is said, because two people
-        # writing the same box is the thing a person most needs to know about.
-        message = f"US {number}: {len(landed)} campi aggiornati."
-        if already:
-            message += f" {len(already)} erano già così."
-        if held:
-            message += (f" {len(held)} non applicati (qualcun altro li ha "
-                        f"scritti più di recente): "
-                        f"{', '.join(o['field'] for o in held)}.")
-
+        data = _plan_data(made, outcomes, landed, already, held)
+        data["scheda"] = {**scheda.ref, "why": why}
         return ToolResult(
-            ok=True, message=message,
-            # The delta carries the ACT, not the nodes: nothing was created, and
-            # a delta claiming a node would be a claim that something was.
+            ok=True,
+            message=_what_happened(made, landed, already, held, number),
+            # The delta carries the ACT; the operations went on the wire.
             delta=GraphDelta(process=process, author=author),
-            data={"us": number, "node_id": unit_id,
-                  "updated": [o["field"] for o in landed],
-                  "already": [o["field"] for o in already],
-                  "not_applied": held})
+            data=data)
 
     return ToolDescriptor(
         name="update_su",
@@ -382,8 +536,16 @@ def make_update_su(graph_writer) -> ToolDescriptor:
             Slot("model", "string", False,
                  "quale modello, per i campi marcati `ai` — è ciò che resta "
                  "leggibile dopo che una persona li ha validati"),
+            Slot("scheda", "string", False,
+                 "con quale definizione: assente vuol dire quella che l'unità "
+                 "dichiara, o quella di riferimento del nodo"),
+            Slot("version", "string", False, "quale versione di quella definizione"),
+            Slot("create", "boolean", False,
+                 "vero la prima volta, DETTO da chi chiama: «creala se manca» "
+                 "è il modo in cui un numero sbagliato diventa un'unità nuova"),
         ],
-        description="Aggiorna i campi di un'unità stratigrafica che esiste già.",
+        description="Compila i campi di un'unità attraverso la ricetta della "
+                    "sua scheda.",
         service="s3dgraphy", handler=handler)
 
 
@@ -445,51 +607,42 @@ SPOKEN_FIELDS: Dict[str, Tuple[str, ...]] = {
 # copra sarebbe stato inventare il criterio. Quando questo tool esiste, il
 # marcatore si mette **là**, nella definizione, non qui.
 
-#: I verbi che una persona dice, e l'arco che ne esce. MISURATO contro
-#: `s3Dgraphy_connections_datamodel.json` — versione **1.6.13**, 54 tipi
-#: dichiarati:
+#: I verbi che una persona dice, e l'arco che ne esce — DERIVATI DALLA RICETTA
+#: della scheda di riferimento del nodo, dal 19 ottobre (audit B2).
 #:
-#:     is_after  overlies  cuts  fills  abuts  is_bonded_to
-#:     is_physically_equal_to  has_same_time            → PRESENTI
-#:     is_before  is_overlain_by  is_cut_by             → ASSENTI
+#: ── PERCHÉ NON PIÙ UN DIZIONARIO A SÉ ──────────────────────────────────────
 #:
-#: **Gli inversi non esistono come tipi di arco.** Esistono solo come etichetta
-#: `reverse` per LEGGERE un arco al contrario. Quindi «la 12 è coperta dalla
-#: 18» non si registra con un arco inverso: si registra **scambiando i capi**,
-#: ed è il motivo per cui la terza voce di ogni coppia qui sotto è `swap`.
+#: Fino a stanotte qui c'era una mappa scritta a mano, allineata a
+#: `pyarchinit-mini/…/us_ops.py`, che diceva `copre → is_after`. La scheda ICCD
+#: compilata dice `copre → overlies`, e l'audit ha misurato che la stessa frase
+#: detta a voce e scritta sulla scheda produceva DUE archi diversi. E.D.:
+#: **COPRE è `overlies`, POSTERIORE A è `is_after`, e non si mescolano** — le
+#: relazioni fisiche giustificano quelle cronologiche, ma sono due cose.
 #:
-#: LA MAPPA È LA STESSA di `pyarchinit-mini/pyarchinit_mini/connector/us_ops.py`
-#: (commit `9fb8777`), deliberatamente: lo stesso rapporto detto a voce o
-#: importato da una tabella deve diventare **lo stesso arco**, altrimenti la
-#: porta da cui è entrato si vede nel grafo.
+#: Quindi la frase è l'ETICHETTA della casella nella lingua dei comandi
+#: («copre», «coperto da», «posteriore a»…, più il femminile dei participi),
+#: e `(edge_type, direzione)` è il passo della ricetta: `$unit → $item` è
+#: `forward`, `$item → $unit` è `swap`, un arco simmetrico è `symmetric`.
 #:
-#: `overlies` ESISTE e NON è scelto: sarebbe la relazione fisica di COPRE con
-#: la sua mappatura AP11, ma l'adattatore già nell'ecosistema usa `is_after`, e
-#: due porte che scrivono due tipi per la stessa frase è la divergenza che si
-#: scopre sei mesi dopo. Se un giorno si passa a `overlies`, si passa nei due
-#: repository insieme.
-RELATIONS: Dict[str, Tuple[str, str]] = {
-    # ── il verbo canonico, e il suo inverso che scambia i capi ──────────────
-    "copre": ("is_after", "forward"),
-    "coperto da": ("is_after", "swap"),
-    "coperta da": ("is_after", "swap"),
-    "posteriore a": ("is_after", "forward"),
-    "anteriore a": ("is_after", "swap"),
-    "taglia": ("cuts", "forward"),
-    "tagliato da": ("cuts", "swap"),
-    "tagliata da": ("cuts", "swap"),
-    "riempie": ("fills", "forward"),
-    "riempito da": ("fills", "swap"),
-    "riempita da": ("fills", "swap"),
-    "si appoggia a": ("abuts", "forward"),
-    "appoggia a": ("abuts", "forward"),
-    "gli si appoggia": ("abuts", "swap"),
-    # ── simmetrici: i capi si ORDINANO, così due modi di dirlo sono un arco ─
-    "si lega a": ("is_bonded_to", "symmetric"),
-    "uguale a": ("is_physically_equal_to", "symmetric"),
-    "contemporaneo a": ("has_same_time", "symmetric"),
-    "contemporanea a": ("has_same_time", "symmetric"),
-}
+#: CHE COSA SI È PERSO, detto: «contemporaneo a» (`has_same_time`) e «appoggia
+#: a» non sono caselle della US ICCD, e una frase che non ha una casella non ha
+#: una ricetta. Tornano il giorno che una definizione le dichiara.
+def _relations() -> Dict[str, Tuple[str, str]]:
+    from .intent import COMMAND_LANGUAGE
+    from .operazioni import relation_phrases
+
+    scheda = reference_scheda()
+    if scheda is None:
+        return {}
+    phrases = relation_phrases(scheda, COMMAND_LANGUAGE)
+    RELATION_FIELDS.clear()
+    RELATION_FIELDS.update({k: v[2] for k, v in phrases.items()})
+    return {k: (v[0], v[1]) for k, v in phrases.items()}
+
+
+#: frase → la casella della scheda che quella frase compila
+RELATION_FIELDS: Dict[str, str] = {}
+RELATIONS: Dict[str, Tuple[str, str]] = _relations()
 
 
 def edge_id_for(source: str, edge_type: str, target: str) -> str:
@@ -513,6 +666,8 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
     """
 
     def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from .operazioni import OperazioniError
+
         left = str(slots.get("us") or "").strip()
         right = str(slots.get("other") or "").strip()
         said = str(slots.get("relation") or "").strip().lower()
@@ -533,45 +688,48 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
                 message=(f"Non conosco il rapporto «{said}». So: "
                          + ", ".join(sorted(RELATIONS)) + "."))
         edge_type, direction = mapping
+        box = RELATION_FIELDS[said]
 
-        source_n, target_n = left, right
-        if direction == "swap":
-            source_n, target_n = right, left
-        source, target = unit_id_for(source_n), unit_id_for(target_n)
-        if direction == "symmetric":
-            # I capi si ORDINANO, così «12 uguale a 18» e «18 uguale a 12»
-            # producono lo stesso id e il secondo si fonde. Senza questo i
-            # simmetrici sarebbero il solo posto che raddoppia ancora.
-            source, target = min(source, target), max(source, target)
-
-        missing = [n for n, node_id in ((source_n, source), (target_n, target))
-                   if not graph_writer.has_node(node_id)]
-        if missing:
-            return ToolResult(
-                ok=False,
-                message=(f"Non trovo la US {' e la US '.join(missing)} in questo "
-                         f"grafo. Un arco verso un'unità che non c'è disegna "
-                         f"una freccia nel vuoto: crea prima l'unità."),
-                data={"missing": missing})
-
-        edge = {"id": edge_id_for(source, edge_type, target),
-                "source": source, "target": target, "edge_type": edge_type}
-        process = _process_node(
-            "relate_su", author, edge["id"],
-            f"US {left} {said} US {right}, detto sul campo")
-        delta = GraphDelta(edges=[edge], process=process, author=author)
-        graph_writer.apply(delta)
-
+        # LA STESSA VIA DELLA SCHEDA: «la 12 copre la 18» è la casella COPRE
+        # della US 12 con dentro la 18 — e il generatore ne fa l'arco che la
+        # ricetta dichiara. `additive`: una frase aggiunge UN rapporto, non
+        # riscrive la casella togliendo gli altri.
+        #
+        # L'unità che FA l'azione deve esistere (`create=False`: è un
+        # aggiornamento, e un numero sbagliato non diventa una US nuova).
+        # L'ALTRA, se non c'è, si segna minima — la stessa decisione della
+        # scheda (`operazioni.py`, decisione 1): un rapporto detto è
+        # un'osservazione che quella unità esiste.
+        scheda = reference_scheda()
+        try:
+            made, process, outcomes, landed, already, held = _through_the_recipe(
+                graph_writer, scheda, {box: [right]}, number=left, create=False,
+                author=author, kind="relate_su",
+                detail=f"US {left} {said} US {right}, detto sul campo",
+                additive=True)
+        except OperazioniError as wrong:
+            return ToolResult(ok=False, message=str(wrong),
+                              data={"missing": [left]})
+        edge = next((o for o in made.ops if o["op"] == "add_edge"), None)
+        message = f"Registrato: US {left} {said} US {right}."
+        if made.stubs:
+            message += (f" La US {right} non c'era ancora: l'ho segnata da "
+                        f"compilare.")
         return ToolResult(
             ok=True,
-            message=f"Registrato: US {left} {said} US {right}.",
-            delta=delta,
-            data={"edge_id": edge["id"], "edge_type": edge_type,
-                  "source": source, "target": target,
+            message=message,
+            delta=GraphDelta(edges=[{k: edge[k] for k in ("id", "source",
+                                                         "target", "edge_type")}]
+                             if edge else [], process=process, author=author),
+            data={"edge_id": edge["id"] if edge else None,
+                  "edge_type": edge_type,
+                  "source": edge["source"] if edge else None,
+                  "target": edge["target"] if edge else None,
                   # Cosa è stato DETTO, oltre a cosa è stato scritto: chi
                   # rilegge deve poter vedere che «coperta da» è diventata un
-                  # `is_after` a capi scambiati e non un tipo inverso.
-                  "said": said, "direction": direction})
+                  # `overlies` a capi scambiati e non un tipo inverso.
+                  "said": said, "direction": direction, "field": box,
+                  "stubs": list(made.stubs)})
 
     return ToolDescriptor(
         name="relate_su",

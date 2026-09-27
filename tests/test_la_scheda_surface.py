@@ -89,7 +89,13 @@ def test_a_language_the_definition_does_not_declare_is_a_400(client):
 
 def test_a_filled_scheda_becomes_a_tool_call(client, monkeypatch):
     """LA TESI DI TUTTO L'ARCO: una scheda è lo stesso atto con un'altra
-    superficie d'ingresso. Non una seconda via di scrittura."""
+    superficie d'ingresso. Non una seconda via di scrittura.
+
+    Dal 19 ottobre è UN atto e non due: il generatore crea l'unità dentro la
+    stessa lista di operazioni quando `create` è dichiarato — con il tipo che
+    la scheda decide, cosa che `create_su` non poteva sapere. Il tool riceve
+    anche QUALE definizione e quale versione, perché è la sua ricetta a dire
+    che cosa sono le caselle."""
     import app.main as main
 
     seen = {}
@@ -106,8 +112,10 @@ def test_a_filled_scheda_becomes_a_tool_call(client, monkeypatch):
         "authored_by": {"nota": "ai"}, "model": "un-modello"})
     assert answer.status_code == 200
 
-    assert set(seen) == {"create_su", "update_su"}
-    assert seen["create_su"] == {"us": "12"}
+    assert set(seen) == {"update_su"}
+    assert seen["update_su"]["create"] is True
+    assert (seen["update_su"]["scheda"], seen["update_su"]["version"]) == (
+        "prova", "")
     assert seen["update_su"]["us"] == "12"
     assert seen["update_su"]["fields"] == {"sito": "Cencelle",
                                            "nota": "terra bruna"}
@@ -152,9 +160,10 @@ def test_create_is_declared_and_not_guessed(client, monkeypatch):
     assert called == ["update_su"]
 
 
-def test_a_failed_creation_stops_before_filling(client, monkeypatch):
-    """Riempire le caselle di un'unità che non è stata creata è come
-    `update_field` risponde «node is not here» — meglio non arrivarci."""
+def test_a_failed_save_is_one_refusal(client, monkeypatch):
+    """Era «a failed creation stops before filling», quando il primo
+    salvataggio erano due atti. Adesso è una lista sola: se non passa, non
+    passa niente, e la risposta è una."""
     import app.main as main
 
     called = []
@@ -168,7 +177,7 @@ def test_a_failed_creation_stops_before_filling(client, monkeypatch):
     answer = client.post("/v1/scheda/prova",
                          json={"us": "12", "create": True,
                                "values": {"nota": "x"}})
-    assert called == ["create_su"]
+    assert called == ["update_su"]
     assert answer.json()["ok"] is False
 
 

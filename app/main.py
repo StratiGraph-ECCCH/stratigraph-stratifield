@@ -538,6 +538,11 @@ def list_schede() -> Dict[str, Any]:
     found = schede.available()
     return {
         "schede": [{"id": s.id,
+                    # WHICH version is served, and whether it can be saved
+                    # (compiled, with a recipe) or only drawn (a YAML source
+                    # from the development override)
+                    "version": s.version,
+                    "saveable": s.recipe is not None,
                     "languages": s.languages,
                     "standard": {k: s.standard.get(k) for k in
                                  ("authority", "code", "version", "invented")},
@@ -655,9 +660,13 @@ class SchedaIn(BaseModel):
     #: box silently address a different unit.
     us: str = ""
     #: `{field id: value}`, with the ids the DEFINITION declares. Anything else
-    #: is refused by `scheda.slots_for` — a form is not a way to put arbitrary
-    #: keys into `data`.
+    #: is refused — a form is not a way to put arbitrary keys into the graph.
+    #: A field sent as `null` is EMPTIED (its operations of removal); a field
+    #: not sent is not touched.
     values: Dict[str, Any] = Field(default_factory=dict)
+    #: WHICH version of the definition the form was drawn from. Absent means
+    #: the latest this node serves.
+    version: str = ""
     #: `{field id: "human"|"ai"}`. Absent means human: whoever said nothing
     #: wrote it themselves.
     authored_by: Dict[str, str] = Field(default_factory=dict)
@@ -677,54 +686,121 @@ def submit_scheda(scheda_id: str, request: Request,
     """A filled scheda becomes the SAME act a voice would have produced.
 
     THE POINT OF THE WHOLE ARC, in one route: this does not write to the graph.
-    It turns a form into the slots of `create_su` / `update_su` and hands them
-    to `invoke`, exactly as `/say` hands it what a sentence produced. The
-    browser talks to the service; the service talks to the tools; the tools talk
-    to the writer — and `tests/test_one_write_path.py` keeps that the only road.
+    It hands the values to `update_su` — the tool a sentence reaches too — and
+    the tool hands them to the generator (`app/operazioni.py`), which reads the
+    definition's RECIPE and says which of s3Dgraphy's five operations to send.
+    The browser talks to the service; the service talks to the tools; the tools
+    talk to the writer — and `tests/test_one_write_path.py` keeps that the only
+    road.
 
-    So there is no new write path here, and there is no second place that knows
-    what a field means: `app/scheda.py` reads the definition, and the definition
-    came from the standard.
+    **Since 2026-10-19 one act, not two.** A first save used to be `create_su`
+    then `update_su`; now the generator creates the unit inside the same list
+    when `create` is declared — with the TYPE the scheda decides (`formazione_
+    segno: negativa` → USN), which `create_su` could not know.
     """
     from . import scheda as schede
 
-    found = schede.find(scheda_id)
+    found = schede.find(scheda_id, version=body.version or None)
     if found is None:
         raise HTTPException(
             status_code=404,
-            detail=f"questo nodo non serve una scheda «{scheda_id}»")
+            detail=(f"questo nodo non serve una scheda «{scheda_id}»"
+                    + (f" nella versione {body.version}" if body.version else "")))
     if not (body.us or "").strip():
         raise HTTPException(
             status_code=400,
             detail="una scheda è di un'unità: manca il numero")
+    unknown = sorted(k for k in body.values if k not in found._by_id)
+    if unknown:
+        raise HTTPException(
+            status_code=400,
+            detail=(f"«{found.id}» non ha i campi {unknown}: una scheda compila "
+                    f"le caselle che lo standard dichiara, non altre."))
 
     author = _author(request)
-    try:
-        slots = schede.slots_for(found, body.values, us=body.us)
-    except schede.SchedaError as problem:
-        raise HTTPException(status_code=400, detail=str(problem)) from problem
-
-    # A unit has to exist before its boxes can be filled — `update_field`
-    # refuses a node that is not there, which is the property that makes an
-    # update an update. So a first save is two acts, in this order, and the
-    # SECOND one is what the answer reports: the creation is a precondition, the
-    # filling is what the person did.
-    if body.create:
-        made = invoke(REGISTRY.get("create_su"),
-                      {"us": slots["us"]}, author, registry=REGISTRY)
-        if not made.ok:
-            return Answer(ok=False, message=made.message, tool="create_su",
-                          data=made.data)
-
-    slots["authored_by"] = dict(body.authored_by)
+    # Il campo-identità non è un valore da scrivere: è il numero, e viaggia in
+    # `us` (lo stesso motivo per cui `payloadFor` lo toglie nel browser).
+    values = {k: v for k, v in body.values.items() if k != found.unit_field}
+    slots: Dict[str, Any] = {"us": body.us.strip(), "fields": values,
+                             "scheda": found.id, "version": found.version,
+                             "create": bool(body.create),
+                             "authored_by": dict(body.authored_by)}
     if body.model:
         slots["model"] = body.model
+    if not values:
+        # una scheda che dice solo il numero: crearla è l'atto intero
+        if not body.create:
+            raise HTTPException(status_code=400,
+                                detail="nessuna casella da scrivere")
+        slots["fields"] = {}
     result: ToolResult = invoke(REGISTRY.get("update_su"), slots, author,
-                                registry=REGISTRY)
-    return Answer(ok=result.ok, message=result.message, tool="update_su",
-                  slots={"us": slots["us"],
-                         "fields": sorted(slots["fields"])},
+                                registry=REGISTRY) if values else invoke(
+        REGISTRY.get("create_su"), {"us": slots["us"]}, author,
+        registry=REGISTRY)
+    return Answer(ok=result.ok, message=result.message,
+                  tool="update_su" if values else "create_su",
+                  slots={"us": slots["us"], "fields": sorted(values)},
                   data=result.data)
+
+
+@v1.get("/scheda/{scheda_id}/unita", tags=["scheda"])
+def read_scheda(scheda_id: str, request: Request, us: str = "") -> Dict[str, Any]:
+    """IL RITORNO (audit B4): i valori di un'unità, riletti dal grafo.
+
+    Dal nodo dell'unità nella sezione — la stanza, o il container locale —
+    attraverso la STESSA ricetta che li ha scritti, ai valori della scheda.
+    È ciò che il modulo (Foglio e Campi) mostra riaprendo un'unità: prima di
+    stanotte una scheda riaperta era vuota, perché nessuno sapeva leggere
+    all'indietro.
+
+    **Se l'unità dichiara un'altra definizione** (`data.scheda`) e questo nodo
+    la serve, si rilegge con quella, e lo si dice (`read_with`, `note`): le
+    caselle di uno standard non sono quelle di un altro, e rileggere una US
+    ungherese con la ricetta ICCD darebbe una scheda vuota che sembra vera.
+    """
+    from . import scheda as schede
+    from .operazioni import MARK, OperazioniError, values_from_graph
+    from .tools import unit_id_for
+
+    _author(request)                   # firma valida, o 401 dall'autenticatore
+    number = (us or "").strip()
+    if not number:
+        raise HTTPException(status_code=400, detail="quale unità? manca `us`")
+    asked = schede.find(scheda_id)
+    if asked is None:
+        raise HTTPException(status_code=404,
+                            detail=f"questo nodo non serve una scheda «{scheda_id}»")
+    try:
+        section = WRITER.section()
+    except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
+        raise HTTPException(status_code=502,
+                            detail=f"Non riesco a leggere il grafo: {chiusa}") from None
+    from .operazioni import _Context, _find_unit
+    unit = _find_unit(_Context(section), number)
+    unit_id = str(unit["id"]) if unit else unit_id_for(number)
+    declared = ((unit or {}).get("data") or {}).get(MARK) or {}
+    read_with, note = asked, ""
+    if isinstance(declared, dict) and declared.get("template") and not declared.get("stub"):
+        if (declared.get("template"), declared.get("version")) != (asked.id, asked.version):
+            other = schede.find(str(declared["template"]),
+                                version=str(declared.get("version") or "") or None)
+            if other is not None:
+                read_with = other
+                note = (f"l'unità è stata compilata con «{other.id}» "
+                        f"{other.version}: riletta con quella, non con "
+                        f"«{asked.id}» {asked.version}")
+            else:
+                note = (f"l'unità dichiara «{declared.get('template')}» "
+                        f"{declared.get('version') or ''}, che questo nodo non "
+                        f"serve: riletta con «{asked.id}» {asked.version}")
+    try:
+        read = values_from_graph(read_with, section, unit_id)
+    except OperazioniError as problem:
+        raise HTTPException(status_code=404, detail=str(problem)) from None
+    return {"us": number, "node_id": unit_id,
+            "read_with": read_with.ref, "declared": read.pop("declared"),
+            "note": note, **read,
+            "where": writer_describe(WRITER)}
 
 
 class ValidateIn(BaseModel):

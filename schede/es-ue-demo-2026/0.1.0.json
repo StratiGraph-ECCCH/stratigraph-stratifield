@@ -1,0 +1,1110 @@
+{
+  "format": "stratigraph-templates/compiled-definition",
+  "format_version": "1",
+  "header": {
+    "id": "es-ue-demo-2026",
+    "version": "0.1.0",
+    "standard": {
+      "authority": "DEMO",
+      "code": "UE",
+      "version": "2026-demo",
+      "kind": "field_model",
+      "title": {
+        "es": "Ficha de Unidad Estratigráfica (demo)",
+        "it": "Scheda di Unità Stratigrafica (demo)"
+      },
+      "license": "CC BY-SA 4.0",
+      "attribution": "stratigraph-templates (ficha demo)",
+      "source": "inventata per la prova — nessuna normativa reale è stata citata",
+      "invented": true
+    },
+    "source_language": "es",
+    "languages": [
+      "es",
+      "it"
+    ],
+    "vocabularies": [
+      {
+        "id": "fx-ue-definicion-es",
+        "authority": "FIXTURE",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://example.invalid/fixture/ue-definicion-es/",
+        "fixture": true
+      }
+    ],
+    "digest": "sha256:d7534c762a87541a40fdd6d7c7245f3a52cdd172b1237ffa73b4c1de5f9b4ccf",
+    "datamodel": {
+      "nodes": "1.6.8",
+      "connections": "1.6.19",
+      "qualia": "1.6.1",
+      "em_ttl": "1.6.2",
+      "s3dgraphy": "1.6.0.dev20",
+      "taken_from": {
+        "git_commit": "8b91867aef7443a7de37fed46812d5f1bba39327",
+        "git_dirty": false
+      },
+      "snapshot": "registry/s3dgraphy-snapshot.json"
+    },
+    "compiled_by": {
+      "name": "stratigraph-templates",
+      "version": "0.1.0"
+    }
+  },
+  "visual": {
+    "identity": {
+      "human_key": [
+        "yacimiento",
+        "contexto"
+      ],
+      "pattern": "Contexto {contexto} · {yacimiento}",
+      "unit_field": "contexto",
+      "uid": {
+        "policy": "minted_by_creator",
+        "opaque": true,
+        "display": "on_request",
+        "derive_from_human_key": false
+      },
+      "deduplication": "by_human_key_in_context"
+    },
+    "provenance": {
+      "per_field": true,
+      "authors": [
+        "human",
+        "ai"
+      ],
+      "states": [
+        "asserted",
+        "ai_drafted",
+        "human_validated"
+      ],
+      "clock": "s3dgraphy_crdt_field_clock"
+    },
+    "paragraphs": [
+      {
+        "id": "cabecera",
+        "labels": {
+          "es": "Cabecera",
+          "it": "Intestazione"
+        },
+        "fields": [
+          "contexto",
+          "yacimiento",
+          "definicion"
+        ]
+      },
+      {
+        "id": "descripcion",
+        "labels": {
+          "es": "Descripción",
+          "it": "Descrizione"
+        },
+        "fields": [
+          "descripcion",
+          "interpretacion"
+        ]
+      },
+      {
+        "id": "secuencia",
+        "labels": {
+          "es": "Secuencia estratigráfica",
+          "it": "Sequenza stratigrafica"
+        },
+        "fields": [
+          "igual_a",
+          "cubre",
+          "cubierto_por",
+          "corta",
+          "cortado_por"
+        ]
+      },
+      {
+        "id": "georreferenciacion",
+        "labels": {
+          "es": "Georreferenciación",
+          "it": "Georeferenziazione"
+        },
+        "fields": [
+          "coordenadas",
+          "crs",
+          "cota"
+        ]
+      },
+      {
+        "id": "registro",
+        "labels": {
+          "es": "Registro",
+          "it": "Registrazione"
+        },
+        "fields": [
+          "responsable",
+          "fecha"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "contexto",
+        "paragraph": "cabecera",
+        "type": "identifier",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "CONTEXTO",
+          "it": "CONTESTO"
+        }
+      },
+      {
+        "id": "yacimiento",
+        "paragraph": "cabecera",
+        "type": "text",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "YACIMIENTO",
+          "it": "SITO"
+        }
+      },
+      {
+        "id": "definicion",
+        "paragraph": "cabecera",
+        "type": "term",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "DEFINICIÓN",
+          "it": "DEFINIZIONE"
+        },
+        "vocabulary": {
+          "scheme": "fx-ue-definicion-es"
+        }
+      },
+      {
+        "id": "descripcion",
+        "paragraph": "descripcion",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "DESCRIPCIÓN",
+          "it": "DESCRIZIONE"
+        }
+      },
+      {
+        "id": "interpretacion",
+        "paragraph": "descripcion",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "INTERPRETACIÓN",
+          "it": "INTERPRETAZIONE"
+        },
+        "provenance": {
+          "enabled": true,
+          "authors": [
+            "human",
+            "ai"
+          ]
+        }
+      },
+      {
+        "id": "igual_a",
+        "paragraph": "secuencia",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "IGUAL A",
+          "it": "UGUALE A"
+        }
+      },
+      {
+        "id": "cubre",
+        "paragraph": "secuencia",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "CUBRE",
+          "it": "COPRE"
+        }
+      },
+      {
+        "id": "cubierto_por",
+        "paragraph": "secuencia",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "CUBIERTO POR",
+          "it": "COPERTO DA"
+        }
+      },
+      {
+        "id": "corta",
+        "paragraph": "secuencia",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "CORTA",
+          "it": "TAGLIA"
+        }
+      },
+      {
+        "id": "cortado_por",
+        "paragraph": "secuencia",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "CORTADO POR",
+          "it": "TAGLIATO DA"
+        }
+      },
+      {
+        "id": "coordenadas",
+        "paragraph": "georreferenciacion",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "COORDENADAS (E, N)",
+          "it": "COORDINATE (E, N)"
+        }
+      },
+      {
+        "id": "crs",
+        "paragraph": "georreferenciacion",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "lab",
+        "labels": {
+          "es": "SISTEMA DE REFERENCIA (EPSG)",
+          "it": "SISTEMA DI RIFERIMENTO (EPSG)"
+        }
+      },
+      {
+        "id": "cota",
+        "paragraph": "georreferenciacion",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "COTA",
+          "it": "QUOTA"
+        }
+      },
+      {
+        "id": "responsable",
+        "paragraph": "registro",
+        "type": "person_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "RESPONSABLE DEL REGISTRO",
+          "it": "RESPONSABILE DELLA REGISTRAZIONE"
+        }
+      },
+      {
+        "id": "fecha",
+        "paragraph": "registro",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "es": "FECHA",
+          "it": "DATA"
+        }
+      }
+    ],
+    "sheet": {
+      "page": "A4",
+      "margins_mm": {
+        "top": 14,
+        "right": 14,
+        "bottom": 14,
+        "left": 14
+      },
+      "sides": [
+        {
+          "id": "recto",
+          "labels": {
+            "es": "anverso",
+            "it": "fronte"
+          },
+          "rows": [
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "contexto",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 22.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "yacimiento",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 48.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "definicion",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 55.0,
+              "cells": [
+                {
+                  "field": "descripcion",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 50.0,
+              "cells": [
+                {
+                  "field": null,
+                  "block": "secuencia",
+                  "block_labels": {
+                    "es": "SECUENCIA",
+                    "it": "SEQUENZA"
+                  },
+                  "rows": [
+                    {
+                      "h": 25.0,
+                      "cells": [
+                        {
+                          "field": "igual_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 34.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "cubre",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 33.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "cubierto_por",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 33.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 25.0,
+                      "cells": [
+                        {
+                          "field": "corta",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 50.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "cortado_por",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 50.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    }
+                  ],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": true,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 22.0,
+              "cells": [
+                {
+                  "field": "coordenadas",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 40.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "crs",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "cota",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verso",
+          "labels": {
+            "es": "reverso",
+            "it": "retro"
+          },
+          "rows": [
+            {
+              "h": 90.0,
+              "cells": [
+                {
+                  "field": "interpretacion",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "responsable",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 70.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "fecha",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": {}
+  },
+  "recipe": {
+    "operations": [
+      "add_node",
+      "update_field",
+      "remove_node",
+      "add_edge",
+      "remove_edge"
+    ],
+    "unit": {
+      "resolve": {
+        "$unit": {
+          "find": {
+            "human_key": [
+              "yacimiento",
+              "contexto"
+            ],
+            "rule": "by_human_key_in_context"
+          },
+          "create": true
+        }
+      },
+      "steps": [
+        {
+          "emit": {
+            "op": "add_node",
+            "node": {
+              "id": "$unit",
+              "node_type": "$unit.node_type",
+              "name": "$unit.name"
+            }
+          },
+          "when": "created"
+        }
+      ],
+      "name": {
+        "pattern": "Contexto {contexto} · {yacimiento}",
+        "unit_field": "contexto"
+      },
+      "node_type": {
+        "decided_by": null,
+        "table": {},
+        "when_empty": "not decided by the definition",
+        "note": "decided when the unit is CREATED: update_field addresses name, description and data.* only, so an existing unit's node_type cannot be changed by an operation of this vocabulary"
+      }
+    },
+    "fields": {
+      "contexto": {
+        "verdict": "identity",
+        "steps": [],
+        "names": "$unit",
+        "designator": true
+      },
+      "yacimiento": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "definicion": {
+        "verdict": "vocabulary",
+        "each": false,
+        "steps": [],
+        "open": "which property the concept is the value of",
+        "scheme": "fx-ue-definicion-es"
+      },
+      "descripcion": {
+        "verdict": "property",
+        "each": false,
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "description",
+              "value": "$value"
+            }
+          }
+        ]
+      },
+      "interpretacion": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "interpretation",
+                "description": "$value",
+                "data": {
+                  "property_type": "interpretation"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "interpretation",
+          "registered_qualia": false
+        }
+      },
+      "igual_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "equals",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#physicallyEquals",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_physically_equal_to"
+          ]
+        }
+      },
+      "cubre": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "cubierto_por": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "corta": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "cortado_por": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "coordenadas": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "absolute_position",
+                "description": "$value",
+                "data": {
+                  "property_type": "absolute_position"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "absolute_position",
+          "registered_qualia": true
+        }
+      },
+      "crs": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "crs",
+                "description": "$value",
+                "data": {
+                  "property_type": "crs"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "crs",
+          "registered_qualia": false
+        }
+      },
+      "cota": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "elevation"
+        },
+        "defaults": {
+          "$item.qualia": "elevation"
+        }
+      },
+      "responsable": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "author",
+              "id": "$value.ref",
+              "name": "$value.name"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "author",
+                "name": "$value.name"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_author",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "AuthorNode",
+          "node_type": "author"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_author_of",
+          "rdf": {
+            "predicate": "http://www.w3.org/ns/prov#wasAttributedTo",
+            "extension": "https://w3id.org/em/ontology#hasAuthor",
+            "subject": "source"
+          }
+        }
+      },
+      "fecha": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "recording_date",
+                "description": "$value",
+                "data": {
+                  "property_type": "recording_date"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "recording_date",
+          "registered_qualia": false
+        }
+      }
+    },
+    "anchors": {},
+    "open": [
+      {
+        "field": "",
+        "what": "no field has verdict 'node_type': the definition does not say which node type the unit is, so the creator has to"
+      },
+      {
+        "field": "definicion",
+        "what": "verdict 'vocabulary' without qualia or property_name: the definition does not say which property the concept is the value of, so nothing is produced"
+      }
+    ]
+  }
+}

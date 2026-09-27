@@ -64,19 +64,31 @@ def _section(writer):
     return next(iter(doc["graphs"].values()))
 
 
+def back(writer, node_id="US12"):
+    """I valori della scheda, RILETTI dal grafo con la stessa ricetta.
+
+    Dal 19 ottobre una casella non è più `data.<nome>`: è ciò che la ricetta
+    della scheda dice (una PropertyNode, un arco, il campo `description`), e
+    la si rilegge per la via inversa (`operazioni.values_from_graph`)."""
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+    return values_from_graph(reference_scheda(), writer.section(), node_id)["values"]
+
+
 # ── 1 · UN AGGIORNAMENTO È UN AGGIORNAMENTO ─────────────────────────────────
 
 def test_an_update_lands_the_fields_on_the_unit_that_exists(writer):
     node_id = unit(writer)
     result = make_update_su(writer).handler(
-        {"us": "12", "fields": {"definizione": "strato di crollo",
+        {"us": "12", "fields": {"descrizione": "strato di crollo",
                                 "colore": "bruno"}}, ORCID)
     assert result.ok, result.message
 
     stored = nodes_of(writer)[node_id]
-    assert stored["data"]["definizione"] == "strato di crollo"
-    assert stored["data"]["colore"] == "bruno"
-    assert set(result.data["updated"]) == {"data.definizione", "data.colore"}
+    assert stored["description"] == "strato di crollo"
+    assert "colore" not in stored["data"] and "descrizione" not in stored["data"]
+    assert back(writer)["colore"] == {"label": "bruno"}
+    assert set(result.data["updated"]) == {"descrizione", "colore"}
 
 
 def test_an_update_on_a_unit_that_is_not_there_is_refused(writer):
@@ -85,7 +97,7 @@ def test_an_update_on_a_unit_that_is_not_there_is_refused(writer):
     before = set(nodes_of(writer))
 
     result = make_update_su(writer).handler(
-        {"us": "21", "fields": {"definizione": "strato"}}, ORCID)
+        {"us": "21", "fields": {"colore": "bruno"}}, ORCID)
 
     assert not result.ok
     assert "non è in questo grafo" in result.message
@@ -141,7 +153,7 @@ def test_an_update_does_not_touch_who_created_the_unit(writer):
     assert after["created_by"] == before["created_by"] == ORCID
     assert after["created_at"] == before["created_at"]
     assert after.get("modified_by") == ALTRO
-    assert after["colore"] == "bruno"
+    assert back(writer)["colore"] == {"label": "bruno"}
 
 
 # ── 2 · come i campi vengono indirizzati ────────────────────────────────────
@@ -221,7 +233,7 @@ def test_an_operation_without_a_timestamp_is_dead_on_arrival(writer):
     result = make_update_su(writer).handler(
         {"us": "12", "fields": {"consistenza": "friabile"}}, ORCID)
     assert result.ok
-    assert result.data["updated"] == ["data.consistenza"], result.data
+    assert result.data["updated"] == ["consistenza"], result.data
 
 
 def test_emptying_a_field_is_a_value_of_its_own(writer):
@@ -230,11 +242,15 @@ def test_emptying_a_field_is_a_value_of_its_own(writer):
     node_id = unit(writer)
     make_update_su(writer).handler(
         {"us": "12", "fields": {"colore": "bruno"}}, ORCID)
-    assert nodes_of(writer)[node_id]["data"]["colore"] == "bruno"
+    assert back(writer)["colore"] == {"label": "bruno"}
 
     make_update_su(writer).handler(
         {"us": "12", "fields": {"colore": None}}, ORCID)
-    assert not nodes_of(writer)[node_id]["data"].get("colore")
+    assert "colore" not in back(writer)
+    # …e la PropertyNode non è sparita: è un TOMBSTONE, perché «svuotato» non
+    # è «mai avuto» (la stessa ragione per cui il CRDT tiene quello di campo)
+    prop = nodes_of(writer)[f"{node_id}::colore"]
+    assert prop["data"].get("removed")
 
 
 # ── 3 · quello che questo tool NON fa ───────────────────────────────────────
@@ -314,25 +330,28 @@ def test_a_field_the_room_keeps_is_reported_and_does_not_lose_the_others(writer)
     insieme a uno nuovo, e si pretende che il nuovo atterri e che l'altro venga
     detto.
     """
+    from app.operazioni import plan
+    from app.tools import reference_scheda
+
     node_id = unit(writer)
-
     # qualcun altro scrive `colore` adesso
-    writer.update(node_id, {"colore": "grigio"}, author=ALTRO)
+    assert make_update_su(writer).handler(
+        {"us": "12", "fields": {"colore": "grigio"}}, ALTRO).ok
 
-    # noi arriviamo con un valore vecchio per `colore` e uno nuovo per `misure`
-    from s3dgraphy.crdt import apply_op_to_section
-    section = _section(writer)
-    stale = apply_op_to_section(section, {
-        "op": "update_field", "node_id": node_id, "field": "data.colore",
-        "value": "bruno", "author": ORCID, "ts": "2000-01-01T00:00:00Z"})
-    assert not stale.applied and stale.reason == "stale", (
-        f"il caso non è stato costruito: {stale.reason}")
-
-    result = make_update_su(writer).handler(
-        {"us": "12", "fields": {"misure": "0,25 m"}}, ORCID)
-    assert result.ok
-    assert nodes_of(writer)[node_id]["data"]["misure"] == "0,25 m"
-    assert nodes_of(writer)[node_id]["data"]["colore"] == "grigio"
+    # noi arriviamo con un valore VECCHIO per `colore` e uno nuovo per `misure`:
+    # la stessa lista, costruita con un orologio del 2000
+    made = plan(reference_scheda(),
+                {"colore": "bruno",
+                 "misure": [{"qualia": "thickness", "value": "0,25", "unit": "m"}]},
+                number="12", section=writer.section(), ts="2000-01-01T00:00:00Z")
+    outcomes = writer.send(made.ops, author=ORCID)
+    by_field = {}
+    for o, f in zip(outcomes, made.op_fields):
+        by_field.setdefault(f, []).append(o)
+    assert any(o["reason"] == "stale" for o in by_field["colore"]), by_field["colore"]
+    assert back(writer)["colore"] == {"label": "grigio"}, "il più recente resta"
+    assert back(writer)["misure"] == [{"qualia": "thickness", "value": "0,25",
+                                       "unit": "m"}], "e l'altro campo è atterrato"
 
 
 def test_a_value_that_is_already_that_is_not_reported_as_a_conflict(writer):
@@ -347,8 +366,8 @@ def test_a_value_that_is_already_that_is_not_reported_as_a_conflict(writer):
     result = make_update_su(writer).handler(
         {"us": "12", "fields": {"area": "1", "colore": "bruno"}}, ORCID)
     assert result.ok
-    assert result.data["updated"] == ["data.colore"]
-    assert result.data["already"] == ["data.area"]
+    assert result.data["updated"] == ["colore"]
+    assert result.data["already"] == ["area"]
     assert result.data["not_applied"] == []
     assert "già così" in result.message
     assert "più di recente" not in result.message

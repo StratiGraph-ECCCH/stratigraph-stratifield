@@ -279,6 +279,53 @@ class Bridge:
             log.info("bridge: %s", esito)
         return esito
 
+    def deliver_batches(self, post: Callable[[List[Dict[str, Any]]], Dict[str, Any]],
+                        *, size: Callable[[], int]) -> Dict[str, Any]:
+        """Consegna a PACCHI, per la porta REST della stanza (dal 19 ottobre).
+
+        La stessa regola di `deliver` — in ordine, e ferma al primo che non
+        passa — con una differenza che viene dalla porta e non da qui: la porta
+        risponde 200 anche per le operazioni che rifiuta (`refused` nel corpo),
+        perché un rifiuto `stale` o `idempotent` È la risposta convergente. Un
+        pacco con un 200 esce quindi tutto dalla coda, e i rifiuti si contano.
+
+        `size()` si rilegge a ogni pacco: un 413 lo abbassa al numero che la
+        porta dichiara (`BatchTooLarge`), e il pacco si riprova più piccolo.
+        """
+        with self._exclusive():
+            in_attesa = self._read()
+            if not in_attesa:
+                self.last_refusal = None
+                return {"delivered": 0, "already": 0, "refused": 0, "left": 0,
+                        "stopped": None, "requests": 0}
+            consegnate = gia = rifiutate = richieste = 0
+            fermo: Optional[str] = None
+            while in_attesa:
+                pacco = in_attesa[:max(1, int(size()))]
+                try:
+                    risposta = post(pacco)
+                except Exception as exc:  # noqa: BLE001
+                    if type(exc).__name__ == "BatchTooLarge":
+                        continue          # `size()` è già sceso: riprova
+                    fermo = f"{type(exc).__name__}: {exc}"
+                    break
+                richieste += 1
+                rifiuti = list((risposta or {}).get("refused") or [])
+                for voce in rifiuti:
+                    if str(voce.get("reason") or "").strip().lower() in GIA_ARRIVATE:
+                        gia += 1
+                    else:
+                        rifiutate += 1
+                consegnate += int((risposta or {}).get("applied") or 0)
+                in_attesa = in_attesa[len(pacco):]
+            self._rewrite(in_attesa)
+            self.last_refusal = fermo
+            esito = {"delivered": consegnate, "already": gia, "refused": rifiutate,
+                     "left": len(in_attesa), "stopped": fermo,
+                     "requests": richieste}
+            log.info("bridge (REST): %s", esito)
+            return esito
+
     def _rewrite(self, resto: List[Dict[str, Any]]) -> None:
         """Sotto il lucchetto di chi chiama — vedi `_read`."""
         if not resto:

@@ -306,7 +306,26 @@ export const otherFields = (def) =>
  *  (il pannello conta le caselle vuote), e due risposte diverse a «questo campo
  *  è compilato?» sarebbero due completezze. */
 export const isFilled = (v) =>
-  v !== undefined && v !== null && String(v).trim() !== "";
+  v !== undefined && v !== null && shown(v).trim() !== "";
+
+/** Un valore come testo in una casella. I valori STRUTTURATI (SPEC §1.5) —
+ *  un termine `{concept, label}`, una persona `{name, ref}`, una lista, una
+ *  riga di misura — arrivano così dal ritorno (`GET /v1/scheda/{id}/unita`), e
+ *  finché nessuno tocca la casella è quello che si rimanda. I widget che li
+ *  compongono sono un pacchetto a sé: qui soltanto si LEGGONO, invece di
+ *  mostrare «[object Object]». */
+export function shown(v) {
+  if (v === undefined || v === null) return "";
+  if (Array.isArray(v)) return v.map(shown).filter(Boolean).join(", ");
+  if (typeof v === "object") {
+    if ("value" in v) {
+      return [v.label ? `${v.label}:` : "", v.value, v.unit || ""]
+        .filter(Boolean).join(" ");
+    }
+    return String(v.label || v.name || v.concept || v.ref || "");
+  }
+  return String(v);
+}
 
 export function completeness(def, values) {
   const filled = (f) => isFilled(values[f.id]);
@@ -400,7 +419,7 @@ function boxFor(field, state) {
     if (digits) input.setAttribute("maxlength", digits[digits.length - 1]);
   }
   if (kind === "checkbox") input.checked = Boolean(state.values[field.id]);
-  else input.value = state.values[field.id] ?? "";
+  else input.value = shown(state.values[field.id]);
   input.addEventListener("input", () => {
     writeValue(state, field.id, kind === "checkbox" ? input.checked : input.value);
   });
@@ -622,10 +641,18 @@ export function stepTo(container, state, where) {
 
 export function payloadFor(def, state) {
   const values = {};
+  const empty = (v) => v === undefined || v === null
+    || (typeof v === "string" && v.trim() === "")
+    || (Array.isArray(v) && v.length === 0);
   for (const [key, value] of Object.entries(state.values)) {
-    if (value === undefined || value === null) continue;
-    if (typeof value === "string" && value.trim() === "") continue;
+    if (empty(value)) continue;
     values[key] = value;
+  }
+  // UNA CASELLA RILETTA DAL GRAFO E POI SVUOTATA si manda `null` (19 ottobre):
+  // il server non tocca un campo che non riceve, quindi senza questa riga
+  // svuotare una casella di un'unità riaperta non l'avrebbe svuotata mai.
+  for (const key of state.loaded || []) {
+    if (empty(state.values[key])) values[key] = null;
   }
   // Il campo-identità NON viaggia fra i valori: è `us`, e mandarlo anche come
   // `data.us` scriverebbe due volte la stessa cosa in due posti del nodo.
@@ -640,6 +667,9 @@ export function payloadFor(def, state) {
     authored_by: authored,
     model: state.model || "",
     create: Boolean(state.create),
+    // QUALE versione della definizione ha disegnato questo modulo: il nodo la
+    // cerca esatta, e l'unità la registra (audit B5b)
+    version: def.version || "",
   };
 }
 

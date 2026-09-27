@@ -73,6 +73,8 @@ const state = {
   panel: "voice",
   def: null,
   values: {},
+  // le caselle che il ritorno ha riempito dal grafo (vedi `refill`)
+  loaded: new Set(),
   authored: {},
   validated: new Set(),
   model: "",
@@ -326,13 +328,14 @@ async function openScheda(id, su = null, lang = null) {
     // CAMBIARE SCHEDA SVUOTA CIÒ CHE C'ERA, e non è pulizia: i campi di uno
     // standard non sono i campi di un altro. Trovato nel giro offline —
     // aprendo prima la scheda ungherese e poi la US ICCD, il payload in coda
-    // portava `ertelmezes`, che l'ICCD non ha. `scheda.slots_for` lo avrebbe
+    // portava `ertelmezes`, che l'ICCD non ha. `POST /v1/scheda` lo avrebbe
     // rifiutato al momento della consegna (ed è giusto che lo faccia), ma la
     // scheda sarebbe rimasta in coda a fallire per sempre.
     //
     // Ricaricare la STESSA scheda invece non perde niente: è la stessa scheda.
     if (!state.def || state.def.id !== def.id) {
       state.values = {};
+      state.loaded = new Set();
       state.authored = {};
       state.validated = new Set();
       state.us = "";
@@ -349,6 +352,19 @@ async function openScheda(id, su = null, lang = null) {
     if (su && su.us) {
       state.us = String(su.us);
       state.create = false;
+      // IL RITORNO (19 ottobre): i valori si RILEGGONO dal grafo, attraverso
+      // la stessa ricetta che li ha scritti. Fino a ieri una scheda riaperta
+      // mostrava solo il numero — e quello che il browser ricordava.
+      const reread = await refill(def, String(su.us));
+      if (reread && reread.other && !su.reread) {
+        // l'unità dice di essere stata compilata con un'ALTRA definizione: si
+        // riapre con quella, perché le sue caselle non sono queste
+        return openScheda(reread.other, { ...su, reread: true }, lang);
+      }
+      if (reread && reread.note) {
+        says.hidden = false;
+        says.textContent = reread.note;
+      }
     }
     if (from === "cache") {
       says.hidden = false;
@@ -369,6 +385,47 @@ async function openScheda(id, su = null, lang = null) {
       `Non ho la definizione di «${id}» e non riesco a chiederla al nodo. ` +
       `Non posso disegnare una scheda che non conosco.`;
   }
+}
+
+/** I valori di un'unità, riletti dal nodo (`GET /v1/scheda/{id}/unita`).
+ *
+ *  Riempie `state.values` e l'autorialità con ciò che il GRAFO dice, e ricorda
+ *  quali caselle erano piene (`state.loaded`): una casella riletta e poi
+ *  svuotata va mandata come `null`, altrimenti salvare non la svuoterebbe mai.
+ *  Torna `{other}` se l'unità dichiara un'altra definizione, `{note}` se c'è
+ *  qualcosa da dire, `null` se il nodo non risponde (e allora la scheda si
+ *  apre col solo numero, e lo si dice). */
+async function refill(def, us) {
+  const seam = SG();
+  state.values = {};
+  state.authored = {};
+  state.validated = new Set();
+  state.loaded = new Set();
+  if (state.keyField) state.values[state.keyField] = us;
+  let read;
+  try {
+    const answer = await fetch(
+      `${seam.node || ""}/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`,
+      { headers: seam.token ? { Authorization: "Bearer " + seam.token } : {} });
+    if (!answer.ok) {
+      return { note: `Non riesco a rileggere la US ${us} dal nodo ` +
+                     `(${answer.status}): la scheda mostra solo il numero.` };
+    }
+    read = await answer.json();
+  } catch {
+    return { note: `Il nodo non risponde: la US ${us} si apre col solo numero.` };
+  }
+  const withId = read.read_with && read.read_with.template;
+  if (withId && withId !== def.id) return { other: withId };
+  for (const [key, value] of Object.entries(read.values || {})) {
+    state.values[key] = value;
+    state.loaded.add(key);
+  }
+  for (const [key, who] of Object.entries(read.authored_by || {})) {
+    if (who === "ai") state.authored[key] = "ai";
+  }
+  for (const key of read.validated || []) state.validated.add(key);
+  return read.note ? { note: read.note } : {};
 }
 
 function markNav(id) {
@@ -511,6 +568,7 @@ async function validateField(field) {
 
 function clearScheda() {
   state.values = {};
+  state.loaded = new Set();
   state.authored = {};
   state.validated = new Set();
   state.step = 0;

@@ -51,7 +51,7 @@
  * si interrogano con node, come `thumbbarPlan`.
  */
 
-import { authorshipOf, isFilled, writeValue } from "./scheda.js";
+import { authorshipOf, isFilled, shown as asText, writeValue } from "./scheda.js";
 
 const SG = () => (typeof window !== "undefined" && window.SG) || {};
 const tr = (key, values) => (SG().t ? SG().t(key, values) : key);
@@ -141,7 +141,7 @@ export function headKey(pattern, values) {
   if (!pattern) return "";
   return String(pattern).replace(/\{(\w+)\}/g, (_m, name) => {
     const v = values ? values[name] : undefined;
-    return isFilled(v) ? String(v).trim() : "…";
+    return isFilled(v) ? asText(v).trim() : "…";
   });
 }
 
@@ -474,8 +474,7 @@ function controlFor(field, id, named, ctx) {
     if (digits) input.setAttribute("maxlength", digits[digits.length - 1]);
   }
   if (field.vocabulary) input.title = field.vocabulary;
-  input.value = current === undefined || current === null
-    ? "" : Array.isArray(current) ? current.join(", ") : String(current);
+  input.value = asText(current);
   input.addEventListener("input", () => {
     writeValue(state, field.id, input.value);
     // Il pannello, se mostra QUESTO campo, segue: stesso valore, due caselle
@@ -576,7 +575,7 @@ function paintField(insp, field, ctx) {
                     text: tr("insp.write") }));
     const pad = el("textarea", { id: "fo-insp-write",
                                   "data-field": field.id, rows: 6 });
-    pad.value = state.values[field.id] ?? "";
+    pad.value = asText(state.values[field.id]);
     pad.addEventListener("input", () => {
       writeValue(state, field.id, pad.value);
       const cell = document.getElementById(`fo-${field.id}`);

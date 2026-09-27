@@ -340,24 +340,70 @@ def test_no_module_in_app_imports_it_either():
 
 # ── 5 · la directory è il meccanismo ────────────────────────────────────────
 
-def test_no_directory_means_no_schede_and_that_is_not_broken():
+@pytest.fixture
+def no_vendored(monkeypatch, tmp_path):
+    """Solo la directory del test: la copia vendorata messa da parte, così che
+    il meccanismo della sovrascrittura si misuri da solo."""
+    monkeypatch.setattr(schede, "VENDORED_DIR", tmp_path / "nessuna-copia")
+
+
+def test_no_variable_means_THE_VENDORED_COPY_since_2026_10_19():
+    """ERA «nessuna directory = nessuna scheda», e si è rovesciato.
+
+    Le schede compilate stanno nel repository (`schede/`, `sync-schede.sh`) e
+    viaggiano nell'immagine. Senza la variabile il nodo serve quelle — le tre
+    con cui è stato rilasciato, compilate, con la loro ricetta."""
+    assert schede.schede_dir({}) == schede.VENDORED_DIR
+    found = {s.id: s for s in schede.available({})}
+    assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026"}
+    assert all(s.compiled and s.recipe for s in found.values())
+    assert found["iccd-us-2021"].version == "1.0.0"
+
+
+def test_no_copy_and_no_variable_means_no_schede_and_that_is_not_broken(no_vendored):
     assert schede.schede_dir({}) is None
     assert schede.available({}) == []
 
 
-def test_a_definition_appears_by_being_dropped_in(tmp_path):
+def test_a_definition_appears_by_being_dropped_in(tmp_path, no_vendored):
     """IL VINCOLO DI §3bis: una definizione nuova arriva al telefono senza un
     rilascio. Provato: la directory è vuota, poi non lo è."""
-    env = {schede.SCHEDE_DIR_VARIABLE: str(tmp_path)}
+    where = tmp_path / "defs"
+    where.mkdir()
+    env = {schede.SCHEDE_DIR_VARIABLE: str(where)}
     assert schede.available(env) == []
 
-    write(tmp_path, minimal(), "prova.yaml")
+    write(where, minimal(), "prova.yaml")
     found = schede.available(env)
     assert [s.id for s in found] == ["prova"]
     assert schede.find("prova", env) is not None
 
 
-def test_one_unreadable_definition_does_not_take_the_others_down(tmp_path):
+def test_the_override_is_ADDED_to_the_vendored_copy_and_compiled_wins(tmp_path):
+    """Misurato la notte del 19 ottobre: il dev-stack punta la variabile agli
+    YAML di `stratigraph-templates/templates`. Se la sovrascrittura
+    SOSTITUISSE la copia, quel nodo avrebbe definizioni senza ricetta, e né la
+    voce né il modulo salverebbero più. Quindi si somma, e per la stessa id
+    vince la forma compilata."""
+    doc = minimal()
+    doc["template"]["id"] = "iccd-us-2021"
+    write(tmp_path, doc, "iccd.yaml")
+    env = {schede.SCHEDE_DIR_VARIABLE: str(tmp_path)}
+    served = schede.find("iccd-us-2021", env)
+    assert served.compiled and served.recipe is not None
+    assert served.path.startswith(str(schede.VENDORED_DIR))
+
+
+def test_a_version_is_found_exactly_or_not_at_all():
+    """Un'unità compilata con 1.0.0 si rilegge con 1.0.0: una versione chiesta
+    e assente è None, non «la più recente», perché chi chiede deve poterlo
+    DIRE."""
+    assert schede.find("iccd-us-2021", {}, version="1.0.0").version == "1.0.0"
+    assert schede.find("iccd-us-2021", {}, version="9.9.9") is None
+
+
+def test_one_unreadable_definition_does_not_take_the_others_down(tmp_path,
+                                                                 no_vendored):
     """Una definizione rotta non deve costare a una persona l'intera lista."""
     env = {schede.SCHEDE_DIR_VARIABLE: str(tmp_path)}
     write(tmp_path, minimal(), "buona.yaml")
@@ -374,23 +420,56 @@ def test_a_file_without_a_template_key_is_named_as_such(tmp_path):
     assert "template" in str(refusal.value)
 
 
-# ── 6 · dalla scheda compilata agli slot dei tool ───────────────────────────
+# ── 6 · dalla scheda ai tool: la RICETTA, non gli slot ─────────────────────
+#
+# `slots_for` non c'è più (19 ottobre). Era la funzione che faceva di una
+# scheda compilata `{nome della casella: valore}` — cioè `data.<id_campo>`
+# nel grafo, il difetto misurato dall'audit del 17 ottobre. Adesso i valori
+# vanno al generatore (`app/operazioni.py`), che legge la ricetta.
 
-def test_a_filled_scheda_becomes_the_slots_of_a_tool(tmp_path):
-    """Nessuna seconda via: quello che esce da qui è quello che una voce
-    avrebbe prodotto, e lo prende `update_su`."""
-    s = schede.load(write(tmp_path, minimal()))
-    slots = schede.slots_for(s, {"nota": "strato di crollo"}, us="12")
-    assert slots == {"us": "12", "fields": {"nota": "strato di crollo"}}
+def test_slots_for_is_gone():
+    assert not hasattr(schede, "slots_for")
 
 
 def test_a_field_the_definition_does_not_declare_is_refused(tmp_path):
-    """Altrimenti un modulo sarebbe un modo per mettere qualunque cosa in
-    `data`: la definizione è ciò che dice che cos'è una casella."""
-    s = schede.load(write(tmp_path, minimal()))
-    with pytest.raises(schede.SchedaError) as refusal:
-        schede.slots_for(s, {"nota": "x", "inventato": "y"}, us="12")
+    """Altrimenti un modulo sarebbe un modo per mettere qualunque cosa nel
+    grafo: la definizione è ciò che dice che cos'è una casella."""
+    from app.operazioni import OperazioniError, plan
+
+    iccd = schede.find("iccd-us-2021", {})
+    with pytest.raises(OperazioniError) as refusal:
+        plan(iccd, {"colore": "x", "inventato": "y"}, number="12",
+             section={}, ts="2026-10-19T00:00:00Z", create=True)
     assert "inventato" in str(refusal.value)
+
+
+def test_a_YAML_definition_is_drawn_and_NOT_saved(tmp_path):
+    """Una definizione sorgente non ha ricetta: nessuno sa che cosa siano le
+    sue caselle nel grafo. Si dice, invece di tornare a `data.<nome>`."""
+    from app.operazioni import OperazioniError, plan
+
+    s = schede.load(write(tmp_path, minimal()))
+    assert s.recipe is None and s.for_browser("it")["saveable"] is False
+    with pytest.raises(OperazioniError) as refusal:
+        plan(s, {"nota": "strato"}, number="12", section={},
+             ts="2026-10-19T00:00:00Z", create=True)
+    assert "ricetta" in str(refusal.value)
+
+
+def test_the_compiled_visual_half_draws_the_same_module_as_the_yaml():
+    """`for_browser` nasce dalla metà visiva della forma compilata, e deve dare
+    al browser ESATTAMENTE ciò che dava lo YAML: stesse etichette, stessi
+    paragrafi, stesso foglio. Misurato su tre definizioni, in ogni lingua."""
+    if not TEMPLATES.is_dir():
+        pytest.skip("stratigraph-templates non è accanto")
+    for compiled in schede.available({}):
+        source = schede.load(TEMPLATES / compiled.id / "template.yaml")
+        for lang in compiled.languages:
+            a, b = compiled.for_browser(lang), source.for_browser(lang)
+            for key in set(a) | set(b):
+                if key in ("saveable", "standard"):
+                    continue
+                assert a.get(key) == b.get(key), (compiled.id, lang, key)
 
 
 # ── 7 · LE DEFINIZIONI VERE, quando ci sono ─────────────────────────────────

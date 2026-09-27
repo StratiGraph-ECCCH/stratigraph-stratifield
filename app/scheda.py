@@ -10,6 +10,29 @@ hand it to this service in the shape it needs.
 whole reason it is one module and not a helper next to whatever needs it.
 
 ════════════════════════════════════════════════════════════════════════════════
+## WHAT IT READS, SINCE 2026-10-19: THE COMPILED FORM, VENDORED
+
+`stratigraph-templates build` produces `dist/schede/<id>/<version>.json`: a
+header (the definition's own version, a digest, the datamodel it was checked
+against), the VISUAL half the module is drawn from, and the RECIPE — what to
+send to a room, in the vocabulary of s3Dgraphy's five CRDT operations
+(templates SPEC §9). `sync-schede.sh` copies that directory into `schede/`
+here, and the copy is committed, exactly like `sync-brand.sh` does with the
+theme. So:
+
+* **one definition per id AND version.** A unit compiled with 1.0.0 is re-read
+  with 1.0.0 even after 1.1.0 is vendored; `find(id)` alone means the latest;
+* **the image carries its schede**, because they are in the repository — until
+  tonight the only road was the dev-stack's bind-mount of a checkout, and the
+  image on GHCR served none (audit 2026-10-17, B5a);
+* **`STRATIGRAPH_SCHEDE_DIR` is a DEVELOPMENT override**, said in the log when
+  it is used. It may hold compiled files or — for somebody editing a
+  definition — the YAML sources. A YAML definition has NO recipe: it is drawn,
+  and a save against it is refused by the generator with a sentence, because
+  the only thing that knows what a box means to the graph is the compiled
+  recipe, and this module does not compile.
+
+════════════════════════════════════════════════════════════════════════════════
 ## WHAT THIS DELIBERATELY DOES NOT DO
 
 **It does not import `stratigraph_templates`.** Not for tidiness — the Python
@@ -17,7 +40,10 @@ renderer over there runs on a SERVER, and the form has to work offline in a
 browser on a telephone in a trench. Those two do not meet. The decision (E.D.,
 5 September) is that the module is rendered in JavaScript from the definition
 travelling as DATA, and the Python stays the authoring engine and the A4 print.
-So this reads YAML and nothing else, and `pyproject.toml` gains no dependency.
+So this reads JSON (and YAML for the development override) and nothing else.
+
+**It does not turn values into operations.** That is `app/operazioni.py`, which
+reads `Scheda.recipe`; this module only hands the recipe over.
 
 **It does not interpret.** Labels, `required`, `repeatable`, vocabularies and
 `recorded_in` are READ. If a rule appears here that the format already
@@ -44,6 +70,9 @@ and the reason a phone form built on it shows nothing rather than everything.
 
 from __future__ import annotations
 
+import json
+import logging
+import os
 import pathlib
 from typing import Any, Dict, List, Optional
 
@@ -72,11 +101,32 @@ class Scheda:
     """One definition, read. Immutable as far as this service is concerned."""
 
     def __init__(self, doc: Dict[str, Any], *, path: Optional[str] = None):
-        template = doc.get("template") if isinstance(doc, dict) else None
-        if not isinstance(template, dict):
-            raise SchedaError(
-                "questo file non è una definizione di scheda: manca la chiave "
-                "`template` di primo livello (SPEC.md §1)")
+        #: THE COMPILED FORM (templates SPEC §9) or a YAML source (SPEC §1).
+        #: Both are turned into ONE `raw` with the YAML's shape, so that every
+        #: reader below — the labels, the sheet, `recorded_in` — has one input
+        #: and cannot drift between the two. What only the compiled form has
+        #: (version, digest, datamodel, recipe) lives in its own attributes.
+        self.compiled = isinstance(doc, dict) and doc.get("format") == COMPILED_FORMAT
+        if self.compiled:
+            template = _raw_from_compiled(doc)
+            header = doc.get("header") or {}
+            self.version: str = str(header.get("version") or "")
+            self.digest: str = str(header.get("digest") or "")
+            self.datamodel: Dict[str, Any] = dict(header.get("datamodel") or {})
+            #: THE RECIPE — read by `app/operazioni.py`, never interpreted here.
+            self.recipe: Optional[Dict[str, Any]] = dict(doc.get("recipe") or {})
+        else:
+            template = doc.get("template") if isinstance(doc, dict) else None
+            if not isinstance(template, dict):
+                raise SchedaError(
+                    "questo file non è una definizione di scheda: né la forma "
+                    "compilata (`format: " + COMPILED_FORMAT + "`) né la chiave "
+                    "`template` di primo livello (SPEC.md §1)")
+            self.version = str(template.get("version") or "")
+            self.digest = ""
+            self.datamodel = {}
+            #: A YAML SOURCE HAS NO RECIPE. It can be drawn and not saved.
+            self.recipe = None
         self.raw = template
         self.path = path
         self.id = str(template.get("id") or "")
@@ -113,6 +163,14 @@ class Scheda:
         if not self.fields:
             raise SchedaError(f"«{self.id}» non dichiara nessun campo")
         self._by_id = {str(f.get("id")): f for f in self.fields}
+
+    @property
+    def ref(self) -> Dict[str, str]:
+        """WHICH definition, which version — what a unit records (audit B5b)."""
+        out = {"template": self.id, "version": self.version}
+        if self.digest:
+            out["digest"] = self.digest
+        return out
 
     # ── what the definition says ────────────────────────────────────────────
 
@@ -213,6 +271,12 @@ class Scheda:
             "human_key": list(self.human_key),
             "unit_field": self.unit_field,
             "counts": self.counts(),
+            # WHICH version the module is drawn from, and whether it can be
+            # saved at all: a YAML source served by the development override
+            # has no recipe, and a form that let somebody fill 58 boxes before
+            # saying so would be the cruellest place to learn it.
+            "version": self.version,
+            "saveable": self.recipe is not None,
         }
         # The running head of the sheet spells the unit with the definition's
         # own pattern (SPEC §1.2), so the browser does not invent «US 12».
@@ -260,7 +324,10 @@ class Scheda:
     def _cell_for_browser(self, cell: Dict[str, Any],
                           lang: str) -> Dict[str, Any]:
         out: Dict[str, Any] = {"w": float(cell.get("w") or 0)}
-        if cell.get("rows") is not None:
+        # A BLOCK is a cell with a `block` name or rows of its own. Not `rows is
+        # not None`: the compiled form spells every cell completely, so a plain
+        # field cell arrives with `rows: []` and `block: null`.
+        if cell.get("block") or cell.get("rows"):
             # A BLOCK: a nested grid. Its label is optional (`label: none`, or
             # simply no `block_labels`); when it is declared it is a label like
             # any other, and a missing language is refused like any other.
@@ -345,85 +412,187 @@ def labels_for(labels: Dict[str, Any], lang: str, what: str) -> str:
 
 # ── loading ──────────────────────────────────────────────────────────────────
 
-def load(path: Any) -> Scheda:
-    """One definition from a YAML file."""
-    import yaml
+#: What `stratigraph-templates build` writes (templates SPEC §9). Read by name:
+#: a JSON file that is not this is not a definition.
+COMPILED_FORMAT = "stratigraph-templates/compiled-definition"
+INDEX_FORMAT = COMPILED_FORMAT + "/index"
 
+#: WHERE THE VENDORED COPY LIVES — `schede/` beside `app/`, filled by
+#: `sync-schede.sh` and committed. The Dockerfile copies it into the image.
+VENDORED_DIR = pathlib.Path(__file__).resolve().parent.parent / "schede"
+
+_log = logging.getLogger("stratigraph-chatbot.scheda")
+_said_override: set = set()
+
+
+def _raw_from_compiled(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """The compiled form, in the YAML's shape (`template: {…}`).
+
+    Read, not interpreted: the VISUAL half (SPEC §9.2) already holds the
+    identity, the paragraphs, the fields with labels in every declared
+    language, and the sheet. The only reshaping is `identity.human_key`, which
+    the compiled form spells as a flat list plus `pattern` and `unit_field`
+    beside it, and the YAML as `{fields, pattern, unit_field}`.
+    """
+    header = doc.get("header") or {}
+    visual = doc.get("visual") or {}
+    identity = dict(visual.get("identity") or {})
+    human_key = identity.get("human_key")
+    if isinstance(human_key, list):
+        identity["human_key"] = {"fields": list(human_key),
+                                 "pattern": identity.get("pattern"),
+                                 "unit_field": identity.get("unit_field")}
+    return {
+        "id": header.get("id"),
+        "version": header.get("version"),
+        "standard": header.get("standard") or {},
+        "source_language": header.get("source_language"),
+        "languages": header.get("languages") or [],
+        "identity": identity,
+        "provenance": visual.get("provenance") or {},
+        "paragraphs": visual.get("paragraphs") or [],
+        "fields": visual.get("fields") or [],
+        "sheet": visual.get("sheet"),
+        "notes": visual.get("notes") or {},
+    }
+
+
+def load(path: Any) -> Scheda:
+    """One definition from a file: compiled JSON, or a YAML source."""
     where = pathlib.Path(path)
     try:
-        doc = yaml.safe_load(where.read_text(encoding="utf-8"))
+        text = where.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise SchedaError(f"nessuna definizione in {where}") from None
+    if where.suffix == ".json":
+        try:
+            doc = json.loads(text)
+        except ValueError as exc:
+            raise SchedaError(f"{where} non è JSON leggibile: {exc}") from exc
+        return Scheda(doc, path=str(where))
+    import yaml
+    try:
+        doc = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         raise SchedaError(f"{where} non è YAML leggibile: {exc}") from exc
     return Scheda(doc, path=str(where))
 
 
 def schede_dir(environ: Optional[Dict[str, str]] = None) -> Optional[pathlib.Path]:
-    """Where this node keeps its definitions, or None.
+    """The directory a scheda is looked for FIRST, or None.
 
-    ABSENT MEANS NO SCHEDE, and the assistant is exactly what it was: the same
-    rule the OIDC door, the session key and the room client all follow in this
-    ecosystem. A node that serves no definitions is not broken; it is a node
-    that takes dictation.
+    **The development override when it is set, the vendored copy otherwise.**
+    Until 2026-10-19 absence of the variable meant NO schede; now the
+    repository carries them, so absence means «the ones this build was
+    released with».
+
+    None only when neither exists (a checkout that never ran `sync-schede.sh`):
+    then the node takes dictation, which is what it always was.
     """
-    import os
+    override = _override_dir(environ)
+    if override is not None:
+        return override
+    return VENDORED_DIR if VENDORED_DIR.is_dir() else None
 
+
+def _override_dir(environ: Optional[Dict[str, str]] = None) -> Optional[pathlib.Path]:
     source = environ if environ is not None else os.environ
     raw = (source.get(SCHEDE_DIR_VARIABLE) or "").strip()
     if not raw:
         return None
     where = pathlib.Path(raw).expanduser()
-    return where if where.is_dir() else None
+    if not where.is_dir():
+        _log.warning("[scheda] %s=%s non è una directory: uso la copia "
+                     "vendorata", SCHEDE_DIR_VARIABLE, where)
+        return None
+    if str(where) not in _said_override:
+        _said_override.add(str(where))
+        _log.warning("[scheda] %s=%s: sovrascrittura di SVILUPPO, letta prima "
+                     "della copia vendorata (%s). Una definizione YAML qui si "
+                     "disegna ma non si salva; se la stessa id è vendorata "
+                     "compilata, vince quella compilata.", SCHEDE_DIR_VARIABLE,
+                     where, VENDORED_DIR)
+    return where
+
+
+def _semver(version: str) -> tuple:
+    parts = []
+    for piece in str(version or "0").split("."):
+        digits = "".join(ch for ch in piece if ch.isdigit())
+        parts.append(int(digits or 0))
+    return tuple(parts)
+
+
+def _read_dir(where: pathlib.Path) -> List[Scheda]:
+    found: List[Scheda] = []
+    candidates = (sorted(where.rglob("*.json")) + sorted(where.rglob("*.yaml"))
+                  + sorted(where.rglob("*.yml")))
+    for candidate in candidates:
+        if candidate.name == "index.json":
+            continue          # the index names the files; it is not one
+        try:
+            found.append(load(candidate))
+        except SchedaError as problem:
+            _log.warning("[scheda] %s non servibile: %s", candidate, problem)
+    return found
+
+
+def _all(environ: Optional[Dict[str, str]] = None) -> List[Scheda]:
+    """EVERY definition this node can see, every version, override FIRST.
+
+    **The override is ADDED to the vendored copy, not a replacement.** Measured
+    the night it was written: the dev-stack points `STRATIGRAPH_SCHEDE_DIR` at
+    the YAML sources of `stratigraph-templates/templates`, and a replacement
+    would have left that node with definitions that have no recipe — the voice
+    and the module would have stopped saving. So the vendored compiled form is
+    always there underneath, and a YAML source only wins where nothing
+    compiled has its id.
+    """
+    found: List[Scheda] = []
+    override = _override_dir(environ)
+    if override is not None:
+        found.extend(_read_dir(override))
+    if VENDORED_DIR.is_dir() and (override is None
+                                  or override.resolve() != VENDORED_DIR.resolve()):
+        found.extend(_read_dir(VENDORED_DIR))
+    return found
 
 
 def available(environ: Optional[Dict[str, str]] = None) -> List[Scheda]:
-    """Every definition this node can serve, in id order.
+    """Every definition this node can serve — THE LATEST version of each —
+    in id order.
 
     A DIRECTORY LISTING, and that is the point: dropping the Spanish sheet in
     makes it appear, with no code change and no release. A file that does not
     parse is SKIPPED and named in the log rather than taking the others down —
     one bad definition must not cost a person their whole scheda list.
+
+    For one id: a COMPILED form beats a YAML source (it is the one that can be
+    saved), a higher version beats a lower one, and at equal version the
+    override beats the vendored copy (it is listed first).
     """
-    import logging
-
-    where = schede_dir(environ)
-    if where is None:
-        return []
-    found: List[Scheda] = []
-    for candidate in sorted(where.rglob("*.yaml")) + sorted(where.rglob("*.yml")):
-        try:
-            found.append(load(candidate))
-        except SchedaError as problem:
-            logging.getLogger("stratigraph-chatbot.scheda").warning(
-                "[scheda] %s non servibile: %s", candidate, problem)
-    return sorted(found, key=lambda s: s.id)
+    best: Dict[str, Scheda] = {}
+    for scheda in _all(environ):
+        held = best.get(scheda.id)
+        if held is None or (scheda.compiled, _semver(scheda.version)) > (
+                held.compiled, _semver(held.version)):
+            best[scheda.id] = scheda
+    return sorted(best.values(), key=lambda s: s.id)
 
 
-def find(scheda_id: str,
-         environ: Optional[Dict[str, str]] = None) -> Optional[Scheda]:
-    return next((s for s in available(environ) if s.id == scheda_id), None)
+def find(scheda_id: str, environ: Optional[Dict[str, str]] = None, *,
+         version: Optional[str] = None) -> Optional[Scheda]:
+    """One definition: the latest, or exactly `version`.
 
-
-# ── from a filled scheda to the slots a tool takes ──────────────────────────
-
-def slots_for(scheda: Scheda, values: Dict[str, Any], *,
-              us: str) -> Dict[str, Any]:
-    """A filled scheda becomes the slots of `create_su` / `update_su`.
-
-    THE POINT OF THE WHOLE MODULE, in one function: a scheda is the same act
-    with another input surface, so what comes out of here is what a voice would
-    have produced. No new write path — `tools.py` and `writer.py` are the only
-    road, and this just fills their slots.
-
-    Fields the definition does not declare are REFUSED, not carried: a form
-    that posted a name nobody wrote would be a way to put anything into
-    `data`, and the definition is what says what a box is.
+    A version asked for and not present is None, not the latest: a unit
+    compiled with 1.0.0 read back with 1.1.0 would be read with rules that are
+    not the ones it was written with, and the caller has to be able to SAY so.
     """
-    unknown = sorted(k for k in values if k not in scheda._by_id)
-    if unknown:
-        raise SchedaError(
-            f"«{scheda.id}» non ha i campi {unknown}: una scheda compila le "
-            f"caselle che lo standard dichiara, non altre.")
-    fields = {k: v for k, v in values.items() if k != "us"}
-    return {"us": str(us).strip(), "fields": fields}
+    if not version:
+        return next((s for s in available(environ) if s.id == scheda_id), None)
+    matches = [s for s in _all(environ)
+               if s.id == scheda_id and s.version == str(version)]
+    # the YAML source of a version declares the same number as its compiled
+    # form: the compiled one is the one with a recipe, so it wins
+    matches.sort(key=lambda s: not s.compiled)
+    return matches[0] if matches else None

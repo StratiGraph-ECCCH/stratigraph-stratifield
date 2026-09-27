@@ -45,6 +45,11 @@ RUN set -eu; \
 
 COPY app ./app
 COPY web ./web
+# THE SCHEDE, compiled and vendored (`sync-schede.sh`). In the image because
+# they are in the repository: until 2026-10-19 the only way a definition reached
+# this service was the dev-stack's bind-mount of a checkout, and the image on
+# GHCR served no scheda at all (audit 2026-10-17, B5a).
+COPY schede ./schede
 
 # The licence text travels WITH the software, and not only in the repository.
 # Publishing an image IS distributing, which is the act the GPL's obligations

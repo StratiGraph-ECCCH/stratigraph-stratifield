@@ -43,11 +43,33 @@ def node(writer):
 # ── 0 · il datamodel, misurato ──────────────────────────────────────────────
 
 def test_an_ai_author_is_an_actor_the_datamodel_already_declares():
-    """Nessun tipo di nodo nuovo: il recinto lo vieta, e non serve."""
+    """Nessun tipo di nodo nuovo: il recinto lo vieta, e non serve.
+
+    **Il numero scritto se n'è andato (19 ottobre).** Il test diceva
+    `len(targets) == 32`, ed era rosso da quando s3Dgraphy ne dichiara 31: un
+    numero scritto a mano è un'affermazione su una versione che nessuno ha
+    nominato. Adesso la versione è nominata DA QUALCUNO — la testata della
+    scheda compilata e vendorata (`schede/…`, `header.datamodel`) dice contro
+    quale datamodel dei nodi la ricetta è stata verificata — e il test chiede
+    che l's3Dgraphy che gira sia quello. Se diverge, il rosso dice le due
+    versioni, che è l'allarme utile; il conteggio non lo era."""
+    import json
+    import pathlib
+
+    import s3dgraphy
     from s3dgraphy.mappings.authoring import target_groups
 
+    from app.tools import reference_scheda
+
+    declared = reference_scheda().datamodel["nodes"]
+    running = json.loads((pathlib.Path(s3dgraphy.__file__).parent / "JSON_config"
+                          / "s3Dgraphy_node_datamodel.json").read_text(
+        encoding="utf-8"))["s3Dgraphy_data_model_version"]
+    assert running == declared, (
+        f"s3Dgraphy dichiara i nodi {running}, la scheda compilata è stata "
+        f"verificata contro {declared}: ricompila e rivendora (sync-schede.sh)")
+
     targets = [t for g in target_groups() for t in g["targets"]]
-    assert len(targets) == 32
     ai = [t for t in targets if t.get("em_type") == authorship.AI_AUTHOR_NODE_TYPE]
     assert len(ai) == 1
     assert ai[0]["label"] == "AI Author"
@@ -166,7 +188,9 @@ def test_the_marks_do_not_get_counted_as_fields(writer):
     """Chi ha compilato due caselle deve leggere «2 campi aggiornati», non
     quattro."""
     result = make_update_su(writer).handler(
-        {"us": "12", "fields": {"colore": "bruno", "misure": "0,25"},
+        {"us": "12", "fields": {"colore": "bruno",
+                                "misure": [{"qualia": "thickness",
+                                            "value": "0,25", "unit": "m"}]},
          "authored_by": {"colore": "ai"}}, ORCID)
     assert result.ok
     assert len(result.data["updated"]) == 2, result.data["updated"]
@@ -219,9 +243,16 @@ def test_validation_does_not_touch_the_value(writer):
     make_update_su(writer).handler(
         {"us": "12", "fields": {"interpretazione": "crollo del tetto"},
          "authored_by": {"interpretazione": "ai"}}, ORCID)
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+
     make_validate_field(writer).handler(
         {"us": "12", "fields": ["interpretazione"]}, ALTRO)
-    assert node(writer)["data"]["interpretazione"] == "crollo del tetto"
+    # il valore è la PropertyNode della ricetta, riletta con la stessa ricetta
+    back = values_from_graph(reference_scheda(), writer.section(), "US12")
+    assert back["values"]["interpretazione"] == "crollo del tetto"
+    assert back["authored_by"]["interpretazione"] == "human"
+    assert back["validated"] == ["interpretazione"]
 
 
 def test_validating_a_field_nobody_composed_is_not_a_tick(writer):

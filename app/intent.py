@@ -262,7 +262,17 @@ def rules_parse(transcript: str, registry: ToolRegistry) -> Optional[Intent]:
     if "fields" in declared and "fields" not in slots:
         spoken = extract_spoken_field(transcript)
         if spoken:
-            slots["fields"] = {spoken["field"]: spoken["value"]}
+            # NELLA FORMA DEL CAMPO (19 ottobre): la ricetta vuole una lista di
+            # righe per le quote e un termine per il colore, e il generatore
+            # rifiuta una stringa dove serve una lista. È qui che una frase
+            # diventa UNA riga, perché qui si sa che era una.
+            value = spoken["value"]
+            from .operazioni import spoken_value
+            from .tools import reference_scheda
+            scheda = reference_scheda()
+            if scheda is not None and spoken["field"] in scheda._by_id:
+                value = spoken_value(scheda, spoken["field"], value)
+            slots["fields"] = {spoken["field"]: value}
     if "us" in declared and "us" not in slots:
         number = extract_us(transcript)
         if number:

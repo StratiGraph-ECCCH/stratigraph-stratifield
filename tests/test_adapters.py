@@ -221,6 +221,12 @@ def _unit(writer, node_id="US12"):
                 if n["id"] == node_id)
 
 
+def _back(writer, node_id="US12"):
+    from app.operazioni import values_from_graph
+    from app.tools import reference_scheda
+    return values_from_graph(reference_scheda(), writer.section(), node_id)["values"]
+
+
 def test_an_atrium_sheet_lands_WHOLE_not_only_its_number(node):
     writer, _, registry = node
     atrium.register(registry)
@@ -230,7 +236,9 @@ def test_an_atrium_sheet_lands_WHOLE_not_only_its_number(node):
 
     unit = _unit(writer)
     assert unit["description"] == "Muro in opus mixtum, due filari conservati."
-    assert unit["data"]["interpretation"] == "Fondazione del portico, prima fase."
+    # through the recipe of the node's reference scheda (2026-10-19): the
+    # interpretation is a PropertyNode, read back through the same recipe
+    assert _back(writer)["interpretazione"] == "Fondazione del portico, prima fase."
     # …and the recording is still a resource, one click from the sentence
     assert any(n.get("node_type") == "resource"
                for n in writer._section(writer._read())["nodes"])
@@ -243,8 +251,9 @@ def test_a_pyarchinit_record_lands_WHOLE_including_what_we_do_not_map(node):
 
     unit = _unit(writer)
     assert unit["description"] == "Due filari in opus mixtum."
-    assert unit["data"]["interpretation"] == "Portico, prima fase."
-    assert unit["data"]["sito"] == "Saggio B" and unit["data"]["area"] == "1"
+    back = _back(writer)
+    assert back["interpretazione"] == "Portico, prima fase."
+    assert back["localita"] == "Saggio B" and back["area"] == "1"
     # the fields the adapter deliberately does not map are carried, not dropped
     carried = unit["data"]["source_fields"]
     assert carried["rapporti"] == '[["copre","13"]]'
