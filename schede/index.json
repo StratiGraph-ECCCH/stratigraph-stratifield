@@ -19,9 +19,25 @@
             "qualia": "1.6.1",
             "em_ttl": "1.6.5"
           }
+        },
+        "0.2.0": {
+          "path": "dai-idaifield-layer-2026/0.2.0.json",
+          "digest": "sha256:87a606c82bd85484220c98dabbb813990d10ad669d597fa6331cbccbf973a0e1",
+          "standard": {
+            "authority": "DAI",
+            "code": "iDAI.field Layer",
+            "version": "config 4b5c1e2 (2026-09-24)",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.2",
+            "em_ttl": "1.6.5"
+          }
         }
       },
-      "latest": "0.1.0"
+      "latest": "0.2.0"
     },
     "es-ue-demo-2026": {
       "versions": {
@@ -53,7 +69,7 @@
           "datamodel": {
             "nodes": "1.6.9",
             "connections": "1.6.20",
-            "qualia": "1.6.1",
+            "qualia": "1.6.2",
             "em_ttl": "1.6.5"
           }
         }
@@ -74,7 +90,7 @@
           "datamodel": {
             "nodes": "1.6.9",
             "connections": "1.6.20",
-            "qualia": "1.6.1",
+            "qualia": "1.6.2",
             "em_ttl": "1.6.5"
           }
         }
@@ -111,7 +127,7 @@
           "datamodel": {
             "nodes": "1.6.9",
             "connections": "1.6.20",
-            "qualia": "1.6.1",
+            "qualia": "1.6.2",
             "em_ttl": "1.6.5"
           }
         }
@@ -167,9 +183,25 @@
             "qualia": "1.6.1",
             "em_ttl": "1.6.5"
           }
+        },
+        "2.0.0": {
+          "path": "iccd-us-2021/2.0.0.json",
+          "digest": "sha256:4c70a3821fe561d7eb57b2db01e6007d55c54b0eaac9afb3f5cf37ea49e7e79a",
+          "standard": {
+            "authority": "ICCD",
+            "code": "US",
+            "version": "2021",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.2",
+            "em_ttl": "1.6.5"
+          }
         }
       },
-      "latest": "1.0.2"
+      "latest": "2.0.0"
     }
   }
 }

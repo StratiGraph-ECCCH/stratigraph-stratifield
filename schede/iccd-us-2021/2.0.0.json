@@ -1,0 +1,4267 @@
+{
+  "format": "stratigraph-templates/compiled-definition",
+  "format_version": "1",
+  "header": {
+    "id": "iccd-us-2021",
+    "version": "2.0.0",
+    "standard": {
+      "authority": "ICCD",
+      "code": "US",
+      "version": "2021",
+      "kind": "field_model",
+      "title": {
+        "it": "Unità Stratigrafica — modello per il rilevamento sul campo",
+        "en": "Stratigraphic Unit — field recording model"
+      },
+      "license": "CC BY-SA 4.0",
+      "attribution": "MiC — Istituto Centrale per il Catalogo e la Documentazione (ICCD)",
+      "source": "SCHEDE_ICCD/US_Unità Stratigrafica_modello per rilevamento sul campo_2021.doc",
+      "invented": false
+    },
+    "source_language": "it",
+    "languages": [
+      "it",
+      "en"
+    ],
+    "vocabularies": [
+      {
+        "id": "iccd-us-definizione",
+        "authority": "ICCD",
+        "status": "declared",
+        "origin": "external",
+        "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+        "provisional": "em-us-definizione"
+      },
+      {
+        "id": "em-us-definizione",
+        "authority": "Extended Matrix",
+        "status": "resolvable",
+        "origin": "originated",
+        "version": "0.1.0",
+        "uri": "https://w3id.org/extendedmatrix/vocab/us-definizione/",
+        "license": "CC BY 4.0",
+        "unverified_languages": [
+          "en",
+          "ro",
+          "el",
+          "es",
+          "pl",
+          "he",
+          "de"
+        ],
+        "provisional_for": "iccd-us-definizione"
+      },
+      {
+        "id": "iccd-us-consistenza",
+        "authority": "ICCD",
+        "status": "declared",
+        "origin": "external",
+        "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+        "provisional": "em-us-consistenza"
+      },
+      {
+        "id": "em-us-consistenza",
+        "authority": "Extended Matrix",
+        "status": "resolvable",
+        "origin": "originated",
+        "version": "0.1.0",
+        "uri": "https://w3id.org/extendedmatrix/vocab/us-consistenza/",
+        "license": "CC BY 4.0",
+        "unverified_languages": [
+          "en",
+          "ro",
+          "el",
+          "es",
+          "pl",
+          "he",
+          "de"
+        ],
+        "provisional_for": "iccd-us-consistenza"
+      },
+      {
+        "id": "iccd-us-colore",
+        "authority": "ICCD",
+        "status": "declared",
+        "origin": "external",
+        "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+        "provisional": "em-us-colore"
+      },
+      {
+        "id": "em-us-colore",
+        "authority": "Extended Matrix",
+        "status": "resolvable",
+        "origin": "originated",
+        "version": "0.1.0",
+        "uri": "https://w3id.org/extendedmatrix/vocab/us-colore/",
+        "license": "CC BY 4.0",
+        "unverified_languages": [
+          "en",
+          "ro",
+          "el",
+          "es",
+          "pl",
+          "he",
+          "de"
+        ],
+        "provisional_for": "iccd-us-colore"
+      },
+      {
+        "id": "iccd-us-stato-conservazione",
+        "authority": "ICCD",
+        "status": "declared",
+        "origin": "external",
+        "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+        "provisional": "em-us-stato-conservazione"
+      },
+      {
+        "id": "em-us-stato-conservazione",
+        "authority": "Extended Matrix",
+        "status": "resolvable",
+        "origin": "originated",
+        "version": "0.1.0",
+        "uri": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/",
+        "license": "CC BY 4.0",
+        "unverified_languages": [
+          "en",
+          "ro",
+          "el",
+          "es",
+          "pl",
+          "he",
+          "de"
+        ],
+        "provisional_for": "iccd-us-stato-conservazione"
+      },
+      {
+        "id": "iccd-us-affidabilita",
+        "authority": "ICCD",
+        "status": "declared",
+        "origin": "external",
+        "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+        "provisional": "em-us-affidabilita"
+      },
+      {
+        "id": "em-us-affidabilita",
+        "authority": "Extended Matrix",
+        "status": "resolvable",
+        "origin": "originated",
+        "version": "0.1.0",
+        "uri": "https://w3id.org/extendedmatrix/vocab/us-affidabilita/",
+        "license": "CC BY 4.0",
+        "unverified_languages": [
+          "en",
+          "ro",
+          "el",
+          "es",
+          "pl",
+          "he",
+          "de"
+        ],
+        "provisional_for": "iccd-us-affidabilita"
+      }
+    ],
+    "digest": "sha256:4c70a3821fe561d7eb57b2db01e6007d55c54b0eaac9afb3f5cf37ea49e7e79a",
+    "datamodel": {
+      "nodes": "1.6.9",
+      "connections": "1.6.20",
+      "qualia": "1.6.2",
+      "em_ttl": "1.6.5",
+      "s3dgraphy": "1.6.0.dev22",
+      "taken_from": {
+        "git_commit": "57c3dc7dc3a3b2e9bf490ecb1e65bf64619d93c2",
+        "git_dirty": true
+      },
+      "snapshot": "registry/s3dgraphy-snapshot.json"
+    },
+    "compiled_by": {
+      "name": "stratigraph-templates",
+      "version": "0.1.0"
+    }
+  },
+  "visual": {
+    "identity": {
+      "human_key": [
+        "localita",
+        "area",
+        "us"
+      ],
+      "pattern": "US {us} — {area} ({localita})",
+      "unit_field": "us",
+      "uid": {
+        "policy": "minted_by_creator",
+        "opaque": true,
+        "display": "on_request",
+        "derive_from_human_key": false
+      },
+      "deduplication": "by_human_key_in_context"
+    },
+    "provenance": {
+      "per_field": true,
+      "authors": [
+        "human",
+        "ai"
+      ],
+      "states": [
+        "asserted",
+        "ai_drafted",
+        "human_validated"
+      ],
+      "clock": "s3dgraphy_crdt_field_clock"
+    },
+    "paragraphs": [
+      {
+        "id": "intestazione",
+        "labels": {
+          "it": "Intestazione",
+          "en": "Header"
+        },
+        "fields": [
+          "us",
+          "ente_responsabile",
+          "anno",
+          "ufficio_mic",
+          "identificativo_riferimento"
+        ]
+      },
+      {
+        "id": "localizzazione",
+        "labels": {
+          "it": "Localizzazione",
+          "en": "Location"
+        },
+        "fields": [
+          "localita",
+          "area",
+          "saggio",
+          "ambiente",
+          "posizione",
+          "settore",
+          "quadrato",
+          "quote",
+          "formazione_natura",
+          "formazione_segno"
+        ]
+      },
+      {
+        "id": "documentazione_grafica",
+        "labels": {
+          "it": "Documentazione grafica e riferimenti",
+          "en": "Graphic documentation and references"
+        },
+        "fields": [
+          "piante",
+          "prospetti",
+          "sezioni",
+          "fotografie",
+          "riferimenti_tabelle_materiali"
+        ]
+      },
+      {
+        "id": "definizione_fisica",
+        "labels": {
+          "it": "Definizione e descrizione fisica",
+          "en": "Definition and physical description"
+        },
+        "fields": [
+          "definizione",
+          "criteri_distinzione",
+          "modo_formazione",
+          "componenti_inorganici",
+          "componenti_organici",
+          "consistenza",
+          "colore",
+          "misure",
+          "stato_conservazione"
+        ]
+      },
+      {
+        "id": "sequenza_fisica",
+        "labels": {
+          "it": "Sequenza fisica",
+          "en": "Physical sequence"
+        },
+        "fields": [
+          "uguale_a",
+          "si_lega_a",
+          "gli_si_appoggia",
+          "si_appoggia_a",
+          "coperto_da",
+          "copre",
+          "tagliato_da",
+          "taglia",
+          "riempito_da",
+          "riempie"
+        ]
+      },
+      {
+        "id": "sequenza_stratigrafica",
+        "labels": {
+          "it": "Sequenza stratigrafica",
+          "en": "Stratigraphic sequence"
+        },
+        "fields": [
+          "posteriore_a",
+          "anteriore_a"
+        ]
+      },
+      {
+        "id": "descrizione_interpretazione",
+        "labels": {
+          "it": "Descrizione e interpretazione",
+          "en": "Description and interpretation"
+        },
+        "fields": [
+          "descrizione",
+          "osservazioni",
+          "interpretazione"
+        ]
+      },
+      {
+        "id": "cronologia",
+        "labels": {
+          "it": "Cronologia",
+          "en": "Chronology"
+        },
+        "fields": [
+          "datazione",
+          "periodo",
+          "fase",
+          "attivita",
+          "elementi_datanti"
+        ]
+      },
+      {
+        "id": "quantificazione",
+        "labels": {
+          "it": "Quantificazione e campionature",
+          "en": "Quantification and sampling"
+        },
+        "fields": [
+          "dati_quantitativi",
+          "campionature",
+          "flottazione",
+          "setacciatura"
+        ]
+      },
+      {
+        "id": "responsabilita",
+        "labels": {
+          "it": "Affidabilità e responsabilità",
+          "en": "Reliability and responsibility"
+        },
+        "fields": [
+          "affidabilita",
+          "responsabile_scientifico",
+          "data_rilevamento",
+          "responsabile_compilazione",
+          "data_rielaborazione",
+          "responsabile_rielaborazione"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "us",
+        "paragraph": "intestazione",
+        "type": "identifier",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "US",
+          "en": "SU"
+        }
+      },
+      {
+        "id": "ente_responsabile",
+        "paragraph": "intestazione",
+        "type": "actor_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "ENTE RESPONSABILE",
+          "en": "RESPONSIBLE BODY"
+        }
+      },
+      {
+        "id": "anno",
+        "paragraph": "intestazione",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "max_len": "4",
+        "labels": {
+          "it": "ANNO",
+          "en": "YEAR"
+        }
+      },
+      {
+        "id": "ufficio_mic",
+        "paragraph": "intestazione",
+        "type": "actor_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "UFFICIO MiC COMPETENTE PER TUTELA",
+          "en": "MiC OFFICE RESPONSIBLE FOR PROTECTION"
+        }
+      },
+      {
+        "id": "identificativo_riferimento",
+        "paragraph": "intestazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "IDENTIFICATIVO DEL SAGGIO STRATIGRAFICO/DELL'EDIFICIO/DELLA STRUTTURA/DELLA DEPOSIZIONE FUNERARIA DI RIFERIMENTO",
+          "en": "IDENTIFIER OF THE REFERENCE TRENCH / BUILDING / STRUCTURE / BURIAL"
+        }
+      },
+      {
+        "id": "localita",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "LOCALITÀ",
+          "en": "LOCALITY"
+        }
+      },
+      {
+        "id": "area",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "AREA/EDIFICIO/STRUTTURA",
+          "en": "AREA / BUILDING / STRUCTURE"
+        }
+      },
+      {
+        "id": "saggio",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "SAGGIO",
+          "en": "TRENCH"
+        }
+      },
+      {
+        "id": "ambiente",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "AMBIENTE/UNITÀ FUNZIONALE",
+          "en": "ROOM / FUNCTIONAL UNIT"
+        }
+      },
+      {
+        "id": "posizione",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "POSIZIONE",
+          "en": "POSITION"
+        }
+      },
+      {
+        "id": "settore",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "SETTORE/I",
+          "en": "SECTOR(S)"
+        }
+      },
+      {
+        "id": "quadrato",
+        "paragraph": "localizzazione",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "QUADRATO/I",
+          "en": "SQUARE(S)"
+        }
+      },
+      {
+        "id": "quote",
+        "paragraph": "localizzazione",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "QUOTE",
+          "en": "ELEVATIONS"
+        }
+      },
+      {
+        "id": "formazione_natura",
+        "paragraph": "localizzazione",
+        "type": "choice",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "MODO DI FORMAZIONE (natura)",
+          "en": "MODE OF FORMATION (nature)"
+        },
+        "options": [
+          {
+            "value": "natural",
+            "labels": {
+              "it": "NATURALE",
+              "en": "NATURAL"
+            }
+          },
+          {
+            "value": "artificial",
+            "labels": {
+              "it": "ARTIFICIALE",
+              "en": "ARTIFICIAL"
+            }
+          }
+        ]
+      },
+      {
+        "id": "formazione_segno",
+        "paragraph": "localizzazione",
+        "type": "choice",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "MODO DI FORMAZIONE (segno)",
+          "en": "MODE OF FORMATION (sign)"
+        },
+        "options": [
+          {
+            "value": "positiva",
+            "labels": {
+              "it": "POSITIVA",
+              "en": "POSITIVE"
+            }
+          },
+          {
+            "value": "negativa",
+            "labels": {
+              "it": "NEGATIVA",
+              "en": "NEGATIVE"
+            }
+          }
+        ]
+      },
+      {
+        "id": "piante",
+        "paragraph": "documentazione_grafica",
+        "type": "resource_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "PIANTE",
+          "en": "PLANS"
+        }
+      },
+      {
+        "id": "prospetti",
+        "paragraph": "documentazione_grafica",
+        "type": "resource_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "PROSPETTI",
+          "en": "ELEVATION DRAWINGS"
+        }
+      },
+      {
+        "id": "sezioni",
+        "paragraph": "documentazione_grafica",
+        "type": "resource_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "SEZIONI",
+          "en": "SECTIONS"
+        }
+      },
+      {
+        "id": "fotografie",
+        "paragraph": "documentazione_grafica",
+        "type": "resource_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "FOTOGRAFIE",
+          "en": "PHOTOGRAPHS"
+        }
+      },
+      {
+        "id": "riferimenti_tabelle_materiali",
+        "paragraph": "documentazione_grafica",
+        "type": "record_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "lab",
+        "labels": {
+          "it": "RIFERIMENTI TABELLE MATERIALI",
+          "en": "FINDS TABLE REFERENCES"
+        }
+      },
+      {
+        "id": "definizione",
+        "paragraph": "definizione_fisica",
+        "type": "term",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "DEFINIZIONE",
+          "en": "DEFINITION"
+        },
+        "vocabulary": {
+          "scheme": "iccd-us-definizione",
+          "provisional": "em-us-definizione"
+        }
+      },
+      {
+        "id": "criteri_distinzione",
+        "paragraph": "definizione_fisica",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "CRITERI DI DISTINZIONE",
+          "en": "CRITERIA OF DISTINCTION"
+        }
+      },
+      {
+        "id": "modo_formazione",
+        "paragraph": "definizione_fisica",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "MODO DI FORMAZIONE",
+          "en": "MODE OF FORMATION"
+        }
+      },
+      {
+        "id": "componenti_inorganici",
+        "paragraph": "definizione_fisica",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "INORGANICI",
+          "en": "INORGANIC"
+        }
+      },
+      {
+        "id": "componenti_organici",
+        "paragraph": "definizione_fisica",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "ORGANICI",
+          "en": "ORGANIC"
+        }
+      },
+      {
+        "id": "consistenza",
+        "paragraph": "definizione_fisica",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "CONSISTENZA",
+          "en": "CONSISTENCY"
+        },
+        "vocabulary": {
+          "scheme": "iccd-us-consistenza",
+          "provisional": "em-us-consistenza"
+        }
+      },
+      {
+        "id": "colore",
+        "paragraph": "definizione_fisica",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "COLORE",
+          "en": "COLOUR"
+        },
+        "vocabulary": {
+          "scheme": "iccd-us-colore",
+          "provisional": "em-us-colore"
+        }
+      },
+      {
+        "id": "misure",
+        "paragraph": "definizione_fisica",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "MISURE",
+          "en": "MEASUREMENTS"
+        }
+      },
+      {
+        "id": "stato_conservazione",
+        "paragraph": "definizione_fisica",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "STATO DI CONSERVAZIONE",
+          "en": "STATE OF PRESERVATION"
+        },
+        "vocabulary": {
+          "scheme": "iccd-us-stato-conservazione",
+          "provisional": "em-us-stato-conservazione"
+        }
+      },
+      {
+        "id": "uguale_a",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "UGUALE A",
+          "en": "SAME AS"
+        }
+      },
+      {
+        "id": "si_lega_a",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "SI LEGA A",
+          "en": "BONDED TO"
+        }
+      },
+      {
+        "id": "posteriore_a",
+        "paragraph": "sequenza_stratigrafica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "POSTERIORE A",
+          "en": "LATER THAN"
+        }
+      },
+      {
+        "id": "anteriore_a",
+        "paragraph": "sequenza_stratigrafica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "ANTERIORE A",
+          "en": "EARLIER THAN"
+        }
+      },
+      {
+        "id": "gli_si_appoggia",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "GLI SI APPOGGIA",
+          "en": "IS ABUTTED BY"
+        }
+      },
+      {
+        "id": "si_appoggia_a",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "SI APPOGGIA A",
+          "en": "ABUTS"
+        }
+      },
+      {
+        "id": "coperto_da",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "COPERTO DA",
+          "en": "COVERED BY"
+        }
+      },
+      {
+        "id": "copre",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "COPRE",
+          "en": "COVERS"
+        }
+      },
+      {
+        "id": "tagliato_da",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "TAGLIATO DA",
+          "en": "CUT BY"
+        }
+      },
+      {
+        "id": "taglia",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "TAGLIA",
+          "en": "CUTS"
+        }
+      },
+      {
+        "id": "riempito_da",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "RIEMPITO DA",
+          "en": "FILLED BY"
+        }
+      },
+      {
+        "id": "riempie",
+        "paragraph": "sequenza_fisica",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "RIEMPIE",
+          "en": "FILLS"
+        }
+      },
+      {
+        "id": "descrizione",
+        "paragraph": "descrizione_interpretazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "DESCRIZIONE",
+          "en": "DESCRIPTION"
+        }
+      },
+      {
+        "id": "osservazioni",
+        "paragraph": "descrizione_interpretazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "OSSERVAZIONI",
+          "en": "OBSERVATIONS"
+        }
+      },
+      {
+        "id": "interpretazione",
+        "paragraph": "descrizione_interpretazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "INTERPRETAZIONE",
+          "en": "INTERPRETATION"
+        },
+        "provenance": {
+          "enabled": true,
+          "authors": [
+            "human",
+            "ai"
+          ]
+        }
+      },
+      {
+        "id": "datazione",
+        "paragraph": "cronologia",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "DATAZIONE",
+          "en": "DATING"
+        }
+      },
+      {
+        "id": "periodo",
+        "paragraph": "cronologia",
+        "type": "epoch_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "PERIODO",
+          "en": "PERIOD"
+        }
+      },
+      {
+        "id": "fase",
+        "paragraph": "cronologia",
+        "type": "epoch_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "FASE",
+          "en": "PHASE"
+        }
+      },
+      {
+        "id": "attivita",
+        "paragraph": "cronologia",
+        "type": "activity_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "ATTIVITÀ",
+          "en": "ACTIVITY"
+        }
+      },
+      {
+        "id": "elementi_datanti",
+        "paragraph": "cronologia",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "ELEMENTI DATANTI",
+          "en": "DATING ELEMENTS"
+        }
+      },
+      {
+        "id": "dati_quantitativi",
+        "paragraph": "quantificazione",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "DATI QUANTITATIVI DEI REPERTI",
+          "en": "QUANTITATIVE FINDS DATA"
+        }
+      },
+      {
+        "id": "campionature",
+        "paragraph": "quantificazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "CAMPIONATURE",
+          "en": "SAMPLING"
+        }
+      },
+      {
+        "id": "flottazione",
+        "paragraph": "quantificazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "FLOTTAZIONE",
+          "en": "FLOTATION"
+        }
+      },
+      {
+        "id": "setacciatura",
+        "paragraph": "quantificazione",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "SETACCIATURA",
+          "en": "SIEVING"
+        }
+      },
+      {
+        "id": "affidabilita",
+        "paragraph": "responsabilita",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "AFFIDABILITÀ STRATIGRAFICA",
+          "en": "STRATIGRAPHIC RELIABILITY"
+        },
+        "vocabulary": {
+          "scheme": "iccd-us-affidabilita",
+          "provisional": "em-us-affidabilita"
+        }
+      },
+      {
+        "id": "responsabile_scientifico",
+        "paragraph": "responsabilita",
+        "type": "person_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "it": "RESPONSABILE SCIENTIFICO DELLE INDAGINI",
+          "en": "SCIENTIFIC DIRECTOR OF INVESTIGATIONS"
+        }
+      },
+      {
+        "id": "data_rilevamento",
+        "paragraph": "responsabilita",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "DATA RILEVAMENTO SUL CAMPO",
+          "en": "DATE OF FIELD RECORDING"
+        }
+      },
+      {
+        "id": "responsabile_compilazione",
+        "paragraph": "responsabilita",
+        "type": "person_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "it": "RESPONSABILE COMPILAZIONE SUL CAMPO",
+          "en": "FIELD RECORDER"
+        }
+      },
+      {
+        "id": "data_rielaborazione",
+        "paragraph": "responsabilita",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "lab",
+        "labels": {
+          "it": "DATA RIELABORAZIONE",
+          "en": "DATE OF REVISION"
+        }
+      },
+      {
+        "id": "responsabile_rielaborazione",
+        "paragraph": "responsabilita",
+        "type": "person_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "lab",
+        "labels": {
+          "it": "RESPONSABILE RIELABORAZIONE",
+          "en": "REVISION RESPONSIBLE"
+        }
+      }
+    ],
+    "sheet": {
+      "page": "A4",
+      "margins_mm": {
+        "top": 10,
+        "right": 12,
+        "bottom": 10,
+        "left": 12
+      },
+      "sides": [
+        {
+          "id": "recto",
+          "labels": {
+            "it": "fronte",
+            "en": "recto"
+          },
+          "rows": [
+            {
+              "h": 9.0,
+              "cells": [
+                {
+                  "field": "us",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 11.6,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "ente_responsabile",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 73.2,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "anno",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 15.2,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 15.0,
+              "cells": [
+                {
+                  "field": "ufficio_mic",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 53.4,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "identificativo_riferimento",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 46.6,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 9.0,
+              "cells": [
+                {
+                  "field": "localita",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "area",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 65.1,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "saggio",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 15.0,
+              "cells": [
+                {
+                  "field": "ambiente",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 19.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "posizione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 17.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "settore",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 9.5,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "quadrato",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 9.5,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "quote",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 21.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": null,
+                  "block": "formazione",
+                  "block_labels": {},
+                  "rows": [
+                    {
+                      "h": 7.5,
+                      "cells": [
+                        {
+                          "field": "formazione_natura",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 100.0,
+                          "label": "none",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 7.5,
+                      "cells": [
+                        {
+                          "field": "formazione_segno",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 100.0,
+                          "label": "none",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    }
+                  ],
+                  "w": 24.0,
+                  "label": "none",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 26.0,
+              "cells": [
+                {
+                  "field": "piante",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 12.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "prospetti",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 14.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "sezioni",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 21.2,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "fotografie",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 16.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "riferimenti_tabelle_materiali",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 35.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "definizione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 16.0,
+              "cells": [
+                {
+                  "field": "criteri_distinzione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "modo_formazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 26.0,
+              "cells": [
+                {
+                  "field": null,
+                  "block": "componenti",
+                  "block_labels": {
+                    "it": "COMPONENTI",
+                    "en": "COMPONENTS"
+                  },
+                  "rows": [
+                    {
+                      "h": 26.0,
+                      "cells": [
+                        {
+                          "field": "componenti_inorganici",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 42.3,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "componenti_organici",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 57.7,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    }
+                  ],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": true,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 19.0,
+              "cells": [
+                {
+                  "field": "consistenza",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 32.7,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "colore",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "misure",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 36.4,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 13.0,
+              "cells": [
+                {
+                  "field": "stato_conservazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 52.0,
+              "cells": [
+                {
+                  "field": null,
+                  "block": "sequenza_fisica",
+                  "block_labels": {
+                    "it": "SEQUENZA FISICA",
+                    "en": "PHYSICAL SEQUENCE"
+                  },
+                  "rows": [
+                    {
+                      "h": 10.4,
+                      "cells": [
+                        {
+                          "field": "uguale_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 46.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "si_lega_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 54.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 10.4,
+                      "cells": [
+                        {
+                          "field": "gli_si_appoggia",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 46.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "si_appoggia_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 54.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 10.4,
+                      "cells": [
+                        {
+                          "field": "coperto_da",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 46.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "copre",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 54.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 10.4,
+                      "cells": [
+                        {
+                          "field": "tagliato_da",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 46.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "taglia",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 54.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 10.4,
+                      "cells": [
+                        {
+                          "field": "riempito_da",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 46.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        },
+                        {
+                          "field": "riempie",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 54.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    }
+                  ],
+                  "w": 64.0,
+                  "label": "auto",
+                  "rotated": true,
+                  "style": null
+                },
+                {
+                  "field": null,
+                  "block": "sequenza_stratigrafica",
+                  "block_labels": {
+                    "it": "SEQUENZA STRATIGRAFICA",
+                    "en": "STRATIGRAPHIC SEQUENCE"
+                  },
+                  "rows": [
+                    {
+                      "h": 26.0,
+                      "cells": [
+                        {
+                          "field": "posteriore_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 100.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    },
+                    {
+                      "h": 26.0,
+                      "cells": [
+                        {
+                          "field": "anteriore_a",
+                          "block": null,
+                          "block_labels": {},
+                          "rows": [],
+                          "w": 100.0,
+                          "label": "auto",
+                          "rotated": false,
+                          "style": null
+                        }
+                      ]
+                    }
+                  ],
+                  "w": 36.0,
+                  "label": "auto",
+                  "rotated": true,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verso",
+          "labels": {
+            "it": "retro",
+            "en": "verso"
+          },
+          "rows": [
+            {
+              "h": 46.0,
+              "cells": [
+                {
+                  "field": "descrizione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 30.0,
+              "cells": [
+                {
+                  "field": "osservazioni",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 45.0,
+              "cells": [
+                {
+                  "field": "interpretazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 16.0,
+              "cells": [
+                {
+                  "field": "datazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.1,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "periodo",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 16.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "fase",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 18.3,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "attivita",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.7,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 20.0,
+              "cells": [
+                {
+                  "field": "elementi_datanti",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 18.0,
+              "cells": [
+                {
+                  "field": "dati_quantitativi",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 20.0,
+              "cells": [
+                {
+                  "field": "campionature",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.1,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "flottazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 35.2,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "setacciatura",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.7,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 11.0,
+              "cells": [
+                {
+                  "field": "affidabilita",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "responsabile_scientifico",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "data_rilevamento",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.1,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "responsabile_compilazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 65.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "data_rielaborazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.1,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "responsabile_rielaborazione",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 65.9,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": {
+      "measured_source": {
+        "cells_in_word_model": 66,
+        "content_width_pt": 504,
+        "content_height_mm": 473,
+        "why_two_sides": "473 mm di contenuto contro 277 mm di altezza utile per facciata A4"
+      },
+      "divergences_from_pyarchinit_us_table": {
+        "excluded_malformed_columns": [
+          "cont_per",
+          "ref_n",
+          "modo_formazione_duplicato",
+          "rapporti2",
+          "doc_usv"
+        ],
+        "usm_columns_not_here": 46,
+        "language_twin_columns_not_here": 13
+      }
+    }
+  },
+  "recipe": {
+    "operations": [
+      "add_node",
+      "update_field",
+      "remove_node",
+      "add_edge",
+      "remove_edge"
+    ],
+    "unit": {
+      "resolve": {
+        "$unit": {
+          "find": {
+            "human_key": [
+              "localita",
+              "area",
+              "us"
+            ],
+            "rule": "by_human_key_in_context"
+          },
+          "create": true
+        }
+      },
+      "steps": [
+        {
+          "emit": {
+            "op": "add_node",
+            "node": {
+              "id": "$unit",
+              "node_type": "$unit.node_type",
+              "name": "$unit.name"
+            }
+          },
+          "when": "created"
+        }
+      ],
+      "name": {
+        "pattern": "US {us} — {area} ({localita})",
+        "unit_field": "us"
+      },
+      "node_type": {
+        "decided_by": "formazione_segno",
+        "table": {
+          "positiva": {
+            "class": "StratigraphicUnit",
+            "node_type": "US"
+          },
+          "negativa": {
+            "class": "NegativeStratigraphicUnit",
+            "node_type": "USN"
+          }
+        },
+        "when_empty": "not decided by the definition",
+        "note": "decided when the unit is CREATED: update_field addresses name, description and data.* only, so an existing unit's node_type cannot be changed by an operation of this vocabulary"
+      }
+    },
+    "fields": {
+      "us": {
+        "verdict": "identity",
+        "steps": [],
+        "names": "$unit",
+        "designator": true
+      },
+      "ente_responsabile": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "attore istituzionale (E39_Actor / E74_Group): un ente non è né 'Author (human)' né 'AI Author'",
+          "reported": "EM_design_setaccio-US §1 — decisione di E.D., non effetto collaterale"
+        }
+      },
+      "anno": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "campaign_year",
+                "description": "$value",
+                "data": {
+                  "property_type": "campaign_year"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$anchor.excavation_activity",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "campaign_year",
+          "registered_qualia": false
+        }
+      },
+      "ufficio_mic": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "attore istituzionale (E39_Actor / E74_Group)",
+          "reported": "EM_design_setaccio-US §1"
+        }
+      },
+      "identificativo_riferimento": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "FunctionalUnitNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "FunctionalUnitNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_functional_unit",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "FunctionalUnitNodeGroup",
+          "node_type": "FunctionalUnitNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_in_functional_unit",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P46i_forms_part_of",
+            "subject": "source"
+          }
+        }
+      },
+      "localita": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "area": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "saggio": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "ambiente": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "FunctionalUnitNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "FunctionalUnitNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_functional_unit",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "FunctionalUnitNodeGroup",
+          "node_type": "FunctionalUnitNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_in_functional_unit",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P46i_forms_part_of",
+            "subject": "source"
+          }
+        }
+      },
+      "posizione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "position",
+                "description": "$value",
+                "data": {
+                  "property_type": "position"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "position",
+          "registered_qualia": false
+        }
+      },
+      "settore": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "quadrato": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "quote": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "elevation"
+        },
+        "defaults": {
+          "$item.qualia": "elevation"
+        }
+      },
+      "formazione_natura": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "origin_type",
+                "description": "$value",
+                "data": {
+                  "property_type": "origin_type"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "origin_type",
+          "registered_qualia": true
+        }
+      },
+      "formazione_segno": {
+        "verdict": "node_type",
+        "steps": [],
+        "decides": "unit.node_type",
+        "table": {
+          "positiva": {
+            "class": "StratigraphicUnit",
+            "node_type": "US"
+          },
+          "negativa": {
+            "class": "NegativeStratigraphicUnit",
+            "node_type": "USN"
+          }
+        }
+      },
+      "piante": {
+        "verdict": "node",
+        "each": true,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "document",
+              "url": "$item"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "document",
+                "name": "$item",
+                "data": {
+                  "url": "$item"
+                }
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_documentation",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "DocumentNode",
+          "node_type": "document"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_documentation_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P70i_is_documented_in",
+            "subject": "source"
+          }
+        }
+      },
+      "prospetti": {
+        "verdict": "node",
+        "each": true,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "document",
+              "url": "$item"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "document",
+                "name": "$item",
+                "data": {
+                  "url": "$item"
+                }
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_documentation",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "DocumentNode",
+          "node_type": "document"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_documentation_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P70i_is_documented_in",
+            "subject": "source"
+          }
+        }
+      },
+      "sezioni": {
+        "verdict": "node",
+        "each": true,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "document",
+              "url": "$item"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "document",
+                "name": "$item",
+                "data": {
+                  "url": "$item"
+                }
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_documentation",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "DocumentNode",
+          "node_type": "document"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_documentation_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P70i_is_documented_in",
+            "subject": "source"
+          }
+        }
+      },
+      "fotografie": {
+        "verdict": "node",
+        "each": true,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "document",
+              "url": "$item"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "document",
+                "name": "$item",
+                "data": {
+                  "url": "$item"
+                }
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_documentation",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "DocumentNode",
+          "node_type": "document"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_documentation_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P70i_is_documented_in",
+            "subject": "source"
+          }
+        }
+      },
+      "riferimenti_tabelle_materiali": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "special_find_record"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_part_of",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "has_part",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P46i_forms_part_of",
+            "extension": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP21i_is_contained_in",
+            "subject": "source"
+          }
+        }
+      },
+      "definizione": {
+        "verdict": "property",
+        "each": false,
+        "element": {
+          "name": "definition",
+          "declared_on": "StratigraphicNode",
+          "value": "concept",
+          "rdf": {
+            "with_concept": "crm:P2_has_type",
+            "concept_class": "crm:E55_Type",
+            "label_only": null,
+            "specialised_alternative": "em:hasDefinition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "data.definition",
+              "value": "$value"
+            }
+          }
+        ],
+        "scheme": "iccd-us-definizione",
+        "provisional": "em-us-definizione"
+      },
+      "criteri_distinzione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "criteria_of_distinction",
+                "description": "$value",
+                "data": {
+                  "property_type": "criteria_of_distinction"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "criteria_of_distinction",
+          "registered_qualia": false
+        }
+      },
+      "modo_formazione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "formation_mode_description",
+                "description": "$value",
+                "data": {
+                  "property_type": "formation_mode_description"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "formation_mode_description",
+          "registered_qualia": false
+        }
+      },
+      "componenti_inorganici": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "inorganic_components",
+                "description": "$value",
+                "data": {
+                  "property_type": "inorganic_components"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "inorganic_components",
+          "registered_qualia": false
+        }
+      },
+      "componenti_organici": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "organic_components",
+                "description": "$value",
+                "data": {
+                  "property_type": "organic_components"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "organic_components",
+          "registered_qualia": false
+        }
+      },
+      "consistenza": {
+        "verdict": "vocabulary",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "texture",
+                "description": "$value.concept",
+                "data": {
+                  "property_type": "texture"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "texture",
+          "registered_qualia": true
+        },
+        "scheme": "iccd-us-consistenza",
+        "provisional": "em-us-consistenza"
+      },
+      "colore": {
+        "verdict": "vocabulary",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "color",
+                "description": "$value.concept",
+                "data": {
+                  "property_type": "color"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "color",
+          "registered_qualia": true
+        },
+        "scheme": "iccd-us-colore",
+        "provisional": "em-us-colore"
+      },
+      "misure": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "measurements"
+        }
+      },
+      "stato_conservazione": {
+        "verdict": "vocabulary",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "conservation_state",
+                "description": "$value.concept",
+                "data": {
+                  "property_type": "conservation_state"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "conservation_state",
+          "registered_qualia": true
+        },
+        "scheme": "iccd-us-stato-conservazione",
+        "provisional": "em-us-stato-conservazione"
+      },
+      "uguale_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "equals",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#physicallyEquals",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_physically_equal_to"
+          ],
+          "spellings": [
+            "is_physically_equal_to"
+          ]
+        }
+      },
+      "si_lega_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "bonded_to",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#bondedTo",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_bonded_to"
+          ],
+          "spellings": [
+            "is_bonded_to"
+          ]
+        }
+      },
+      "posteriore_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_after",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_before",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP28_occurs_before",
+            "subject": "target"
+          }
+        }
+      },
+      "anteriore_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_after",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_before",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP28_occurs_before",
+            "subject": "target"
+          }
+        }
+      },
+      "gli_si_appoggia": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "abuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_abutted_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#abuts",
+            "subject": "source"
+          }
+        }
+      },
+      "si_appoggia_a": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "abuts",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_abutted_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#abuts",
+            "subject": "source"
+          }
+        }
+      },
+      "coperto_da": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "copre": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "tagliato_da": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "taglia": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "riempito_da": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "fills",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_filled_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#fills",
+            "subject": "source"
+          }
+        }
+      },
+      "riempie": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": "stratigraphic_unit"
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "fills",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_filled_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#fills",
+            "subject": "source"
+          }
+        }
+      },
+      "descrizione": {
+        "verdict": "property",
+        "each": false,
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "description",
+              "value": "$value"
+            }
+          }
+        ]
+      },
+      "osservazioni": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "observations",
+                "description": "$value",
+                "data": {
+                  "property_type": "observations"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "observations",
+          "registered_qualia": false
+        }
+      },
+      "interpretazione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "interpretation",
+                "description": "$value",
+                "data": {
+                  "property_type": "interpretation"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "interpretation",
+          "registered_qualia": false
+        }
+      },
+      "datazione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "dating",
+                "description": "$value",
+                "data": {
+                  "property_type": "dating"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "dating",
+          "registered_qualia": false
+        }
+      },
+      "periodo": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "EpochNode",
+              "id": "$value.ref",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "EpochNode",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_first_epoch",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "EpochNode",
+          "node_type": "EpochNode"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_first_epoch_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P10_falls_within",
+            "extension": "https://w3id.org/em/ontology#firstAttestedInEpoch",
+            "subject": "source"
+          }
+        }
+      },
+      "fase": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "EpochNode",
+              "id": "$value.ref",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "EpochNode",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_first_epoch",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "EpochNode",
+          "node_type": "EpochNode"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_first_epoch_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P10_falls_within",
+            "extension": "https://w3id.org/em/ontology#firstAttestedInEpoch",
+            "subject": "source"
+          }
+        }
+      },
+      "attivita": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "ActivityNodeGroup",
+              "id": "$value.ref",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "ActivityNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_activity",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "ActivityNodeGroup",
+          "node_type": "ActivityNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_in_activity",
+          "rdf": {
+            "extension": "https://w3id.org/em/ontology#isInActivity",
+            "subject": "source"
+          }
+        }
+      },
+      "elementi_datanti": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "extractor",
+                "description": "$value"
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_data_provenance",
+              "source": "$field.datazione.prop",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "ExtractorNode",
+          "node_type": "extractor"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_data_provenance_of",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P70i_is_documented_in",
+            "subject": "source"
+          }
+        },
+        "after": [
+          "datazione"
+        ]
+      },
+      "dati_quantitativi": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "finds_quantities"
+        }
+      },
+      "campionature": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "CRMsci S13_Sample — un campione di terreno non è un Special Find",
+          "reported": "EM_design_setaccio-US §1, voce 'da decidere'"
+        }
+      },
+      "flottazione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "flotation",
+                "description": "$value",
+                "data": {
+                  "property_type": "flotation"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "flotation",
+          "registered_qualia": false
+        }
+      },
+      "setacciatura": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "sieving",
+                "description": "$value",
+                "data": {
+                  "property_type": "sieving"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "sieving",
+          "registered_qualia": false
+        }
+      },
+      "affidabilita": {
+        "verdict": "vocabulary",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "certainty_level",
+                "description": "$value.concept",
+                "data": {
+                  "property_type": "certainty_level"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "certainty_level",
+          "registered_qualia": true
+        },
+        "scheme": "iccd-us-affidabilita",
+        "provisional": "em-us-affidabilita"
+      },
+      "responsabile_scientifico": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "author",
+              "id": "$value.ref",
+              "name": "$value.name"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "author",
+                "name": "$value.name"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_author",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "AuthorNode",
+          "node_type": "author"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_author_of",
+          "rdf": {
+            "predicate": "http://www.w3.org/ns/prov#wasAttributedTo",
+            "extension": "https://w3id.org/em/ontology#hasAuthor",
+            "subject": "source"
+          }
+        }
+      },
+      "data_rilevamento": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "field_recording_date",
+                "description": "$value",
+                "data": {
+                  "property_type": "field_recording_date"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$anchor.recording_act",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "field_recording_date",
+          "registered_qualia": false
+        }
+      },
+      "responsabile_compilazione": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "author",
+              "id": "$value.ref",
+              "name": "$value.name"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "author",
+                "name": "$value.name"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_author",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "AuthorNode",
+          "node_type": "author"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_author_of",
+          "rdf": {
+            "predicate": "http://www.w3.org/ns/prov#wasAttributedTo",
+            "extension": "https://w3id.org/em/ontology#hasAuthor",
+            "subject": "source"
+          }
+        }
+      },
+      "data_rielaborazione": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "revision_date",
+                "description": "$value",
+                "data": {
+                  "property_type": "revision_date"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$anchor.revision_act",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "revision_date",
+          "registered_qualia": false
+        }
+      },
+      "responsabile_rielaborazione": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "author",
+              "id": "$value.ref",
+              "name": "$value.name"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "author",
+                "name": "$value.name"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_author",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "AuthorNode",
+          "node_type": "author"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_author_of",
+          "rdf": {
+            "predicate": "http://www.w3.org/ns/prov#wasAttributedTo",
+            "extension": "https://w3id.org/em/ontology#hasAuthor",
+            "subject": "source"
+          }
+        }
+      }
+    },
+    "anchors": {
+      "excavation_activity": {
+        "declared_by": [
+          "anno"
+        ],
+        "defined": false
+      },
+      "recording_act": {
+        "declared_by": [
+          "data_rilevamento"
+        ],
+        "defined": false
+      },
+      "revision_act": {
+        "declared_by": [
+          "data_rielaborazione"
+        ],
+        "defined": false
+      }
+    },
+    "open": [
+      {
+        "field": "anno",
+        "what": "attaches_to 'excavation_activity': the definition names it and does not define it — the statement hangs on $anchor.excavation_activity, which the creator has to resolve"
+      },
+      {
+        "field": "data_rilevamento",
+        "what": "attaches_to 'recording_act': the definition names it and does not define it — the statement hangs on $anchor.recording_act, which the creator has to resolve"
+      },
+      {
+        "field": "data_rielaborazione",
+        "what": "attaches_to 'revision_act': the definition names it and does not define it — the statement hangs on $anchor.revision_act, which the creator has to resolve"
+      }
+    ]
+  }
+}

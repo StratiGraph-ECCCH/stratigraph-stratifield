@@ -145,3 +145,64 @@ for sid, langs in sorted(wanted.items()):
         encoding="utf-8")
     print(f"  vocabulary {sid:<28} {scheme.status:<10} {len(concepts)} concepts")
 EOF
+
+# ── APACHE-2.0: THE LICENCE AND A NOTICE BESIDE WHAT IS VENDORED (2026-09-28) ──
+#
+# The DAI's words (iDAI.field, Apache-2.0) travel in two places: the compiled
+# scheda (field labels de/en) and the `idai-field-*` vocabularies (valuelist
+# labels). Apache-2.0 §4 asks whoever redistributes to give a copy of the
+# licence and to keep the attribution: the `attribution` field in each json is
+# not enough for someone who opens the image and not the json. So, beside each
+# of them: `LICENSE-Apache-2.0.txt` (the text the DAI itself distributes, read
+# from the iDAI.field checkout at the commit the schemes are read at — upstream
+# has no NOTICE file of its own at that commit, measured) and a `NOTICE` saying
+# what is the DAI's, from which commit, and that it is not modified in meaning.
+# Generated, never hand-edited, like everything else here.
+PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" - "$DST" "$VOC" <<'EOF'
+import json, pathlib, sys
+from stratigraph_templates import idai_extract as idai
+from stratigraph_templates.vocab import Vocabularies
+
+schede, voc = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+vocab = Vocabularies.load()
+commits = sorted({s.resolve.get("commit") for s in vocab.schemes.values()
+                  if s.resolve.get("kind") == "idai_field_valuelist"} - {None})
+apache_voc = sorted(p for p in voc.glob("*.json")
+                    if json.loads(p.read_text(encoding="utf-8")).get("license") == "Apache-2.0")
+apache_schede = {}
+for path in sorted(schede.rglob("*.json")):
+    if path.name == "index.json":
+        continue
+    std = json.loads(path.read_text(encoding="utf-8"))["header"].get("standard") or {}
+    if std.get("license") == "Apache-2.0":
+        apache_schede.setdefault(path.parent, []).append((path.name, std.get("attribution", "")))
+if not (apache_voc or apache_schede):
+    sys.exit(0)
+if len(commits) != 1:
+    sys.exit(f"  Apache-2.0 material vendored, but the idai-field-* schemes name {len(commits)} "
+             f"commits ({commits}): one licence text per directory needs one commit")
+src = idai.Source.open(commit=commits[0])
+licence = src.text("LICENSE")
+assert "Apache License" in licence and "Version 2.0" in licence, "LICENSE at the commit is not Apache-2.0"
+
+HEAD = ("This directory contains material from iDAI.field (Field Desktop), (c) Deutsches\n"
+        "Archäologisches Institut (DAI), https://github.com/dainst/idai-field, licensed under\n"
+        "the Apache License, Version 2.0 (copy in LICENSE-Apache-2.0.txt).\n"
+        f"Read at commit {src.commit} ({src.date}).\n\n")
+TAIL = ("\nThe DAI's labels are reproduced as published, not translated or changed; the\n"
+        "reading around them (which box lands where in the graph, the notes, the\n"
+        "alignments) is StratiGraph's own work and carries its own licence.\n"
+        "Upstream has no NOTICE file at that commit; this one is written by\n"
+        "stratigraph-chatbot/sync-schede.sh.\n")
+
+def write(where, lines):
+    (where / "LICENSE-Apache-2.0.txt").write_text(licence, encoding="utf-8")
+    (where / "NOTICE").write_text(HEAD + "".join(f"  - {l}\n" for l in lines) + TAIL, encoding="utf-8")
+    print(f"  Apache-2.0      LICENSE + NOTICE → {where.name}/ ({len(lines)} file(s))")
+
+for where, files in sorted(apache_schede.items()):
+    write(where, [f"{name}: field names and their de/en labels — {attr}" for name, attr in files])
+if apache_voc:
+    write(voc, [f"{p.name}: valuelist labels — "
+                f"{json.loads(p.read_text(encoding='utf-8')).get('attribution', '')}" for p in apache_voc])
+EOF

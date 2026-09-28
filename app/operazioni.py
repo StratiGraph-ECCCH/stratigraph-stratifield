@@ -1039,8 +1039,19 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
     lente, un campo che non trova proprietà col proprio segno prende quelle
     appese all'unità (`has_property`) con la STESSA qualia, se nessun campo di
     questa scheda le ha già prese. Non si traduce niente: dove le due schede
-    scrivono qualia diverse (`formation_mode` / `origin_type`) il campo resta
-    vuoto — ed è il buco che la lente deve far vedere.
+    scrivono qualia diverse il campo resta vuoto — ed è il buco che la lente
+    deve far vedere.
+
+    **CIÒ CHE NESSUN CAMPO LEGGE (2026-09-28).** Una voce con una qualia FISSA
+    (`property.property_type`) prende col proprio segno solo le proprietà di
+    quella qualia: un nodo col segno del campo ma un'altra `property_type` è
+    l'affermazione di un'altra versione della definizione (la US ICCD fino alla
+    1.0.2 scriveva `formazione_natura` come `formation_mode` = «naturale», la
+    2.0.0 come `origin_type` = `natural`), e mostrarlo nella casella nuova
+    sarebbe tradurlo. Con la lente, le proprietà dell'unità che nessun campo ha
+    letto tornano in `unread` — qualia, valore, campo che le ha scritte: non si
+    perdono, si dicono. Senza lente la lettura si fa con la versione che
+    l'unità dichiara, e il problema non si pone.
     """
     from . import authorship
     from .tools import number_from_unit_id
@@ -1096,6 +1107,16 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
         qualia = prop.get("property_type") or (entry.get("defaults") or {}).get("$item.qualia")
         return list(by_qualia.get(str(qualia), [])) if qualia else []
 
+    def own(entry: Dict[str, Any], nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Col segno del campo, solo le proprietà della qualia fissa della voce."""
+        fixed = (entry.get("property") or {}).get("property_type")
+        if not fixed:
+            return nodes
+        return [n for n in nodes
+                if ((n.get("data") or {}).get("property_type") or fixed) == fixed]
+
+    used: Set[str] = set()
+
     for f in scheda.fields:
         fid = str(f.get("id"))
         ftype = str(f.get("type") or "")
@@ -1138,7 +1159,8 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
             if said not in (None, ""):
                 values[fid] = _typed(ftype, said)
             continue
-        nodes = minted.get(fid) or (borrowed(entry) if lens else [])
+        nodes = own(entry, minted.get(fid) or []) or (borrowed(entry) if lens else [])
+        used.update(str(n.get("id")) for n in nodes)
         if nodes:
             rows = []
             for node in nodes:
@@ -1212,9 +1234,26 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
                 validated.append(fid)
             elif said["by"] == authorship.AI:
                 authored[fid] = authorship.AI
-    return {"unit_id": unit_id, "values": values, "authored_by": authored,
-            "validated": validated, "silent": silent,
-            "declared": _mark(unit) or None}
+    out = {"unit_id": unit_id, "values": values, "authored_by": authored,
+           "validated": validated, "silent": silent,
+           "declared": _mark(unit) or None}
+    if lens:
+        unread = []
+        for edge in ctx.edges:
+            if edge.get("edge_type") != "has_property" or edge.get("source") != unit_id:
+                continue
+            node = ctx.nodes.get(str(edge.get("target")))
+            if not node or str(node.get("id")) in used:
+                continue
+            mark = _mark(node)
+            unread.append({
+                "property": (node.get("data") or {}).get("property_type") or node.get("name"),
+                "value": node.get("description"),
+                **({"field": mark["field"]} if mark.get("field") else {}),
+                **({"template": mark["template"]} if mark.get("template") else {})})
+        out["unread"] = sorted(unread, key=lambda u: (str(u.get("field") or ""),
+                                                      str(u["property"])))
+    return out
 
 
 def _typed(ftype: str, said: Any) -> Any:

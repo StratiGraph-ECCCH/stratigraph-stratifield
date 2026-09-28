@@ -26,12 +26,12 @@
     "datamodel": {
       "nodes": "1.6.9",
       "connections": "1.6.20",
-      "qualia": "1.6.1",
+      "qualia": "1.6.2",
       "em_ttl": "1.6.5",
-      "s3dgraphy": "1.6.0.dev21",
+      "s3dgraphy": "1.6.0.dev22",
       "taken_from": {
-        "git_commit": "bd3340dec0c8c55121533f8a05433db1e447bac2",
-        "git_dirty": false
+        "git_commit": "57c3dc7dc3a3b2e9bf490ecb1e65bf64619d93c2",
+        "git_dirty": true
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
     },

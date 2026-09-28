@@ -382,24 +382,35 @@ def require_token(request: Request) -> Dict[str, Any]:
 AuthDependency = Depends(require_token)
 
 
-#: Where an ORCID lands in a Keycloak token, in the spellings a realm may use.
-#: Read in order; the first that speaks decides. A realm that brokers ORCID puts
-#: it in a claim, and which claim is a decision of whoever configured the realm —
-#: so this reads several rather than demanding one.
-ORCID_CLAIMS = ("orcid", "orcid_id", "https://orcid.org/id", "preferred_username")
+#: WHO is speaking, out of the token — THE SERVER'S ORDER, not ours
+#: (2026-09-28). `stratigraph-server/app/identity.py::IDENTITY_CLAIMS` decides it:
+#: the union of the lists this node and the room used to read separately, ORCID
+#: first in every spelling a realm may broker it under, then the realm's username,
+#: then the subject. Before, with the ORCID only in `orcid_id`, this node stamped
+#: the ORCID and the room the username — two authors for one person. The server
+#: has no endpoint that publishes the order (measured: `/v1/whoami` answers WHO,
+#: not in which order), so this is a copy, and
+#: `tests/test_un_ordine_solo.py` compares it with the server's byte for byte.
+#: `web/index.html` carries the same list for display (test_field_signature).
+ORCID_CLAIMS = ("orcid", "ORCID", "orcid_id", "https://orcid.org/id",
+                "preferred_username", "sub")
 
 
 def principal_orcid(claims: Dict[str, Any]) -> Optional[str]:
     """Who is speaking — from the token, never from the request body.
 
-    Falls back to `sub` so a dev realm without an ORCID broker still produces a
-    stable identity; it will not look like an ORCID, which is the honest
-    outcome: the record then says "this person, on this realm", not a digit
-    string pretending to be an ORCID.
+    Read in `ORCID_CLAIMS` order, the first claim that speaks deciding (a
+    string stripped, a blank one is silence) — the same rule as the server's
+    `identity_of`. Ends with `sub` so a dev realm without an ORCID broker still
+    produces a stable identity; it will not look like an ORCID, which is the
+    honest outcome: the record then says "this person, on this realm", not a
+    digit string pretending to be an ORCID.
     """
     for key in ORCID_CLAIMS:
-        value = claims.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-    sub = claims.get("sub")
-    return str(sub) if sub else None
+        value = (claims or {}).get(key)
+        if isinstance(value, str):
+            if value.strip():
+                return value.strip()
+        elif value:
+            return str(value)
+    return None

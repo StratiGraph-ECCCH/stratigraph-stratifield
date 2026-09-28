@@ -20,16 +20,15 @@ keywords = ["extended matrix", "archaeology", "assistant", "knowledge graph"]
 # everything it knows about identity comes from the realm; the heavy AI (Whisper,
 # the LLM) runs on the Field Computing Node and is reached, not bundled.
 dependencies = [
-    # The floor stays at dev13 DELIBERATELY, and the reason is worth a line: since
-    # 2026-08-22 `app/contract.py` is a binding to `s3dgraphy.contract.core`, and
-    # that module landed *inside* the 1.6.0.dev14 line — after the bump. A pin
-    # cannot say "dev14 plus two commits", so raising it to dev14 would be a
-    # precision this file does not have: a dev14 wheel cut before the contract
-    # commits satisfies the pin and still lacks the module. What protects somebody
-    # is therefore an import-time check in `app/contract.py`, which names the fix
-    # in one sentence. Raise this to the first release that carries
-    # `s3dgraphy.contract` the day it is cut.
-    "s3dgraphy>=1.6.0.dev13",
+    # The floor is dev22 (2026-09-28), the first PUBLISHED release that carries
+    # both things this app reads from the library: `s3dgraphy.contract.core`
+    # (`app/contract.py`, landed inside the dev14 line — which is why the floor
+    # sat at dev13 with an import-time check until a release carried it) and
+    # `s3dgraphy.tools.datamodel_i18n` (the qualia names in the CARD's language,
+    # `app/scheda.py::measuring_qualia`). With dev22 the measures come out in the
+    # card's language, not in the English fallback — measured, report
+    # 2026-10-27-NIGHT-il-giro-di-chiusura.
+    "s3dgraphy>=1.6.0.dev22",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
     # The room's WIRE. `uvicorn[standard]` already pulls this in, and relying on

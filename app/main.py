@@ -873,6 +873,7 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
         read = values_from_graph(read_with, section, unit_id, lens=lente)
     except OperazioniError as problem:
         raise HTTPException(status_code=404, detail=str(problem)) from None
+    unread = read.pop("unread", [])
     out = {"us": number, "node_id": unit_id,
            "read_with": read_with.ref, "declared": read.pop("declared"),
            "note": note, **read,
@@ -884,7 +885,10 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
         out["lens"] = {"read_with": read_with.ref, "written_with": written,
                        "filled": filled,
                        "holes": [str(f.get("id")) for f in read_with.fields
-                                 if str(f.get("id")) not in filled]}
+                                 if str(f.get("id")) not in filled],
+                       # ciò che l'unità dice e nessun campo di questa scheda
+                       # legge (2026-09-28): detto, non perso
+                       "unread": unread}
     return out
 
 

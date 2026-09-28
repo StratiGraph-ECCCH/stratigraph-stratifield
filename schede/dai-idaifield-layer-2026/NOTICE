@@ -1,0 +1,13 @@
+This directory contains material from iDAI.field (Field Desktop), (c) Deutsches
+Archäologisches Institut (DAI), https://github.com/dainst/idai-field, licensed under
+the Apache License, Version 2.0 (copy in LICENSE-Apache-2.0.txt).
+Read at commit 4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4 (2026-09-24).
+
+  - 0.1.0.json: field names and their de/en labels — Deutsches Archäologisches Institut (DAI) — iDAI.field / Field Desktop (github.com/dainst/idai-field @ 4b5c1e2)
+  - 0.2.0.json: field names and their de/en labels — Deutsches Archäologisches Institut (DAI) — iDAI.field / Field Desktop (github.com/dainst/idai-field @ 4b5c1e2)
+
+The DAI's labels are reproduced as published, not translated or changed; the
+reading around them (which box lands where in the graph, the notes, the
+alignments) is StratiGraph's own work and carries its own licence.
+Upstream has no NOTICE file at that commit; this one is written by
+stratigraph-chatbot/sync-schede.sh.

@@ -540,6 +540,16 @@ function paintLens(host) {
     filled: String((state.lens.filled || []).length),
     holes: String(holes.size),
   });
+  // (28 settembre) ciò che l'unità dice e nessuna casella legge — una US ICCD
+  // 1.0.2 riletta con la 2.0.0 porta `formation_mode`: detto, non perso
+  const unread = state.lens.unread || [];
+  if (unread.length) {
+    says.textContent += " " + tr("lens.unread", "", {
+      n: String(unread.length),
+      list: unread.map((u) => `${u.property} = ${u.value ?? "—"}`
+        + (u.field ? ` (${u.field})` : "")).join("; "),
+    });
+  }
   watchReading();
 }
 

@@ -29,7 +29,7 @@ US_3014 = {
     "consistenza": {"concept": FRIABILE, "label": "friabile"},
     "colore": {"label": "bruno chiaro (10YR 6/3)"},
     "descrizione": "Crollo di tegole e pietrame in matrice terrosa.",
-    "formazione_natura": "artificiale",
+    "formazione_natura": "artificial",       # ICCD 2.0.0: la chiave di `origin_type`
     "misure": [{"qualia": "thickness", "label": "spessore max", "value": "0,42", "unit": "m"}],
     "copre": ["3018", "3020"],
     "tagliato_da": ["3009"],
@@ -73,11 +73,15 @@ def test_the_DAI_lens_on_US_3014(client):
     assert v["isCutBy"] == ["3009"]
     assert v["isAfter"] == ["3021"]
 
+    # ICCD 2.0.0 (2026-09-28): la natura scrive `origin_type`, la stessa qualia di
+    # isNatural — prima era un buco (`formation_mode`, mai registrata)
+    assert v["isNatural"] == "artificial"
+
     # e i buchi, che la lente deve far vedere invece di riempire
     holes = set(lens["holes"])
-    assert "isNatural" in holes, ("l'ICCD scrive `formation_mode`, il DAI legge `origin_type`: "
-                                  "divergenza vera, segnalata nel referto")
+    assert "isNatural" not in holes
     assert {"soilType", "period", "dating", "shortDescription"} <= holes
+    assert lens["unread"] == [], "tutto ciò che la ICCD 2.0.0 scrive e il DAI ha, il DAI lo legge"
     assert set(lens["filled"]) | holes == {str(f["id"]) for f in S.find(DAI).fields}
     print(f"\n  lente DAI su US 3014: {len(lens['filled'])} caselle dal grafo, "
           f"{len(holes)} buchi")
@@ -103,3 +107,62 @@ def test_the_lens_reads_and_does_not_write(client):
     before = len(writer.section()["nodes"]), len(writer.section()["edges"])
     c.get(f"/v1/scheda/{DAI}/unita?us=3014&lente=1")
     assert (len(writer.section()["nodes"]), len(writer.section()["edges"])) == before
+
+
+# ═══ LE US GIÀ SCRITTE CON `formation_mode` (ICCD ≤ 1.0.2) ═══════════════════
+
+def _written_with_1_0_2(c):
+    for other in ("3018", "3020", "3009", "3021"):
+        assert post(c, other, dict(BASE))["ok"]
+    old = {**US_3014, "formazione_natura": "artificiale"}
+    answer = post(c, "3014", old, version="1.0.2")
+    assert answer["ok"], answer.get("message")
+
+
+def test_una_US_1_0_2_senza_lente_si_rilegge_con_la_1_0_2_e_non_perde_niente(client):
+    c, _ = client
+    _written_with_1_0_2(c)
+    read = c.get("/v1/scheda/iccd-us-2021/unita?us=3014").json()
+    assert read["read_with"]["version"] == "1.0.2"
+    assert read["values"]["formazione_natura"] == "artificiale"
+
+
+def test_la_lente_della_ICCD_2_0_0_su_una_US_1_0_2_dice_formation_mode_non_la_traduce(client):
+    """Stesso campo, verdetto cambiato: il segno del campo c'è, la qualia no. La
+    casella nuova resta vuota (niente «artificiale» in una scelta natural/artificial)
+    e la proprietà vecchia torna in `unread`, con il campo che l'ha scritta."""
+    c, _ = client
+    _written_with_1_0_2(c)
+    read = c.get("/v1/scheda/iccd-us-2021/unita?us=3014&lente=1").json()
+    lens = read["lens"]
+    assert read["read_with"]["version"] == "2.0.0"
+    assert lens["written_with"] == {"template": "iccd-us-2021", "version": "1.0.2"}
+    assert "formazione_natura" in lens["holes"]
+    assert {"property": "formation_mode", "value": "artificiale",
+            "field": "formazione_natura", "template": "iccd-us-2021"} in lens["unread"]
+
+
+def test_la_lente_DAI_su_una_US_1_0_2_isNatural_e_un_buco_detto(client):
+    c, _ = client
+    _written_with_1_0_2(c)
+    lens = c.get(f"/v1/scheda/{DAI}/unita?us=3014&lente=1").json()["lens"]
+    assert "isNatural" in lens["holes"]
+    assert [u["property"] for u in lens["unread"]] == ["formation_mode"]
+
+
+def test_riscritta_con_la_2_0_0_la_stessa_proprieta_cambia_qualia_non_si_duplica(client, monkeypatch):
+    """Il nodo coniato ha lo stesso id (`US3014::formazione_natura`): riscrivere la
+    casella con la 2.0.0 lo aggiorna, non ne appende un secondo. (L'orologio va
+    avanti: a timbro uguale, per il merge datato, resta chi c'era.)"""
+    from app import tools as tools_module, writer as writer_module
+    c, writer = client
+    _written_with_1_0_2(c)
+    for module in (tools_module, writer_module):
+        monkeypatch.setattr(module, "_now", lambda: "2099-01-01T00:00:00Z")
+    answer = post(c, "3014", {**BASE, "formazione_natura": "artificial"})
+    assert answer["data"]["updated"] == ["formazione_natura"], answer["message"]
+    props = [n for n in writer.section()["nodes"] if n["id"].endswith("::formazione_natura")]
+    assert len(props) == 1
+    assert (props[0]["data"]["property_type"], props[0]["description"]) == ("origin_type", "artificial")
+    lens = c.get(f"/v1/scheda/{DAI}/unita?us=3014&lente=1").json()["lens"]
+    assert "isNatural" in lens["filled"] and lens["unread"] == []

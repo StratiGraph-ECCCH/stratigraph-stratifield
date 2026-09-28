@@ -398,6 +398,7 @@ const STRINGS = {
     "lens.pick": "Read with…",
     "lens.off": "— close the lens —",
     "lens.says": "Lens: unit {us}, written with «{written}», read with «{read}». {filled} boxes come from the graph, {holes} stay empty (dashed). Reading only.",
+    "lens.unread": "{n} statement(s) of the unit that no box of this card reads, kept in the graph: {list}.",
     // ── the structured widgets and moving between units, 22 October: SAME
     //    KEYS as the mockup E.D. approved (object `UI`), values en/it from there.
     "w.add_unit": "Add a unit",
@@ -604,6 +605,7 @@ const STRINGS = {
     "lens.pick": "Leggi con…",
     "lens.off": "— chiudi la lente —",
     "lens.says": "Lente: unità {us}, scritta con «{written}», letta con «{read}». {filled} caselle vengono dal grafo, {holes} restano vuote (tratteggiate). Solo lettura.",
+    "lens.unread": "{n} affermazione/i dell'unità che nessuna casella di questa scheda legge, rimaste nel grafo: {list}.",
     "w.add_unit": "Aggiungi unità",
     "w.to_fill": "da compilare",
     "w.remove": "Togli",
@@ -1824,8 +1826,9 @@ const serviceDoorOpen = (config) =>
 // stamps the author from the token, this page only SHOWS it and files it beside
 // a queued note, and the two disagreeing would mean a queue held for a person
 // the node thinks is somebody else.
-const ORCID_CLAIMS = ["orcid", "orcid_id", "https://orcid.org/id",
-                      "preferred_username"];
+// (2026-09-28) …which is the SERVER's order (stratigraph-server app/identity.py).
+const ORCID_CLAIMS = ["orcid", "ORCID", "orcid_id", "https://orcid.org/id",
+                      "preferred_username", "sub"];
 
 // The claims, read WITHOUT verifying the signature — display only, and it must
 // stay that way. Nothing here decides anything: the node checks the signature
@@ -1844,9 +1847,10 @@ function claimsOf(jwt) {
 function subjectOf(claims) {
   for (const key of ORCID_CLAIMS) {
     const value = claims[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "string") { if (value.trim()) return value.trim(); }
+    else if (value) return String(value);
   }
-  return claims.sub ? String(claims.sub) : "";
+  return "";
 }
 
 /** Adopt a token: this is the ONE place TOKEN is assigned from. */
