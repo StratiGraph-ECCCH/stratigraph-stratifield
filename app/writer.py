@@ -62,6 +62,17 @@ class RoomRefused(RuntimeError):
     """
 
 
+class AccessRefused(RoomRefused):
+    """La stanza ha detto di no **a questa persona** — un ruolo in sola lettura,
+    un accesso revocato, una firma che non vale più (4401/4403, 401/403).
+
+    Distinta da un'operazione rifiutata perché `stale`, che riguarda il VALORE e
+    non chi scrive: quella è il merge che funziona, questa è una frase che la
+    persona deve leggere, e una coda che deve restare dov'è invece di sembrare
+    consegnata. Dal 25 ottobre il browser la riconosce (`Answer.refused`).
+    """
+
+
 class BytesFirst(RuntimeError):
     """C'è una foto che non ha ancora raggiunto lo store condiviso.
 
@@ -120,6 +131,16 @@ class BatchTooLarge(RuntimeError):
     def __init__(self, limit: int) -> None:
         super().__init__(f"the room accepts {limit} operations per request")
         self.limit = limit
+
+
+def _said(raw: str) -> str:
+    """La frase di una risposta d'errore, non il suo JSON: FastAPI risponde
+    `{"detail": "…"}`, e una persona deve leggere i puntini, non le graffe."""
+    try:
+        detail = json.loads(raw).get("detail")
+        return str(detail) if detail else raw
+    except Exception:                                  # noqa: BLE001
+        return raw
 
 
 def _declared_batch(detail: str) -> Optional[int]:
@@ -862,6 +883,14 @@ class RoomWriter:
             self._to_the_bridge(ops, why=self.last_refusal)
             if self.fallback is not None:
                 self.fallback.apply(delta)
+            # IN CAMPO LA PORTA REST, come fa già `send`: senza, un'unità
+            # dettata con il websocket assente restava sul ponte finché
+            # qualcuno non chiedeva «consegna ora» — misurato il 28 settembre.
+            # Un rifiuto qui (ruolo tolto) lascia la coda dov'è e si conta.
+            try:
+                self.last_rest = self.deliver_by_rest()
+            except Exception as rest:     # noqa: BLE001 — la coda resta lì
+                log.info("la porta REST non ha preso la coda: %s", rest)
             return
         self.degraded = False
         self.last_refusal = None
@@ -901,7 +930,86 @@ class RoomWriter:
 
     # ── il posto a sedere ───────────────────────────────────────────────────
 
-    def _seated(self) -> None:
+    # ── il token della persona ─────────────────────────────────────────────
+
+    def renew(self, token: str) -> None:
+        """Il token più recente di chi scrive con questo scrivano.
+
+        Dal 25 ottobre uno scrivano è di UNA persona in UNA stanza
+        (`app/scrivani.py`), e ogni richiesta di quella persona porta il suo
+        token. Se è cambiato — il browser l'ha rinnovato — la sessione aperta
+        con quello vecchio si chiude qui e si riapre al prossimo uso con il
+        nuovo: il relay rilegge la scadenza a ogni scrittura, e una sessione
+        tenuta col token di un'ora fa verrebbe chiusa a metà di una scheda.
+        Il token resta in memoria, come prima: mai su disco.
+        """
+        token = (token or "").strip()
+        if not token or token == self._token:
+            return
+        self._token = token
+        if self.session.seated:
+            self.session.close(quiet=True)
+
+    @property
+    def role(self) -> Optional[str]:
+        """Il ruolo che la stanza ha detto alla porta, se ci si è seduti."""
+        return (getattr(self, "host_info", None) or {}).get("role")
+
+    @property
+    def can_write(self) -> Optional[bool]:
+        """Se la stanza lascia scrivere questa persona; None se non si sa."""
+        host = getattr(self, "host_info", None) or {}
+        return host.get("can_write") if "can_write" in host else None
+
+    # ── cosa è successo DURANTE QUESTA richiesta ───────────────────────────
+
+    def _here(self) -> Any:
+        """Lo stato di QUESTO thread: una richiesta è un thread.
+
+        Misurato nel browser il 28 settembre: un contatore per scrivano veniva
+        incrementato dal battito della pagina (`GET /v1/room`, che riceveva 403)
+        mentre un'altra richiesta della stessa persona dettava, e la dettatura
+        risultava `refused` per un rifiuto non suo. Le due domande che una rotta
+        fa — «la stanza ha detto di no?» e «è finito in coda?» — sono della sua
+        richiesta, non dello scrivano.
+        """
+        here = self.__dict__.get("_thread_state")
+        if here is None:
+            here = self.__dict__.setdefault("_thread_state", threading.local())
+        return here
+
+    def refusals_here(self) -> int:
+        return int(getattr(self._here(), "refusals", 0))
+
+    def queued_here(self) -> int:
+        return int(getattr(self._here(), "queued", 0))
+
+    def _access(self, message: str) -> "AccessRefused":
+        """Un rifiuto che riguarda la persona: contato, e tenuto come frase.
+
+        Il contatore (per thread, `_here`) è ciò che una rotta legge per sapere
+        se, DURANTE la sua richiesta, la stanza ha detto di no a chi scrive
+        (`main._refusals`): i tool trasformano l'eccezione in una frase, e senza
+        il contatore il browser non saprebbe distinguere «non puoi» da «non ho
+        capito».
+        """
+        here = self._here()
+        here.refusals = getattr(here, "refusals", 0) + 1
+        self.access_refusals = getattr(self, "access_refusals", 0) + 1
+        self.last_access_refusal = message
+        return AccessRefused(message)
+
+    def _may_write(self) -> None:
+        """Il rifiuto di un ruolo in sola lettura, prima di qualunque
+        operazione. LA FRASE È QUELLA DI SEMPRE, parola per parola: era alla
+        porta della sessione, e si è spostata qui perché un viewer ora si siede
+        per LEGGERE."""
+        host = getattr(self, "host_info", None) or {}
+        if host.get("can_write") is False:
+            raise self._access(f"this room is read-only for you "
+                               f"(role {host.get('role') or 'unknown'})")
+
+    def _seated(self, *, write: bool = True) -> None:
         """Assicura la sessione, riaprendola se è caduta.
 
         **La caduta è normale, non eccezionale**: in modalità telefono la rete
@@ -914,6 +1022,8 @@ class RoomWriter:
         non c'era niente.
         """
         if self.session.seated:
+            if write:
+                self._may_write()
             return
         try:
             host = self.session.open()
@@ -923,10 +1033,16 @@ class RoomWriter:
             # e senza questa traduzione un ruolo in sola lettura sarebbe
             # diventato una scrittura locale che nessuno avrebbe mai potuto
             # consegnare.
-            raise RoomRefused(str(refusal)) from None
+            raise self._access(str(refusal)) from None
         # QUELLO CHE IL RELAY DICE ALLA PORTA, tenuto: da ieri contiene anche
         # se dei salvataggi si occupa lui (`keeping.host_keeps`).
         self.host_info = host
+        if host.get("can_write") is False:
+            # seduti per leggere: niente ponte né dispensa da attraversare, e
+            # se si voleva scrivere, la frase.
+            if write:
+                self._may_write()
+            return
         # …e SUBITO il ponte, prima che il chiamante mandi la sua roba nuova.
         # Un fallimento qui non fa fallire la consegna in corso: la coda resta
         # dov'è, `bridge.last_refusal` dice perché, e si riprova al prossimo
@@ -961,6 +1077,8 @@ class RoomWriter:
             return
         try:
             self.bridge.keep(ops, why=why)
+            here = self._here()
+            here.queued = getattr(here, "queued", 0) + len(ops)
         except Exception as exc:          # noqa: BLE001
             log.warning("il ponte non ha preso %d operazioni: %s", len(ops), exc)
 
@@ -1052,8 +1170,8 @@ class RoomWriter:
         payload = message.get("payload") or {}
         kind = message.get("type")
         if kind == "denied":
-            raise RoomRefused(payload.get("reason")
-                              or "the room refused the write")
+            raise self._access(payload.get("reason")
+                               or "the room refused the write")
         if kind == "error":
             raise RoomRefused(payload.get("detail") or "the room errored")
         return payload
@@ -1088,7 +1206,7 @@ class RoomWriter:
                 continue
             payload = message.get("payload") or {}
             if payload.get("can_write") is False:
-                raise RoomRefused(
+                raise self._access(
                     f"this room is read-only for you (role "
                     f"{payload.get('role') or 'unknown'})")
         return snapshot
@@ -1113,8 +1231,8 @@ class RoomWriter:
                     f"the room did not apply {op.get('op')} {op.get('id')}: "
                     f"{payload.get('reason') or 'no reason given'}")
             if kind == "denied":
-                raise RoomRefused(payload.get("reason")
-                                  or "the room refused the write")
+                raise self._access(payload.get("reason")
+                                   or "the room refused the write")
             if kind == "error":
                 raise RoomRefused(payload.get("detail") or "the room errored")
             # anything else is somebody else's news: not ours to act on
@@ -1241,8 +1359,8 @@ class RoomWriter:
                 return payload
             if kind == "denied":
                 # about the PERSON, not the value: it aborts.
-                raise RoomRefused(payload.get("reason")
-                                  or "the room refused the write")
+                raise self._access(payload.get("reason")
+                                   or "the room refused the write")
             if kind == "error":
                 raise RoomRefused(payload.get("detail") or "the room errored")
         raise TimeoutError(
@@ -1325,6 +1443,66 @@ class RoomWriter:
             item["queued"] = True
         return outcomes
 
+    def role_by_rest(self) -> Dict[str, Any]:
+        """Il ruolo di questa persona chiesto alla porta REST (`GET
+        /v1/rooms/{id}` → `your_role`), per quando il socket non si apre.
+
+        È il caso del CAMPO: una rete che lascia passare l'HTTP e non il
+        websocket, o un telefono che consegna e se ne va. Senza questa domanda
+        «entrare» falliva come una rete che manca anche con la porta aperta.
+        Torna `{status, role}`; status 0 = nessuna risposta.
+        """
+        import urllib.error
+
+        request = urllib.request.Request(
+            f"{self.base_url}/v1/rooms/{urllib.parse.quote(self.room_id)}",
+            headers={"Authorization": f"Bearer {self._token}"})
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as answer:
+                body = json.loads(answer.read() or b"{}")
+                return {"status": answer.status, "role": body.get("your_role")}
+        except urllib.error.HTTPError as refusal:
+            detail = _said(refusal.read().decode("utf-8", "replace"))[:200]
+            if refusal.code in (401, 403):
+                self._access(f"la porta REST della stanza ha rifiutato "
+                             f"({refusal.code}): {detail}")
+            return {"status": refusal.code, "role": None, "detail": detail}
+        except (urllib.error.URLError, OSError):
+            return {"status": 0, "role": None}
+
+    def deliver_pending(self) -> Dict[str, Any]:
+        """Consegna ADESSO la coda di questa persona per questa stanza.
+
+        Seduti se la porta si apre (il rientro attraversa ponte e dispensa,
+        nell'ordine della regola), dalla porta REST se il socket non c'è. Il
+        token è quello dell'ultima richiesta (`renew`): una coda accodata ieri
+        parte con la firma di oggi, e se la firma di oggi non basta più — ruolo
+        tolto — la coda RESTA, e il rifiuto sale come `AccessRefused` perché la
+        persona lo legga.
+        """
+        before = len(self.bridge) if self.bridge is not None else 0
+        if not before:
+            return {"delivered": 0, "left": 0, "via": None, "stopped": None}
+        refusals = getattr(self, "access_refusals", 0)
+        via = "socket"
+        try:
+            was = self.session.seated
+            self._seated()
+            if was and not self._byte_in_attesa():
+                self._crossed = self._cross_the_bridge()
+        except AccessRefused:
+            raise
+        except Exception:                 # noqa: BLE001 — il socket non c'è
+            via = "rest"
+            self.last_rest = self.deliver_by_rest()
+        left = len(self.bridge)
+        stopped = self.bridge.last_refusal
+        if getattr(self, "access_refusals", 0) > refusals:
+            raise AccessRefused(self.last_access_refusal or stopped
+                                or "the room refused the queue")
+        return {"delivered": before - left, "left": left, "via": via,
+                "stopped": stopped}
+
     def deliver_by_rest(self) -> Optional[Dict[str, Any]]:
         """Consegna la coda del ponte dalla porta REST, a pacchi, in ordine.
 
@@ -1368,8 +1546,8 @@ class RoomWriter:
                     self.ops_batch = declared
                     raise BatchTooLarge(declared) from None
             if refusal.code in (401, 403):
-                raise RoomRefused(f"la porta REST della stanza ha rifiutato "
-                                  f"({refusal.code}): {detail[:200]}") from None
+                raise self._access(f"la porta REST della stanza ha rifiutato "
+                                   f"({refusal.code}): {_said(detail)[:200]}") from None
             raise
 
     def has_node(self, node_id: str) -> bool:
@@ -1383,9 +1561,18 @@ class RoomWriter:
         documento è arrivata: due `request_snapshot` scritti a mano sono due
         posti da cui sbagliare la forma della risposta.
         """
-        self._seated()
+        self._seated(write=False)
         self.session.send("request_snapshot", {})
         answer = self.session.await_answer("snapshot")
+        if answer.get("type") == "denied":
+            raise self._access(str((answer.get("payload") or {}).get("reason")
+                                   or "the room refused to send its document"))
+        if answer.get("type") == "error":
+            # un documento negato NON è un documento vuoto: un elenco di zero
+            # unità che sembra vero è la bugia peggiore che una lettura possa dire
+            raise RoomRefused(str((answer.get("payload") or {}).get("reason")
+                                  or (answer.get("payload") or {}).get("detail")
+                                  or "the room refused to send its document"))
         return ((answer.get("payload") or {}).get("doc")) or {}
 
     def units(self) -> List[Dict[str, Any]]:
@@ -1404,7 +1591,11 @@ class RoomWriter:
         """
         try:
             return active_section(self._document())
-        except Exception:                             # unreachable, refused
+        except RoomRefused:
+            # UNA PORTA CHIUSA NON SI RIEMPIE COL CONTAINER LOCALE: a chi la
+            # stanza ha detto di no non si risponde con un altro grafo.
+            raise
+        except Exception:                             # unreachable
             if self.fallback is not None:
                 return self.fallback.section()
             raise
@@ -1443,7 +1634,9 @@ class RoomWriter:
         """
         try:
             found = self._snapshot_node(node_id)
-        except Exception:                             # unreachable, refused
+        except RoomRefused:
+            raise
+        except Exception:                             # unreachable
             return self.fallback.node(node_id) if self.fallback else None
         if found is not None:
             return found

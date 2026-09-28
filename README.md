@@ -103,7 +103,8 @@ Tests:
 | variable | what it does |
 |---|---|
 | `OIDC_ISSUER` (or `TOKEN_ENDPOINT`), `OIDC_AUDIENCE` | Keycloak/ORCID. Half-configured → the process refuses to start |
-| `EM_SERVER_URL`, `EM_CHATBOT_ROOM`, `EM_CHATBOT_TOKEN` | the shared room. A room without a token is a startup refusal |
+| `EM_SERVER_URL`, `EM_CHATBOT_ROOM`, `EM_CHATBOT_TOKEN` | the node's OWN room, and the token it sits with when nobody is signed (headless). A room without a token is a startup refusal |
+| `EM_ROOM_SERVERS` | the room servers this node may present a PERSON's token to — comma-separated, each `address` or `public=reachable` (in a container the public name is not reachable from inside). Since 25 October every write goes to the room with the token of whoever made it (`app/scrivani.py`: one writer per person and room); a server not listed here never sees a signature. `EM_SERVER_URL` is trusted by construction |
 | `EM_CHATBOT_CONTAINER`, `EM_CHATBOT_STUDY` | the node's own container, for the offline case |
 | `MINIO_ENDPOINT` / `_ACCESS_KEY` / `_SECRET_KEY` / `_BUCKET` | the photos. **The same variables StratiGraph Server reads** |
 | `EM_CHATBOT_INTENT_MODEL`, `EM_CHATBOT_INTENT_ENDPOINT` | an intent model ON THIS NODE — `<provider>:<model>` (or a bare model name) and an OpenAI-compatible base URL, which is what Ollama, llama.cpp, llamafile and vLLM all expose. **No default endpoint, deliberately:** a default would be somebody's cloud. One without the other refuses to start; an endpoint that is not loopback/LAN is allowed but SAID, loudly, in the log and in `/health`. Unset → the rules answer, exactly as before |

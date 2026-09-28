@@ -355,7 +355,8 @@ def room_key(room_id: str) -> str:
     return f"{leggibile}.{hashlib.sha256(grezzo.encode()).hexdigest()[:8]}"
 
 
-def bridge_for(container_path: str, room: Optional[str] = None) -> Bridge:
+def bridge_for(container_path: str, room: Optional[str] = None, *,
+               who: Optional[str] = None) -> Bridge:
     """La coda che accompagna un container locale, **per stanza**.
 
     Accanto e non dentro: il container è un `em.json` che l'ecosistema intero
@@ -406,6 +407,17 @@ def bridge_for(container_path: str, room: Optional[str] = None) -> Bridge:
     legacy = base.with_suffix(base.suffix + ".pending.jsonl")
     if not room:
         return Bridge(str(legacy))
+    if who:
+        # ## E PER PERSONA, DAL 25 OTTOBRE
+        #
+        # Un'operazione in coda non porta l'autore: lo mette il relay dal token
+        # di chi CONSEGNA. Con una coda per stanza, la nota accodata da Anna e
+        # consegnata quando scrive Marco entrava firmata Marco — la stessa
+        # confusione delle stanze, spostata sulle persone. Quindi una coda per
+        # (stanza, persona), e nessuna adozione: la coda di stanza di prima era
+        # del nodo, e darla alla prima persona che passa la ri-attribuirebbe.
+        return Bridge(str(base.with_suffix(
+            base.suffix + f".{room_key(room)}.{room_key(who)}.pending.jsonl")))
     mia = base.with_suffix(base.suffix + f".{room_key(room)}.pending.jsonl")
     if legacy.is_file() and not mia.is_file():
         try:

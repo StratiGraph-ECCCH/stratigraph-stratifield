@@ -69,7 +69,18 @@ s3 = ["minio>=7.2"]
 # Speech-to-text ON THE NODE. Never a hard dependency: the assistant must run
 # headless, in a test, and against ATRIUM (which already hands over the text).
 stt = ["faster-whisper>=1.0"]
-dev = ["pytest>=7", "httpx>=0.27"]
+dev = [
+    "pytest>=7",
+    "httpx>=0.27",
+    # THE BROWSER TESTS' DRIVER — a TEST dependency, never the app's: the page
+    # ships to a tablet with no build step and nothing of this. Declared because
+    # the tests `importorskip` it, and an undeclared driver means a checkout on
+    # another machine SKIPS the cache, RTL and field-door tests in silence and
+    # reports green (measured on 24 October: installed in one .venv by hand, in
+    # nobody's list). They drive the system Chrome (`channel="chrome"`), so no
+    # `playwright install` is needed where Chrome is.
+    "playwright>=1.40",
+]
 
 [tool.setuptools]
 packages = ["app"]

@@ -43,7 +43,10 @@
 
 import { isStructured, mountWidget, sendable } from "./widgets.js";
 
-const SG = () => window.SG || {};
+const SG = () => (typeof window !== "undefined" && window.SG) || {};
+/* La cornice parla la lingua dell'interfaccia (`t()`); l'inglese accanto è il
+ * ripiego di un modulo caricato senza la pagina, come nei test. */
+const tr = (key, fallback) => (SG().t ? SG().t(key) : fallback);
 
 /* ── il modo, e come si decide ─────────────────────────────────────────────
  *
@@ -356,7 +359,8 @@ export function completenessLine(def, values, mode) {
   }
   const box = el("p", { class: "completeness" });
   if (!bits.length) {
-    box.append(el("span", { text: "Tutti i campi obbligatori sono compilati." }));
+    box.append(el("span", { text: tr("sheet.allRequired",
+                                     "All the required fields are filled in.") }));
     return box;
   }
   // Il caso della trincea NON è dipinto come un problema: dipingerlo così
@@ -601,7 +605,7 @@ export function render(container, def, state) {
   // non dove cade il pollice. Svuotare una scheda che qualcuno ha compilato
   // con i guanti addosso non deve essere a un centimetro dal bottone che salva.
   const clear = el("button", { class: "risky", type: "button",
-                               text: "Svuota la scheda" });
+                               text: tr("sheet.clear", "Clear the sheet") });
   clear.addEventListener("click", () => state.onClear());
   head.append(clear);
   sheet.append(head);
@@ -628,7 +632,7 @@ export function render(container, def, state) {
   if (mode !== "phone") {
     const foot = el("footer", { class: "sheetfoot" });
     const saveIt = el("button", { class: "primary save", type: "button",
-                                  text: "Salva la scheda" });
+                                  text: tr("sheet.save", "Save the sheet") });
     saveIt.addEventListener("click", () => state.onSave());
     foot.append(saveIt);
     sheet.append(foot);

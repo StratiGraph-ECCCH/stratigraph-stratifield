@@ -203,20 +203,29 @@ class RoomSession:
                 if kind == "snapshot":
                     self._snapshot = message.get("payload") or {}
                 elif kind == "host_info":
+                    # UN VIEWER SI SIEDE, e legge. Fino al 25 ottobre un
+                    # `can_write: false` chiudeva la porta qui, e la sola
+                    # sessione del nodo era anche la sola via per rileggere
+                    # la stanza: un viewer non vedeva nemmeno l'elenco delle
+                    # unità. Adesso il rifiuto sta dove si SCRIVE
+                    # (`RoomWriter._may_write`), con la stessa frase.
                     host = message.get("payload") or {}
-                    if host.get("can_write") is False:
-                        socket.close()
-                        # LA FRASE È QUELLA DI PRIMA, parola per parola: è la
-                        # stessa porta, spostata di file. Cambiarla avrebbe
-                        # cambiato ciò che una persona legge per una ragione
-                        # che non la riguarda.
-                        raise SessionRefused(
-                            f"this room is read-only for you "
-                            f"(role {host.get('role') or 'unknown'})")
         except SessionClosed:
             raise
         except Exception as exc:      # noqa: BLE001
             socket.close()
+            # UNA PORTA CHIUSA NON È UNA RETE CHE MANCA, nemmeno al join. Il
+            # relay accetta il socket e poi lo chiude con un codice: 4401 (il
+            # token non va) o 4403 (non sei membro). Letti come un «join
+            # fallito» qualunque, finivano nel ramo della rete: la nota andava
+            # in coda e sarebbe tornata a fallire per sempre, senza che
+            # nessuno leggesse perché.
+            code = getattr(getattr(exc, "rcvd", None), "code", None)
+            if code in (4401, 4403):
+                reason = getattr(getattr(exc, "rcvd", None), "reason", "") or ""
+                raise SessionRefused(
+                    f"the room refused this signature ({code}: "
+                    f"{reason or 'no reason given'})") from None
             self._back_off()
             raise SessionClosed(f"join fallito: {type(exc).__name__}: {exc}") from None
 

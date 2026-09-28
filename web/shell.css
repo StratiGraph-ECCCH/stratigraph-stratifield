@@ -493,3 +493,32 @@ input[type="date"], input[type="number"], time {
  * ancora italiani scritti nel codice (vedi il referto del 24 ottobre), e in una
  * riga RTL il loro punto finale andava in testa. */
 #scheda-says, .saysit { unicode-bidi: plaintext; }
+
+/* ── IL RUOLO SI VEDE (25 ottobre) ───────────────────────────────────────────
+ * Quello che la STANZA dice di chi è firmato (`GET /v1/room`), scritto sul
+ * documento come `data-access` da `render()`: `write`, `read`, `none`. La
+ * regola non si decide qui — la decide l'ACL della stanza — qui si toglie
+ * soltanto quello che la stanza rifiuterebbe comunque: un bottone che porta a
+ * un rifiuto certo è un'interfaccia che non funziona. Le caselle le blocca
+ * `shell.js` (`lockForReading`); la frase è `#role-note`. */
+:root[data-access="read"] #rec,
+:root[data-access="read"] #shoot,
+:root[data-access="read"] #typed,
+:root[data-access="read"] #send,
+:root[data-access="read"] #chat-say,
+:root[data-access="read"] #chat-send,
+:root[data-access="read"] .save,
+:root[data-access="read"] .risky,
+:root[data-access="read"] #tb-save,
+:root[data-access="read"] #hint,
+:root[data-access="read"] #commands-in { display: none; }
+/* chi non è membro non entra: niente elenco, niente scheda, niente gesti */
+:root[data-access="none"] #work,
+:root[data-access="none"] #index,
+:root[data-access="none"] #scheda,
+:root[data-access="none"] #thumbbar { display: none; }
+.role-note {
+  margin: var(--sg-space-2) var(--sg-space-4);
+  padding: var(--sg-space-2) var(--sg-space-3);
+  border-inline-start: 3px solid var(--sg-line);
+}

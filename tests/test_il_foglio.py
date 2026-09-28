@@ -334,9 +334,9 @@ def test_the_new_words_are_the_xlsx_keys_in_en_and_it():
     for key in keys:
         assert LOCALES["en"].get(key), key
         assert LOCALES["it"].get(key), key
-        # Le altre quattro restano VUOTE nel sorgente (`ro: {}`) e la pagina
-        # le riempie di chiavi vuote all'avvio, che ricadono sull'inglese.
-        for other in ("ro", "el", "es", "pl"):
-            assert not LOCALES[other].get(key), (other, key)
+        # Le altre sei sono le BOZZE dei partner, dall'xlsx: «bozza subito,
+        # correzione postuma» (E.D.), quindi una lingua in bozza è presente.
+        for other in ("ro", "el", "es", "pl", "he", "de"):
+            assert LOCALES[other].get(key), (other, key)
     assert LOCALES["it"]["page.expand"] == "Ingrandisci questa facciata per scrivere"
     assert LOCALES["en"]["f.trench_only"] == "Trench fields only"

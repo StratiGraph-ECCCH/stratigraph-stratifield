@@ -14,6 +14,17 @@ cose, avrebbe consegnato il lavoro di una stanza dentro un'altra.
 
 *Cambiare destinazione a un lavoro già accodato non è ripuntare, è perderlo con
 un'altra faccia.*
+
+## DAL 25 OTTOBRE IL NODO NON SI PRENDE PIÙ
+
+La presa (`holding.py`, «un nodo, una persona alla volta») esisteva perché lo
+scrivano era uno e il suo token era del nodo: l'unica configurazione onesta era
+dirlo. Adesso lo scrivano è **di una persona in una stanza** (`app/scrivani.py`)
+e porta il suo token, quindi due persone sullo stesso nodo scrivono ciascuna a
+nome suo e la presa non ha più niente da proteggere. `POST /v1/room` prova la
+porta per chi chiama e non sposta il nodo; il posto lo tiene il browser e lo
+manda con ogni richiesta. Le prove della presa sono uscite con lei; quelle delle
+code, dell'ambiente e del disco restano, riscritte sulla forma nuova.
 """
 
 from __future__ import annotations
@@ -39,7 +50,6 @@ from app.assets import InMemoryAssetStore                     # noqa: E402
 from app.auth import OidcSettings, authenticator              # noqa: E402
 from app.bridge import bridge_for, queues_beside, room_key    # noqa: E402
 from app.contract import GraphDelta                           # noqa: E402
-from app.holding import HeldByAnother, Holding                # noqa: E402
 from app.tools import build_registry                          # noqa: E402
 from app.writer import LocalWriter, RoomWriter                # noqa: E402
 from tests.test_room_writer_wire import FakeRelay             # noqa: E402
@@ -86,20 +96,24 @@ def realm():
 
 @pytest.fixture()
 def nodo(tmp_path, monkeypatch):
-    """Un nodo con il suo container locale, la sua presa e nessuna stanza."""
+    """Un nodo con il suo container locale, nessuna stanza, e un registro di
+    scrivani per persona che si fida dei server che il test gli dà."""
+    from app.scrivani import Scrivani
+
     local = LocalWriter(str(tmp_path / "scavo.em.json"), study="Saggio B")
     store = InMemoryAssetStore()
-    presa = Holding(idle_after=1200)
     monkeypatch.setattr(main_module, "LOCAL", local)
     monkeypatch.setattr(main_module, "WRITER", local)
     monkeypatch.setattr(main_module, "LARDER", None)
     monkeypatch.setattr(main_module, "STORE", store)
-    monkeypatch.setattr(main_module, "HOLDING", presa)
     monkeypatch.setattr(main_module, "REGISTRY", build_registry(local, store))
+    scrivani = Scrivani(local=local, spool=None, trusted={},
+                        build_registry=lambda w: build_registry(w, store))
+    monkeypatch.setattr(main_module, "SCRIVANI", scrivani)
     # niente scambio configurato e nessun token d'ambiente, se non lo dice il test
     for nome in handoff.EXCHANGE_KEYS + ("EM_CHATBOT_TOKEN",):
         monkeypatch.delenv(nome, raising=False)
-    return local, presa
+    return local, scrivani
 
 
 @pytest.fixture()
@@ -112,8 +126,15 @@ def _con(firma, orcid=DEV):
     return {"Authorization": "Bearer " + firma(orcid)}
 
 
-def _ambiente(monkeypatch, token="tok-del-dispiegamento"):
-    monkeypatch.setenv("EM_CHATBOT_TOKEN", token)
+def _fidato(nodo, *indirizzi):
+    """Il nodo nomina questi server: la firma di una persona ci può andare."""
+    for indirizzo in indirizzi:
+        nodo[1].trusted[indirizzo] = indirizzo
+
+
+def _qui(indirizzo, stanza):
+    """Il posto che il browser manda con ogni richiesta."""
+    return {"X-StratiGraph-Server": indirizzo, "X-StratiGraph-Room": stanza}
 
 
 # ═══ 1 · cosa succede OGGI con due firme ═════════════════════════════════════
@@ -143,13 +164,13 @@ def test_due_firme_scrivono_nello_stesso_posto_ma_con_nomi_diversi(
     assert autori == {"US10": DEV, "US20": VIEWER}
 
 
-def test_nella_stanza_invece_il_nome_e_quello_del_NODO(tmp_path):
-    """E questa è la metà che rende «una persona alla volta» obbligatoria.
+def test_nella_stanza_il_nome_e_quello_del_TOKEN_che_consegna(tmp_path):
+    """La ragione per cui lo scrivano è per persona (`app/scrivani.py`).
 
     Il relay prende l'autore dal token e non dal payload — lo dice la sua
     docstring, letta e non dedotta. Qui si misura il lato client: le operazioni
-    partono **senza autore**, quindi nella stanza il nome è quello del token del
-    nodo, chiunque abbia parlato.
+    partono **senza autore**, quindi nella stanza il nome è quello del token di
+    chi consegna. Con uno scrivano del nodo era il nodo; ora è la persona.
     """
     with FakeRelay() as relay:
         local = LocalWriter(str(tmp_path / "scavo.em.json"), study="Scavo")
@@ -162,83 +183,61 @@ def test_nella_stanza_invece_il_nome_e_quello_del_NODO(tmp_path):
             edges=[], process=None, author=VIEWER))
         [operazione] = [op for op in relay.ops if op.get("id") == "US1"]
         assert "author" not in operazione, (
-            "il client non dichiara l'autore: lo mette il token, e il token è "
-            "del nodo")
+            "il client non dichiara l'autore: lo mette il token di chi consegna")
         assert operazione["node"]["data"]["created_by"] == VIEWER, (
             "nel payload c'è chi ha parlato — e le due cose possono "
             "contraddirsi, che è il fatto")
 
 
-# ═══ 2 · la presa: chi arriva secondo vede una frase ═════════════════════════
+# ═══ 2 · due persone, due scrivani ══════════════════════════════════════════
 
-def test_chi_arriva_secondo_legge_chi_lo_tiene(client, realm, nodo,
-                                               monkeypatch):
-    _, presa = nodo
-    _ambiente(monkeypatch)
+def test_due_persone_nella_stessa_stanza_hanno_DUE_scrivani_e_due_token(
+        client, realm, nodo):
+    """Il cuore della notte. Stessa stanza, due firme: ognuna entra col suo
+    token, e il relay (che firma dal token) vede due persone."""
+    _, scrivani = nodo
     with FakeRelay() as relay:
         indirizzo = f"http://127.0.0.1:{relay.port}"
-        primo = client.post("/v1/room", json={"server": indirizzo, "room": "A"},
-                            headers=_con(realm, DEV))
-        assert primo.status_code == 200, primo.text
-
-        secondo = client.post("/v1/room",
-                              json={"server": indirizzo, "room": "B"},
-                              headers=_con(realm, VIEWER))
-        assert secondo.status_code == 409
-        detto = secondo.json()["detail"]
-        assert DEV in detto, "la frase dice CHI"
-        assert "meno di un minuto" in detto, "e da quanto"
-        assert "aspetta" in detto, "e cosa può fare"
-        # e il nodo non si è mosso
-        assert main_module.WRITER.room_id == "A"
-        assert presa.holder().who == DEV
-
-
-def test_un_nodo_fermo_si_prende_e_LO_DICE(client, realm, nodo, monkeypatch):
-    """L'altra metà: una presa che nessuno può prendere è un blocco, e in una
-    tenda di cantiere è la fine della giornata di qualcun altro.
-
-    Subentrare in silenzio sarebbe la stessa sorpresa girata dall'altra parte.
-    """
-    _, presa = nodo
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        indirizzo = f"http://127.0.0.1:{relay.port}"
-        client.post("/v1/room", json={"server": indirizzo, "room": "A"},
-                    headers=_con(realm, DEV))
-        # il telefono è stato messo giù: mezz'ora di silenzio, contata
-        # sull'orologio monotono che è quello che la presa guarda
-        presa._seen_at -= 1_800
-        secondo = client.post("/v1/room",
-                              json={"server": indirizzo, "room": "B"},
-                              headers=_con(realm, VIEWER))
-        assert secondo.status_code == 200, secondo.text
-        detto = secondo.json()["message"]
-        assert "era tenuto da" in detto and DEV in detto
-        assert presa.holder().who == VIEWER
-        assert main_module.WRITER.room_id == "B"
+        _fidato(nodo, indirizzo)
+        mia, sua = realm(DEV), realm(VIEWER)
+        for firma, numero in ((mia, "10"), (sua, "20")):
+            risposta = client.post(
+                "/v1/say",
+                json={"transcript": f"crea una nuova scheda, US {numero}"},
+                headers={"Authorization": "Bearer " + firma,
+                         **_qui(indirizzo, "A")})
+            assert risposta.status_code == 200, risposta.text
+            assert risposta.json()["ok"], risposta.json()
+        assert mia in relay.tokens and sua in relay.tokens, relay.tokens
+        assert len(scrivani.mine(DEV)) == 1 and len(scrivani.mine(VIEWER)) == 1
+        assert scrivani.mine(DEV)[0] is not scrivani.mine(VIEWER)[0]
+    assert main_module.WRITER is nodo[0], "il nodo non si è mosso"
 
 
-def test_lavorare_tiene_il_nodo(client, realm, nodo, monkeypatch):
-    """La presa dura finché chi la tiene **lavora**: ogni atto autenticato la
-    rinfresca. Un nodo tenuto per aver detto una volta «è mio» sarebbe di nuovo
-    un blocco, solo con un'altra causa."""
-    _, presa = nodo
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        client.post("/v1/room",
-                    json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-                    headers=_con(realm, DEV))
-        presa._seen_at -= 1_000                 # sedici minuti di silenzio finti
-        assert presa.describe()["idle_seconds"] >= 1_000
-        client.post("/v1/say", json={"transcript": "crea una nuova scheda, US 5"},
-                    headers=_con(realm, DEV))
-        assert presa.describe()["idle_seconds"] < 5, "il lavoro l'ha rinfrescata"
-
-
-def test_senza_firma_non_si_prende_niente(client, realm, nodo):
+def test_senza_firma_non_si_entra(client, realm, nodo):
     risposta = client.post("/v1/room", json={"server": "http://x", "room": "A"})
     assert risposta.status_code == 401
+
+
+def test_un_server_che_il_nodo_non_ha_nominato_NON_riceve_la_firma(
+        client, realm, nodo):
+    """Il *confused deputy* che `_room_credential` teneva chiuso rifiutando
+    l'inoltro: il server lo sceglie il LINK, e un link lo scrive chiunque. Ora
+    la firma va solo ai server che chi amministra il nodo ha scritto."""
+    mia = realm(DEV)
+    with FakeRelay() as relay:
+        estraneo = f"http://127.0.0.1:{relay.port}"
+        risposta = client.post("/v1/room",
+                               json={"server": estraneo, "room": "A"},
+                               headers={"Authorization": "Bearer " + mia})
+        assert risposta.status_code == 403, risposta.text
+        assert "EM_ROOM_SERVERS" in risposta.json()["detail"]
+        # …né per la porta di ogni giorno, gli header
+        detto = client.post("/v1/say", json={"transcript": "crea una nuova scheda, US 3"},
+                            headers={"Authorization": "Bearer " + mia,
+                                     **_qui(estraneo, "A")})
+        assert detto.status_code == 403
+        assert relay.tokens == [], "la firma è uscita verso un server estraneo"
 
 
 # ═══ 3 · IL CANCELLO: la coda non cambia destinazione ════════════════════════
@@ -251,24 +250,21 @@ def test_IL_CANCELLO_la_coda_di_A_non_finisce_in_B(client, realm, nodo,
     finiscono in coda), poi si ripunta a B che invece risponde, e si guarda cosa
     ha ricevuto B.
     """
-    local, _ = nodo
-    _ambiente(monkeypatch)
+    local, scrivani = nodo
     with FakeRelay() as relay:
         vivo = f"http://127.0.0.1:{relay.port}"
         morto = "http://127.0.0.1:9"           # nessuno ascolta
+        _fidato(nodo, vivo, morto)
 
         # ── A, irraggiungibile: il lavoro si accoda ──
-        scrivano_a = RoomWriter(morto, "A", "tok", timeout=1.0, fallback=local,
-                                bridge=bridge_for(local.path, "A"))
-        main_module.WRITER = scrivano_a
-        main_module.REGISTRY = build_registry(scrivano_a, main_module.STORE)
         client.post("/v1/say", json={"transcript": "crea una nuova scheda, US 77"},
-                    headers=_con(realm, DEV))
+                    headers={**_con(realm, DEV), **_qui(morto, "A")})
+        [scrivano_a] = scrivani.mine(DEV)
         assert len(scrivano_a.bridge) >= 1, "in coda per A"
         in_coda_per_a = [op.get("id") for op in scrivano_a.bridge.pending()]
         assert "US77" in in_coda_per_a
 
-        # ── si ripunta a B, che risponde ──
+        # ── si va in B, che risponde ──
         prima_in_b = len(relay.ops)
         risposta = client.post("/v1/room", json={"server": vivo, "room": "B"},
                                headers=_con(realm, DEV))
@@ -278,12 +274,14 @@ def test_IL_CANCELLO_la_coda_di_A_non_finisce_in_B(client, realm, nodo,
         arrivate = [op.get("id") for op in relay.ops[prima_in_b:]]
         assert "US77" not in arrivate, (
             "il lavoro dettato per la stanza A è comparso nella stanza B")
-        assert len(main_module.WRITER.bridge) == 0, "B parte con la sua coda vuota"
-        # e quello di A è ancora lì, suo, e si vede
+        scrivano_b = next(w for w in scrivani.mine(DEV) if w.room_id == "B")
+        assert len(scrivano_b.bridge) == 0, "B parte con la sua coda vuota"
+        # e quello di A è ancora lì, suo — di DEV in A — e si vede
         code = {q["queue"]: q["pending"] for q in queues_beside(local.path)}
-        mia = f"{pathlib.Path(local.path).name}.{room_key('A')}.pending.jsonl"
+        mia = (f"{pathlib.Path(local.path).name}.{room_key('A')}."
+               f"{room_key(DEV)}.pending.jsonl")
         assert code.get(mia, 0) >= 1, code
-        assert risposta.json()["queues"], "e /v1/room lo dice a chi ha ripuntato"
+        assert risposta.json()["queues"], "e /v1/room lo dice a chi entra"
 
 
 def test_E_CON_UNA_CODA_SOLA_il_lavoro_di_A_FINISCE_IN_B(tmp_path):
@@ -348,20 +346,26 @@ def test_la_dispensa_NON_e_per_stanza_e_cè_una_ragione(client, realm, nodo,
     """
     from app.spool import Spool
 
-    local, _ = nodo
+    local, scrivani = nodo
     dispensa = Spool(tmp_path / "dispensa", remote=InMemoryAssetStore())
     monkeypatch.setattr(main_module, "LARDER", dispensa)
+    scrivani.spool = dispensa
     dispensa.put(b"\xff\xd8\xff\xe0 foto \xff\xd9", "image/jpeg")
     prima = list(dispensa.waiting())
     assert len(prima) == 1
 
-    _ambiente(monkeypatch)
     with FakeRelay() as relay:
+        _fidato(nodo, f"http://127.0.0.1:{relay.port}")
         risposta = client.post(
             "/v1/room",
             json={"server": f"http://127.0.0.1:{relay.port}", "room": "B"},
             headers=_con(realm, DEV))
         assert risposta.status_code == 200, risposta.text
+        # la dispensa sale quando si SCRIVE, non quando si entra a guardare
+        detto = client.post("/v1/say", json={"transcript": "crea una nuova scheda, US 8"},
+                            headers={**_con(realm, DEV),
+                                     **_qui(f"http://127.0.0.1:{relay.port}", "B")})
+        assert detto.status_code == 200, detto.text
     # …e al rientro nella stanza nuova sono SALITI, non spariti: `_seated`
     # attraversa la dispensa prima del ponte, che è la regola del 30 settembre.
     # Il punto di questo test è che la dispensa è **una sola** — non una per
@@ -369,163 +373,83 @@ def test_la_dispensa_NON_e_per_stanza_e_cè_una_ragione(client, realm, nodo,
     assert dispensa.waiting() == [], "consegnati allo store condiviso"
     assert dispensa._remote.get(prima[0]) is not None
     assert dispensa._remote.count() == 1, "una volta sola"
-    assert main_module.WRITER.spool is dispensa, "e la stessa dispensa, una sola"
+    assert all(w.spool is dispensa for w in scrivani.everyone()), (
+        "e la stessa dispensa, una sola, per tutte le persone")
 
 
 # ═══ 5 · il ritorno indietro ═════════════════════════════════════════════════
 
-def test_si_torna_al_container_locale_e_si_lascia_il_nodo(client, realm, nodo,
-                                                          monkeypatch):
-    local, presa = nodo
-    _ambiente(monkeypatch)
+def test_si_torna_al_posto_del_nodo_e_le_sessioni_si_chiudono(client, realm,
+                                                                nodo):
+    local, scrivani = nodo
     with FakeRelay() as relay:
-        client.post("/v1/room",
-                    json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
+        indirizzo = f"http://127.0.0.1:{relay.port}"
+        _fidato(nodo, indirizzo)
+        client.post("/v1/room", json={"server": indirizzo, "room": "A"},
                     headers=_con(realm, DEV))
-        assert main_module.WRITER.room_id == "A"
-
+        [mio] = scrivani.mine(DEV)
+        assert mio.session.seated
         indietro = client.delete("/v1/room", headers=_con(realm, DEV))
         assert indietro.status_code == 200, indietro.text
-        assert main_module.WRITER is local
-        assert presa.holder() is None, "il nodo è libero"
+        assert not mio.session.seated, "la sessione in A si è chiusa"
+        assert main_module.WRITER is local, "il nodo non si era mai mosso"
         assert "container locale" in indietro.json()["message"]
-
-
-def test_non_si_spunta_il_nodo_di_un_altro(client, realm, nodo, monkeypatch):
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        client.post("/v1/room",
-                    json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-                    headers=_con(realm, DEV))
-        rifiuto = client.delete("/v1/room", headers=_con(realm, VIEWER))
-        assert rifiuto.status_code == 409
-        assert DEV in rifiuto.json()["detail"]
-        assert main_module.WRITER.room_id == "A"
 
 
 # ═══ 6 · il nodo lo dice ═════════════════════════════════════════════════════
 
-def test_il_nodo_dice_dove_scrive_e_chi_lo_tiene(client, realm, nodo,
-                                                 monkeypatch):
-    _ambiente(monkeypatch)
-    libero = client.get("/health").json()
-    assert libero["held"] == "libero"
-
+def test_ognuno_legge_DOVE_scrive_LUI(client, realm, nodo):
     with FakeRelay() as relay:
         indirizzo = f"http://127.0.0.1:{relay.port}"
-        client.post("/v1/room", json={"server": indirizzo, "room": "A"},
-                    headers=_con(realm, DEV))
-
+        _fidato(nodo, indirizzo)
+        a = client.get("/v1/room", headers={**_con(realm, DEV),
+                                            **_qui(indirizzo, "A")}).json()
+        b = client.get("/v1/room", headers={**_con(realm, VIEWER),
+                                            **_qui(indirizzo, "B")}).json()
+        assert (a["room"], a["who"]) == ("A", DEV)
+        assert (b["room"], b["who"]) == ("B", VIEWER)
+        assert a["role"] == "owner" and a["can_write"] is True
         salute = client.get("/health").json()
-        assert "A" in salute["writes_to"], salute["writes_to"]
-        assert salute["held"].startswith("tenuto"), salute["held"]
-        assert DEV not in json.dumps(salute), (
-            "/health è pubblica: il fatto sì, il nome no")
-
-        risposta = client.get("/v1/room", headers=_con(realm, DEV))
-        assert risposta.status_code == 200, risposta.text
-        mio = risposta.json()
-        assert mio["room"] == "A" and mio["holding"]["who"] == DEV
-
-
-def test_dopo_un_ripuntamento_dice_la_cosa_nuova(client, realm, nodo,
-                                                 monkeypatch):
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        indirizzo = f"http://127.0.0.1:{relay.port}"
-        client.post("/v1/room", json={"server": indirizzo, "room": "A"},
-                    headers=_con(realm, DEV))
-        client.post("/v1/room", json={"server": indirizzo, "room": "B"},
-                    headers=_con(realm, DEV))
-        assert "B" in client.get("/health").json()["writes_to"]
-        assert client.get("/v1/room", headers=_con(realm, DEV)).json()["room"] == "B"
+        assert DEV not in json.dumps(salute) and VIEWER not in json.dumps(salute), (
+            "/health è pubblica: chi lavora qui non si dice a chi non firma")
+        assert salute["seated"] is True, "la rete verso la stanza c'è"
 
 
 # ═══ 7 · la porta si prova PRIMA di scambiare lo scrivano ════════════════════
 
-def test_una_stanza_che_non_risponde_non_sposta_il_nodo(client, realm, nodo,
-                                                        monkeypatch):
-    """Ripuntare a una stanza che non c'è lascerebbe il nodo fermo dove non può
-    scrivere. Si prova la porta, e se non si apre non si tocca niente."""
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        client.post("/v1/room",
-                    json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-                    headers=_con(realm, DEV))
-        rifiuto = client.post("/v1/room",
-                              json={"server": "http://127.0.0.1:9", "room": "Z"},
-                              headers=_con(realm, DEV))
-        assert rifiuto.status_code == 502
-        assert "non si è aperta" in rifiuto.json()["detail"]
-        assert main_module.WRITER.room_id == "A", "il nodo è dove era"
-
-
-def test_una_stanza_in_sola_lettura_dice_la_frase_del_relay(client, realm, nodo,
-                                                            monkeypatch):
-    _ambiente(monkeypatch)
-    with FakeRelay(can_write=False) as relay:
-        rifiuto = client.post(
-            "/v1/room",
-            json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-            headers=_con(realm, DEV))
-        assert rifiuto.status_code == 502
-        assert "read-only" in rifiuto.json()["detail"]
-
-
-def test_se_la_porta_non_si_apre_la_presa_si_lascia(client, realm, nodo,
-                                                    monkeypatch):
-    """Aver preso un nodo e non averne ottenuto niente non è tenerlo: se
-    restasse preso, il nodo sarebbe bloccato da un tentativo fallito."""
-    _, presa = nodo
-    _ambiente(monkeypatch)
+def test_una_stanza_che_non_risponde_si_dice_come_rete(client, realm, nodo):
+    _fidato(nodo, "http://127.0.0.1:9")
     rifiuto = client.post("/v1/room",
                           json={"server": "http://127.0.0.1:9", "room": "Z"},
                           headers=_con(realm, DEV))
     assert rifiuto.status_code == 502
-    assert presa.holder() is None, "il nodo è ancora libero"
+    assert "non ha risposto" in rifiuto.json()["detail"]
+
+
+def test_una_stanza_in_sola_lettura_si_apre_PER_LEGGERE(client, realm, nodo):
+    """Fino al 25 ottobre un viewer riceveva 502 e «read-only»: la porta si
+    chiudeva e con lei la sola via per rileggere la stanza. Ora entra, legge,
+    e la risposta dice il ruolo."""
+    with FakeRelay(can_write=False) as relay:
+        indirizzo = f"http://127.0.0.1:{relay.port}"
+        _fidato(nodo, indirizzo)
+        entra = client.post("/v1/room", json={"server": indirizzo, "room": "A"},
+                            headers=_con(realm, VIEWER))
+        assert entra.status_code == 200, entra.text
+        assert entra.json()["can_write"] is False
+        assert "per leggere" in entra.json()["message"]
+        elenco = client.get("/v1/room/units",
+                            headers={**_con(realm, VIEWER), **_qui(indirizzo, "A")})
+        assert elenco.status_code == 200, elenco.text
+        scrive = client.post("/v1/say", json={"transcript": "crea una nuova scheda, US 4"},
+                             headers={**_con(realm, VIEWER), **_qui(indirizzo, "A")})
+        assert scrive.json()["ok"] is False
+        assert "read-only" in scrive.json()["message"]
+        assert not [m for m in relay.received if m.get("type") == "op"], (
+            "nessuna operazione è partita da un viewer")
 
 
 # ═══ 8 · la credenziale ══════════════════════════════════════════════════════
-
-def test_il_token_di_chi_chiama_NON_viene_inoltrato(client, realm, nodo,
-                                                    monkeypatch):
-    """L'attacco che questa regola esiste per chiudere: il server lo sceglie il
-    LINK, e un link lo scrive chiunque. «Incolla questo» e il nodo consegnerebbe
-    la firma di chi ha firmato a chi ha scritto il link."""
-    _ambiente(monkeypatch, "tok-del-dispiegamento")
-    mia = realm(DEV)
-    with FakeRelay() as relay:
-        risposta = client.post(
-            "/v1/room",
-            json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-            headers={"Authorization": "Bearer " + mia})
-        assert risposta.status_code == 200, risposta.text
-        assert mia not in relay.tokens, "la firma di chi chiama è uscita dal nodo"
-        assert relay.tokens == ["tok-del-dispiegamento"]
-
-
-def test_col_token_dellambiente_il_nodo_DICE_di_chi_sara_il_lavoro(
-        client, realm, nodo, monkeypatch):
-    """Il comportamento che questo nodo ha sempre avuto, che stanotte smette di
-    essere taciuto."""
-    _ambiente(monkeypatch)
-    with FakeRelay() as relay:
-        risposta = client.post(
-            "/v1/room",
-            json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-            headers=_con(realm, DEV)).json()
-    assert "non tuo" in risposta["credential"]
-    assert "EM_ROOM_AUDIENCE" in risposta["credential"]
-
-
-def test_senza_niente_il_nodo_dice_cosa_manca(client, realm, nodo):
-    rifiuto = client.post("/v1/room",
-                          json={"server": "http://127.0.0.1:9", "room": "A"},
-                          headers=_con(realm, DEV))
-    assert rifiuto.status_code == 503
-    detto = rifiuto.json()["detail"]
-    assert "EM_ROOM_AUDIENCE" in detto and "EM_CHATBOT_TOKEN" in detto
-
 
 def test_lo_scambio_chiede_al_realm_a_nome_di_chi_ha_firmato(monkeypatch):
     """Lo scambio, misurato su un endpoint finto: cosa parte davvero."""
@@ -616,10 +540,10 @@ def test_ripuntare_non_scrive_nessun_token_da_nessuna_parte(
     import os
 
     local, _ = nodo
-    _ambiente(monkeypatch, "tok-del-dispiegamento")
     mia = realm(DEV)
     prima = dict(os.environ)
     with FakeRelay() as relay:
+        _fidato(nodo, f"http://127.0.0.1:{relay.port}")
         risposta = client.post(
             "/v1/room",
             json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
@@ -636,71 +560,6 @@ def test_ripuntare_non_scrive_nessun_token_da_nessuna_parte(
                 f"la firma di chi ha chiamato è finita in {path.name}"
     # né nella risposta che il nodo dà
     assert mia not in json.dumps(risposta.json())
-
-
-def test_il_token_non_finisce_nemmeno_nella_presa(client, realm, nodo,
-                                                  monkeypatch):
-    """La presa porta un ORCID — che è un identificatore pubblico e finisce nel
-    grafo comunque — e mai una credenziale."""
-    _, presa = nodo
-    _ambiente(monkeypatch)
-    mia = realm(DEV)
-    with FakeRelay() as relay:
-        client.post("/v1/room",
-                    json={"server": f"http://127.0.0.1:{relay.port}", "room": "A"},
-                    headers={"Authorization": "Bearer " + mia})
-    tenuta = presa.holder()
-    assert tenuta.who == DEV
-    assert mia not in json.dumps(presa.describe(reveal=True))
-
-
-# ═══ 11 · la presa, da sola ══════════════════════════════════════════════════
-
-def test_la_presa_e_dello_stesso_e_non_si_rinnova_il_da_quando():
-    presa = Holding(idle_after=1200)
-    prima = presa.take(DEV)["grip"]
-    dopo = presa.take(DEV)["grip"]
-    assert dopo.since == prima.since, "è sempre lo stesso, dalle stesse ore"
-
-
-def test_una_presa_senza_nome_si_rifiuta():
-    with pytest.raises(ValueError) as vuoto:
-        Holding().take("")
-    assert "senza identità" in str(vuoto.value)
-
-
-def test_lasciare_una_presa_che_non_e_tua_non_fa_niente():
-    presa = Holding()
-    presa.take(DEV)
-    assert presa.release(VIEWER) is False
-    assert presa.holder().who == DEV
-
-
-def test_un_riavvio_libera_il_nodo():
-    """Dichiarato invece che scoperto: la presa vive nel processo, perché il
-    token della stanza non tocca mai il disco e una presa durevole senza il suo
-    token sarebbe un nodo che dichiara una stanza in cui non può scrivere."""
-    presa = Holding()
-    presa.take(DEV)
-    rinata = Holding()                            # il processo è ripartito
-    assert rinata.holder() is None
-    assert rinata.take(VIEWER)["took_over_from"] is None
-
-
-def test_la_presa_scaduta_non_e_una_presa():
-    presa = Holding(idle_after=0)
-    presa.take(DEV)
-    assert presa.holder() is None
-    assert presa.stale().who == DEV, "ma si sa ancora di chi era, per dirlo"
-    with pytest.raises(HeldByAnother):
-        Holding(idle_after=10_000).take(DEV) and \
-            _presa_occupata().take(VIEWER)
-
-
-def _presa_occupata():
-    presa = Holding(idle_after=10_000)
-    presa.take(DEV)
-    return presa
 
 
 # ═══ 12 · la superficie ══════════════════════════════════════════════════════
@@ -770,4 +629,4 @@ def test_GET_v1_room_arriva_al_suo_gestore(client, realm, nodo):
     """E lo stesso fatto, misurato invece che dedotto dall'ordine."""
     risposta = client.get("/v1/room", headers=_con(realm, DEV))
     assert risposta.status_code == 200, risposta.text
-    assert "holding" in risposta.json()
+    assert "role" in risposta.json()

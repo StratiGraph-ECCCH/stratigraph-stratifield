@@ -327,4 +327,8 @@ def test_UNO_E_MOLTI_SONO_DUE_FRASI():
     pagina = (WEB / "index.html").read_text(encoding="utf-8")
     for chiave in ("index.fields.one", "index.fields.many",
                    "index.total.one", "index.total.many"):
-        assert pagina.count(f'"{chiave}"') == 2, chiave
+        # in inglese e in italiano scritte qui; nelle altre sei lingue sono
+        # le bozze che l'xlsx dei partner porta (dal 25 ottobre), quindi il
+        # numero delle occorrenze non è più due e non è la cosa da contare
+        from tests.test_field_signature import LOCALES
+        assert LOCALES["en"].get(chiave) and LOCALES["it"].get(chiave), chiave

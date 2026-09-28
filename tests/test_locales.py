@@ -4,11 +4,13 @@ English is the source language of every StratiGraph surface; beside it, the
 languages of the project's case studies (T2.3) — `it` `ro` `el` `es` `pl` —
 because those are the languages somebody will actually excavate in.
 
-`en` and `it` are complete. The other four exist with **the same keys and empty
-values**, which fall back to English. That is deliberate and it is not laziness:
-**translating is the partners' work**, each for their own language and their own
-dig. A string invented by us in a language none of us re-reads is worse than the
-English it replaced.
+`en` and `it` are complete. The other six are the partners' DRAFTS, generated
+from their xlsx (`scripts/ui_strings.py`): «bozza subito, correzione postuma»
+(E.D., 25 October), so a language in draft is a language present. What is not in
+the file keeps an empty value and falls back to English. **Translating is the
+partners' work**, each for their own language and their own dig: a string
+invented by us in a language none of us re-reads is worse than the English it
+replaced.
 
 What this file defends is the SLOT, not the translation:
 
@@ -35,9 +37,10 @@ from tests.test_field_signature import LOCALES, PAGE   # noqa: E402
 EXPECTED = ("en", "it", "ro", "el", "es", "pl", "he", "de")
 #: complete today; the rest are the partners' to fill
 COMPLETE = ("en", "it")
-#: GENERATED from the partners' xlsx by `scripts/ui_strings.py` (24 October):
-#: drafts, and only the keys the page shares with the file
-GENERATED = ("he", "de")
+#: GENERATED from the partners' xlsx by `scripts/ui_strings.py` (he·de on 24
+#: October, ro·el·es·pl on the 25th): drafts, and only the keys the page shares
+#: with the file
+GENERATED = ("he", "de", "ro", "el", "es", "pl")
 
 
 def test_the_eight_locales_are_declared():
@@ -130,6 +133,19 @@ def test_the_generated_locales_are_generated_and_not_written_by_hand():
         assert PAGE.count(f"\n  {code}: {{") == 1, code
 
 
+def test_a_locale_is_declared_ONCE_because_in_js_the_last_key_wins():
+    """Measured with node on 28 September: the generated `ro` sat above the
+    empty-slot line `ro: {}, el: {}, …`, and in an object literal the repeated
+    key wins LAST — the page ran with ro/el/es/pl EMPTY while this file's parser,
+    which reads the first `ro: {`, said they were full. So a locale is a key of
+    `STRINGS` exactly once, whichever of the two spellings it takes."""
+    block = re.search(r"const STRINGS = \{(.*?)\n\};", PAGE, re.S).group(1)
+    for code in EXPECTED:
+        spelled = (len(re.findall(rf"^  {code}: \{{$", block, re.M))
+                   + len(re.findall(rf"\b{code}: \{{\}}", block)))
+        assert spelled == 1, (code, spelled)
+
+
 def test_the_generated_locales_carry_real_text_and_no_invented_key():
     for code in GENERATED:
         filled = {k: v for k, v in LOCALES[code].items() if v.strip()}
@@ -203,3 +219,39 @@ def test_a_card_link_waits_for_the_listing_before_choosing_the_cards_language():
              ).read_text(encoding="utf-8")
     assert "const schedeLoaded = loadSchede();" in shell
     assert "void land().then(() => schedeLoaded).then(() => followHash());" in shell
+
+
+# ── la cornice scritta fissa (25 ottobre) ───────────────────────────────────
+
+def test_the_frame_is_painted_from_keys_and_every_key_exists():
+    """Il referto del 24 (§B.3) ha trovato, con l'interfaccia in ebraico,
+    «Scrivania», «Salva», «Detta», gli `aria-label` e i messaggi della scheda
+    ancora in italiano. Ora ogni testo della cornice nel markup porta la sua
+    chiave (`data-t`, `data-t-aria`), e la chiave esiste in en e in it."""
+    keys = re.findall(r'data-t(?:-aria)?="([\w.]+)"', PAGE)
+    assert len(keys) >= 15, keys
+    for key in keys:
+        assert LOCALES["en"].get(key), key
+        assert LOCALES["it"].get(key), key
+    assert 'document.querySelectorAll("[data-t]")' in PAGE
+    assert 'document.querySelectorAll("[data-t-aria]")' in PAGE
+
+
+def test_the_old_italian_literals_do_not_come_back():
+    from tests import sorgenti
+
+    web = pathlib.Path(__file__).resolve().parent.parent / "web"
+    gone = ("Svuota la scheda", "Salva la scheda", "Scrivania", "Telefono",
+            "Non ho la definizione", "Non riesco a rileggere",
+            "Questo nodo non serve schede", "Nessuna scheda in cache",
+            "Tutti i campi obbligatori", "campi da trincea su campi totali")
+    for name in ("shell.js", "scheda.js", "foglio.js"):
+        code = sorgenti.senza_prosa((web / name).read_text(encoding="utf-8"))
+        for text in gone:
+            assert text not in code, (name, text)
+    markup = re.sub(r"<!--.*?-->", "", PAGE.split("<script")[0], flags=re.S)
+    for text in ("Apri la navigazione", "Campo precedente", "Campo successivo",
+                 "Tema chiaro o scuro", 'aria-label="Soglia"',
+                 'aria-label="Navigazione"', ">Salva<", ">Detta<",
+                 ">Dove scrivo<", ">Una facciata per volta<"):
+        assert text not in markup, text

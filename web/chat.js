@@ -58,9 +58,8 @@ export function mount({ t, toast }) {
     if (!seam.signed) { nota.textContent = t("chat.signin"); return; }
     let letto;
     try {
-      const risposta = await fetch(seam.node + "/v1/room/chat", {
-        headers: { Authorization: "Bearer " + seam.token },
-      });
+      // chi E DOVE, col token rinnovato: `SG.request`, non un `fetch` suo
+      const risposta = await seam.request("/v1/room/chat", {});
       if (!risposta.ok) {
         //  409 = questo nodo scrive nel contenitore locale; 502 = niente rete
         nota.textContent = risposta.status === 409
@@ -88,10 +87,9 @@ export function mount({ t, toast }) {
     const seam = SG();
     casella.value = "";
     try {
-      const risposta = await fetch(seam.node + "/v1/room/chat", {
+      const risposta = await seam.request("/v1/room/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json",
-                   Authorization: "Bearer " + seam.token },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ said: testo }),
       });
       if (!risposta.ok) throw new Error(String(risposta.status));

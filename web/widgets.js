@@ -63,6 +63,8 @@ export const room = {
 
 function authHeaders() {
   const seam = SG();
+  // chi E DOVE (dal 25 ottobre): la stanza di questa persona, non quella del nodo
+  if (seam.headers) return seam.headers();
   return seam.token ? { Authorization: "Bearer " + seam.token } : {};
 }
 

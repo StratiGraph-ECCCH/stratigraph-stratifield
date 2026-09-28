@@ -196,4 +196,7 @@ def test_LA_SUPERFICIE_DICE_COSA_NON_PROMETTE():
     for chiave in ("chat.unreachable", "chat.queued", "chat.boundary"):
         assert f'"{chiave}"' in pagina
     #: in tutt'e due le lingue
-    assert pagina.count('"chat.boundary"') == 2
+    # en e it scritte qui; nelle altre sei lingue le bozze dell'xlsx dei
+    # partner (25 ottobre): le occorrenze non sono più due
+    from tests.test_field_signature import LOCALES
+    assert LOCALES["en"].get("chat.boundary") and LOCALES["it"].get("chat.boundary")

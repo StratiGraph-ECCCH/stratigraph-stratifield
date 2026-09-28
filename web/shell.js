@@ -33,11 +33,16 @@ let repaintPhotos = () => {};
 /* …e la stessa cosa per l'elenco di cosa c'è già nella stanza. */
 let repaintIndex = async () => {};
 
+/* Le etichette sono CHIAVI: il chip si dipinge nella lingua dell'interfaccia
+ * (`t()`), e l'inglese accanto è solo il ripiego di un modulo caricato senza
+ * la pagina (i test). */
 const MODES = [
-  ["phone", "Telefono"],
-  ["tablet", "Tablet"],
-  ["desktop", "Scrivania"],
+  ["phone", "field.phone", "Phone"],
+  ["tablet", "field.tablet", "Tablet"],
+  ["desktop", "mode.desk", "Desk"],
 ];
+const tr = (key, fallback, values) =>
+  (SG().t ? SG().t(key, values) : fallback);
 const THEME_KEY = "sg.theme.v1";
 
 /* ── il tema ────────────────────────────────────────────────────────────────
@@ -164,11 +169,11 @@ function paintModes() {
   const proposed = proposeMode(window.innerWidth);
   const bar = $("modes");
   bar.replaceChildren();
-  for (const [value, label] of MODES) {
+  for (const [value, key, fallback] of MODES) {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "chip";
-    chip.textContent = label;
+    chip.textContent = tr(key, fallback);
     chip.setAttribute("aria-pressed", String(value === state.mode));
     if (value === proposed) chip.dataset.proposed = "true";
     chip.addEventListener("click", () => {
@@ -237,7 +242,8 @@ function paintWayBack() {
   const verso = wayBack(state.mode, window.innerWidth);
   bottone.hidden = !verso;
   if (!verso) return;
-  const nome = (MODES.find(([value]) => value === verso) || [])[1] || verso;
+  const voce = MODES.find(([value]) => value === verso);
+  const nome = voce ? tr(voce[1], voce[2]) : verso;
   bottone.textContent = SG().t
     ? SG().t("mode.back", { mode: nome }) : `↔ ${nome}`;
   bottone.setAttribute("aria-label", bottone.textContent);
@@ -277,8 +283,9 @@ async function loadSchede() {
     host.append(Object.assign(document.createElement("p"), {
       className: "help",
       textContent: listing
-        ? "Questo nodo non serve schede."
-        : "Nessuna scheda in cache: serve una connessione la prima volta.",
+        ? tr("schede.none", "This node serves no sheets.")
+        : tr("schede.noCache",
+             "No sheet in the cache: the first time needs a connection."),
     }));
     return;
   }
@@ -294,7 +301,7 @@ async function loadSchede() {
     const count = document.createElement("span");
     count.className = "count";
     count.textContent = `${item.recorded_in.trench}/${item.fields}`;
-    count.title = "campi da trincea su campi totali";
+    count.title = tr("schede.countTitle", "trench fields out of all fields");
     button.append(count);
     button.addEventListener("click", () => openScheda(item.id));
     host.append(button);
@@ -403,9 +410,8 @@ async function openScheda(id, su = null, lang = null) {
     paintStrip();
     paintThumbbar();
     says.hidden = false;
-    says.textContent =
-      `Non ho la definizione di «${id}» e non riesco a chiederla al nodo. ` +
-      `Non posso disegnare una scheda che non conosco.`;
+    says.textContent = tr("scheda.noDefinition",
+      `I do not have the definition of «${id}».`, { id });
   }
 }
 
@@ -426,16 +432,20 @@ async function refill(def, us) {
   if (state.keyField) state.values[state.keyField] = us;
   let read;
   try {
-    const answer = await fetch(
-      `${seam.node || ""}/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`,
-      { headers: seam.token ? { Authorization: "Bearer " + seam.token } : {} });
+    const path = `/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`;
+    // chi E DOVE, col token rinnovato (`SG.request`); il ripiego è per un
+    // modulo caricato senza la pagina
+    const answer = seam.request
+      ? await seam.request(path, {})
+      : await fetch(`${seam.node || ""}${path}`,
+                    { headers: seam.token ? { Authorization: "Bearer " + seam.token } : {} });
     if (!answer.ok) {
-      return { note: `Non riesco a rileggere la US ${us} dal nodo ` +
-                     `(${answer.status}): la scheda mostra solo il numero.` };
+      return { note: tr("scheda.noReread", `US ${us}: ${answer.status}`,
+                        { us, status: answer.status }) };
     }
     read = await answer.json();
   } catch {
-    return { note: `Il nodo non risponde: la US ${us} si apre col solo numero.` };
+    return { note: tr("scheda.nodeSilent", `US ${us}: no answer`, { us }) };
   }
   const withId = read.read_with && read.read_with.template;
   if (withId && withId !== def.id) return { other: withId };
@@ -491,6 +501,44 @@ function draw() {
   $("nav-all-count").textContent =
     `${shown.length}/${state.def.fields.length}`;
   $("nav-all").setAttribute("aria-pressed", String(state.showAll));
+}
+
+/* ── IN SOLA LETTURA (25 ottobre) ─────────────────────────────────────────────
+ *
+ * Un viewer apre una scheda e LEGGE: le caselle ci sono, e non si scrivono.
+ * Non è la regola — la regola è della stanza, che rifiuterebbe comunque — è
+ * l'interfaccia che non promette quello che non può dare. Un osservatore sul
+ * `#scheda-host` perché la scheda si ridisegna da sé (il pannello del Foglio,
+ * i widget, le righe aggiunte): bloccare una volta sola dopo `draw()` lascerebbe
+ * aperte le caselle che nascono dopo. «Salva» e «Svuota» li toglie il CSS
+ * (`data-access="read"`). */
+function lockForReading(host) {
+  if (!host || !SG().readOnly) return;
+  for (const box of host.querySelectorAll("input, textarea")) {
+    if (!box.readOnly) box.readOnly = true;
+  }
+  for (const control of host.querySelectorAll(
+      "select, button:not(.fo-corner):not(.fo-struct)")) {
+    if (!control.disabled) control.disabled = true;
+  }
+  for (const editable of host.querySelectorAll("[contenteditable='true']")) {
+    editable.setAttribute("contenteditable", "false");
+  }
+}
+
+let readingWatch = null;
+function watchReading() {
+  const host = $("scheda-host");
+  if (!host) return;
+  if (SG().readOnly && !readingWatch) {
+    readingWatch = new MutationObserver(() => lockForReading(host));
+    readingWatch.observe(host, { childList: true, subtree: true });
+    lockForReading(host);
+  } else if (!SG().readOnly && readingWatch) {
+    readingWatch.disconnect();
+    readingWatch = null;
+    if (state.def) draw();             // di nuovo scrivibili: si ridisegna
+  }
 }
 
 function paintCompleteness() {
@@ -945,7 +993,10 @@ async function land() {
     salute = await (await fetch(SG().node + "/health",
                                 { cache: "no-store" })).json();
   } catch { /* il nodo non risponde: si resta dove si è, ed è onesto */ }
-  const piano = arrivalPlan(arrivo, roomOf(salute));
+  // IL POSTO DI CHI È FIRMATO, se questa pagina ne ricorda uno; quello del nodo
+  // altrimenti. Dal 25 ottobre non è la stessa cosa (`app/scrivani.py`).
+  const mio = SG().where ? SG().where() : null;
+  const piano = arrivalPlan(arrivo, (mio && mio.room) || roomOf(salute));
   if (piano.do === "nothing") return;
 
   if (piano.do === "offer") {
@@ -984,8 +1035,11 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                      state.postureForced = p === "desk" || p === "field" ? p : null;
                      if (state.def) draw();
                    },
+                   onAccess: () => watchReading(),
                    onLocale: () => {
                      $("nav-units").textContent = SG().t("nav.units");
+                     paintModes();
+                     paintWayBack();
                      if (state.def) draw();
                    },
                    goUnit: (n) => goUnit(n), stepUnit: (d) => stepUnit(d),

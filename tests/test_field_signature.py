@@ -321,7 +321,10 @@ def test_a_queued_note_is_stamped_when_it_is_DICTATED_not_when_it_is_sent():
 def test_flush_keeps_somebody_elses_note_in_its_place():
     body = CODE[CODE.index("async function flush()"):]
     body = body[:body.index("async function ping()")]
-    assert "if (!isMine(item, subject)) { left.push(item); continue; }" in body
+    # …and once something of mine could not go (`stopped`), the rest of mine
+    # waits too: the ORDER is the one thing the room cannot rebuild
+    assert ("if (!isMine(item, subject) || stopped) { left.push(item); continue; }"
+            in body)
     assert "writeQueue(left)" in body
 
 

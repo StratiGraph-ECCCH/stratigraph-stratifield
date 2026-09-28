@@ -68,10 +68,10 @@
     <!-- I tre controlli che sul TELEFONO traslocano nella colonna: vivono qui
          dentro, così `placeControls` ha un posto preciso dove riportarli. -->
     <span class="topbar-controls" id="topbar-controls">
-      <span class="chips" id="modes" role="group" aria-label="Soglia"></span>
+      <span class="chips" id="modes" role="group" aria-label="Screen size" data-t-aria="aria.modes"></span>
 
       <button class="iconbtn" id="theme" type="button"
-              aria-label="Tema chiaro o scuro">◐</button>
+              aria-label="Light or dark theme" data-t-aria="aria.theme">◐</button>
 
       <!-- The language picker, in the header and not behind a settings screen:
            on a device that changes hands the language changes with it, and it
@@ -89,34 +89,34 @@
     <span class="state" id="state">…</span>
   </header>
 
-  <nav class="sidenav" id="sidenav" aria-label="Navigazione">
-    <h3>Stanza</h3>
-    <button class="navitem" type="button" id="nav-voice" aria-current="true">Detta</button>
+  <nav class="sidenav" id="sidenav" aria-label="Navigation" data-t-aria="aria.nav">
+    <h3 data-t="nav.room">Room</h3>
+    <button class="navitem" type="button" id="nav-voice" aria-current="true" data-t="tab.dictate">Dictate</button>
     <!-- L'ELENCO DELLE UNITÀ, raggiungibile anche da chi non è arrivato da un
          link: è dove si torna da una scheda, con i filtri com'erano. -->
     <button class="navitem" type="button" id="nav-units">Units (US)</button>
-    <h3>Schede</h3>
+    <h3 data-t="nav.sheets">Sheets</h3>
     <div id="nav-schede"></div>
     <!-- DOVE FINISCE QUELLO CHE DICI. Nella colonna e non sotto il bottone
          grande: puntare il nodo a una stanza è un gesto raro — si fa una volta
          la mattina — mentre dettare si fa tutto il giorno. Quello che si fa una
          volta sta dietro. Il NOME della stanza invece sta nell'intestazione,
          perché quello si legge in continuazione. -->
-    <h3 id="nav-room-title">Dove scrivo</h3>
+    <h3 id="nav-room-title" data-t="nav.where">Where I write</h3>
     <div id="nav-room"></div>
     <!-- DOVE I CONTROLLI DELLA BARRA VANNO A FINIRE SUL TELEFONO. Vuoto sulle
          altre soglie: i nodi si SPOSTANO qui, non si duplicano — due copie di
          un selettore sono due stati il giorno che qualcuno ne tocca uno. -->
     <div id="nav-controls" hidden>
-      <h3>Soglia e aspetto</h3>
+      <h3 data-t="nav.controls">Size and look</h3>
       <div id="nav-controls-host"></div>
     </div>
 
-    <h3>Vista</h3>
+    <h3 data-t="ctl.view">View</h3>
     <button class="navitem" type="button" id="nav-all">
-      Tutti i campi <span class="count" id="nav-all-count"></span>
+      <span data-t="nav.all">All fields</span> <span class="count" id="nav-all-count"></span>
     </button>
-    <button class="navitem" type="button" id="nav-onepage">Una facciata per volta</button>
+    <button class="navitem" type="button" id="nav-onepage" data-t="nav.onepage">One page at a time</button>
   </nav>
 
   <main class="work">
@@ -124,6 +124,9 @@
       <span id="signed-as">signed in as</span> <b id="who-name"></b>
       <button id="signout">Sign out</button>
     </div>
+    <!-- IL RUOLO, detto dalla stanza: sola lettura, o fuori. Vuota e nascosta
+         per chi scrive — che è il caso di tutti i giorni. -->
+    <p class="hint role-note" id="role-note" role="status" hidden></p>
 
     <!-- Nobody has signed: this is the whole screen. -->
     <section id="gate" hidden>
@@ -203,17 +206,17 @@
        distruttive: apri la colonna, indietro, avanti, salva. L'azione che
        svuota la scheda sta in CIMA alla scheda, dove il pollice non arriva. -->
   <div class="thumbbar" id="thumbbar" hidden>
-    <button type="button" id="tb-nav" aria-label="Apri la navigazione">☰</button>
+    <button type="button" id="tb-nav" aria-label="Open the navigation" data-t-aria="aria.openNav">☰</button>
     <!-- IL RITORNO, quando il modo a schermo non è quello che questa finestra
          proporrebbe. Qui e non nella colonna: sul telefono i chip del modo
          STANNO nella colonna, e una via d'uscita che si apre solo da ☰ è la
          via d'uscita che il 5 ottobre non è stata trovata. Compare solo quando
          serve — `wayBack` — così non è un bottone in più tutto il giorno. -->
     <button type="button" id="tb-back" hidden></button>
-    <button type="button" id="tb-prev" aria-label="Campo precedente">◀</button>
+    <button type="button" id="tb-prev" aria-label="Previous field" data-t-aria="aria.prevField">◀</button>
     <span class="step" id="tb-step"></span>
-    <button type="button" id="tb-next" aria-label="Campo successivo">▶</button>
-    <button type="button" class="save" id="tb-save">Salva</button>
+    <button type="button" id="tb-next" aria-label="Next field" data-t-aria="aria.nextField">▶</button>
+    <button type="button" class="save" id="tb-save" data-t="act.save">Save</button>
   </div>
 </div>
 
@@ -343,8 +346,6 @@ const STRINGS = {
     "index.refused": "The link tried to say how this is shown ({what}): refused. A link names a place, never a mode — the window decides.",
     "room.local": "local container",
     "room.in": "room {room}",
-    "room.in.held": "room {room} · held",
-    "room.heldby": "This node is held by {who}: what is written here goes into the room under that name.",
     "room.left.one": "1 operation still queued for a room this node has left.",
     "room.left.many": "{n} operations still queued for {rooms} rooms this node has left.",
     "room.placeholder": "room, or a handoff link",
@@ -434,6 +435,43 @@ const STRINGS = {
     "w.no_photos": "No photos in this room yet.",
     "w.orcid_bad": "Not an ORCID: the format or the check digit is wrong. The name is kept, the ORCID is not.",
     "w.none_in_room": "None in this room yet.",
+    // la cornice (25 ottobre): testi che erano scritti fissi in italiano
+    "act.save": "Save",
+    "tab.dictate": "Dictate",
+    "mode.desk": "Desk",
+    "field.tablet": "Tablet",
+    "field.phone": "Phone",
+    "nav.room": "Room",
+    "nav.sheets": "Sheets",
+    "nav.where": "Where I write",
+    "nav.controls": "Size and look",
+    "nav.all": "All fields",
+    "nav.onepage": "One page at a time",
+    "aria.modes": "Screen size",
+    "aria.theme": "Light or dark theme",
+    "aria.nav": "Navigation",
+    "aria.openNav": "Open the navigation",
+    "aria.prevField": "Previous field",
+    "aria.nextField": "Next field",
+    "sheet.clear": "Clear the sheet",
+    "sheet.save": "Save the sheet",
+    "sheet.allRequired": "All the required fields are filled in.",
+    "schede.none": "This node serves no sheets.",
+    "schede.noCache": "No sheet in the cache: the first time needs a connection.",
+    "schede.countTitle": "trench fields out of all fields",
+    "scheda.noDefinition": "I do not have the definition of «{id}» and I cannot ask the node for it. I cannot draw a sheet I do not know.",
+    "scheda.noReread": "I cannot read US {us} back from the node ({status}): the sheet shows only the number.",
+    "scheda.nodeSilent": "The node does not answer: US {us} opens with the number only.",
+    // firme vere e ruoli nella stanza (25 ottobre)
+    "signin.expired": "Your signature has expired and could not be renewed: sign in again. Nothing queued on this device is lost.",
+    "role.viewer": "You can read this room: your role is {role}, so nothing is saved from here.",
+    "role.none": "You are not a member of room «{room}»: ask its owner for an invitation.",
+    "queue.refused.one": "1 note waits on this device: the room refused it ({why}).",
+    "queue.refused.many": "{n} notes wait on this device: the room refused them ({why}).",
+    "room.pending.one": "1 operation of yours waits on the node for this room.",
+    "room.pending.many": "{n} operations of yours wait on the node for this room.",
+    "f.deliver_now": "Deliver now",
+    "f.delivering": "Delivering…",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -515,8 +553,6 @@ const STRINGS = {
     "index.refused": "Il link ha provato a dire come si vede ({what}): rifiutato. Un link nomina un posto, mai un modo — decide la finestra.",
     "room.local": "container locale",
     "room.in": "stanza {room}",
-    "room.in.held": "stanza {room} · tenuto",
-    "room.heldby": "Questo nodo è tenuto da {who}: quello che si scrive da qui entra nella stanza con quel nome.",
     "room.left.one": "1 operazione ancora in coda per una stanza che il nodo ha lasciato.",
     "room.left.many": "{n} operazioni ancora in coda per {rooms} stanze che il nodo ha lasciato.",
     "room.placeholder": "stanza, o un link di consegna",
@@ -596,6 +632,43 @@ const STRINGS = {
     "w.no_photos": "In questa stanza non ci sono ancora foto.",
     "w.orcid_bad": "Non è un ORCID: il formato o la cifra di controllo non tornano. Il nome resta, l'ORCID no.",
     "w.none_in_room": "In questa stanza non ce n'è ancora nessuno.",
+    // la cornice (25 ottobre): testi che erano scritti fissi in italiano
+    "act.save": "Salva",
+    "tab.dictate": "Detta",
+    "mode.desk": "Scrivania",
+    "field.tablet": "Tablet",
+    "field.phone": "Telefono",
+    "nav.room": "Stanza",
+    "nav.sheets": "Schede",
+    "nav.where": "Dove scrivo",
+    "nav.controls": "Soglia e aspetto",
+    "nav.all": "Tutti i campi",
+    "nav.onepage": "Una facciata per volta",
+    "aria.modes": "Soglia",
+    "aria.theme": "Tema chiaro o scuro",
+    "aria.nav": "Navigazione",
+    "aria.openNav": "Apri la navigazione",
+    "aria.prevField": "Campo precedente",
+    "aria.nextField": "Campo successivo",
+    "sheet.clear": "Svuota la scheda",
+    "sheet.save": "Salva la scheda",
+    "sheet.allRequired": "Tutti i campi obbligatori sono compilati.",
+    "schede.none": "Questo nodo non serve schede.",
+    "schede.noCache": "Nessuna scheda in cache: serve una connessione la prima volta.",
+    "schede.countTitle": "campi da trincea su campi totali",
+    "scheda.noDefinition": "Non ho la definizione di «{id}» e non riesco a chiederla al nodo. Non posso disegnare una scheda che non conosco.",
+    "scheda.noReread": "Non riesco a rileggere la US {us} dal nodo ({status}): la scheda mostra solo il numero.",
+    "scheda.nodeSilent": "Il nodo non risponde: la US {us} si apre col solo numero.",
+    // firme vere e ruoli nella stanza (25 ottobre)
+    "signin.expired": "La tua firma è scaduta e non si è potuta rinnovare: firma di nuovo. Niente di quello che è in coda su questo dispositivo va perso.",
+    "role.viewer": "Puoi leggere questa stanza: il tuo ruolo è {role}, quindi da qui non si salva niente.",
+    "role.none": "Non sei membro della stanza «{room}»: chiedi un invito a chi la possiede.",
+    "queue.refused.one": "1 nota aspetta su questo dispositivo: la stanza l'ha rifiutata ({why}).",
+    "queue.refused.many": "{n} note aspettano su questo dispositivo: la stanza le ha rifiutate ({why}).",
+    "room.pending.one": "1 tua operazione aspetta sul nodo per questa stanza.",
+    "room.pending.many": "{n} tue operazioni aspettano sul nodo per questa stanza.",
+    "f.deliver_now": "Consegna ora",
+    "f.delivering": "Consegno…",
   },
   // >>> ui_strings.py
   // GENERATO da scripts/ui_strings.py leggendo StratiGraph_UI_strings.xlsx
@@ -603,6 +676,105 @@ const STRINGS = {
   // script. BOZZE dei partner, solo le chiavi che la pagina ha con
   // lo stesso inglese; il resto ricade sull'inglese.
   he: {
+    "app.subtitle": "עוזר שטח",
+    "signed.as": "מחובר בתור",
+    "action.signout": "התנתק",
+    "action.signin": "✍️ התחבר כדי להתחיל",
+    "gate.why.canSign": "התחבר בזהותך: מה שתכתיב נכנס לגרף בשמך.",
+    "gate.why.noAuth": "הצומת הזה אינו מבקש התחברות, ולכן אינו יכול לייחס לאיש את מה שתאמר: ההכתבות יידחו.",
+    "gate.why.missing": "חסר: {what}.",
+    "gate.why.unreachable": "איני יכול לשאול את הצומת איך מתחברים. בלי התחברות איני יכול לקבל הכתבות, כי לאיש לא יהיה מחבר.",
+    "action.record": "🎙 החזק ודבר",
+    "action.shoot": "📷 צלם",
+    "action.where": "📍 איפה אני",
+    "action.send": "שלח",
+    "hint.type": "אם אין מיקרופון, הקלד את הפקודה למטה.",
+    "hint.noListen": "הדפדפן הזה אינו מקשיב: הקלד את הפקודה.",
+    "hint.nodeListens": "דבר: ההקלטה נשלחת לצומת, שמתמלל אותה.",
+    "listening": "מקשיב…",
+    "heard": "שמעתי:",
+    "read": "קראתי:",
+    "notHeard": "לא שמעתי דבר.",
+    "notHeard.offline": "לא שמעתי דבר — הדפדפן הזה שולח את ההקלטה לשרת מרוחק לתמלול, ואין רשת. הקלד את הפקודה.",
+    "recording": "מקליט… שחרר כדי לשלוח.",
+    "node.room": "צומת · חדר",
+    "node.local": "צומת · מקומי",
+    "node.offline": "לא מחובר",
+    "queue.mine": "{n} בתור, אשלח אותם כשהצומת יחזור.",
+    "queue.theirs.one": "הערה אחת של {who}, ממתינה לשובו.",
+    "queue.theirs.many": "{n} הערות של {who}, ממתינות לשובו.",
+    "queue.unsigned.one": "הערה אחת ללא חתימה, שהוכתבה לפני שהייתה חתימה: היא נשארת בתור.",
+    "queue.unsigned.many": "{n} הערות ללא חתימה, שהוכתבו לפני שהייתה חתימה: הן נשארות בתור.",
+    "queue.sent.one": "שלחתי פריט אחד מהתור.",
+    "queue.sent.many": "שלחתי {n} פריטים מהתור.",
+    "queue.kept": "הצומת אינו זמין: הכנסתי לתור.",
+    "photos.waiting.one": "תצלום אחד ממתין לקישור.",
+    "photos.waiting.many": "{n} תצלומים ממתינים לקישור.",
+    "photos.ready.one": "תצלום אחד מקושר, ממתין לצומת.",
+    "photos.ready.many": "{n} תצלומים מקושרים, ממתינים לצומת.",
+    "photos.unlinked": "לא מקושר",
+    "photos.propose": "US {us}?",
+    "photos.on": "US {us}",
+    "photos.drop": "מחק",
+    "photos.drop.title": "מחיקת {name}. הבתים שלו נמצאים רק במכשיר הזה: הוא לא יחזור.",
+    "photos.drop.ask": "למחוק את התצלום הזה? הוא מעולם לא נשלח, ולכן הבתים שלו נמצאים רק כאן.",
+    "console.confirm": "{what}\n\n{name}\n\nזהו מרחב העבודה של מישהו. להמשיך?",
+    "console.confirm.typed": "{what}\n\nאי אפשר לבטל את זה.\n\nהקלד את השם כדי לאשר:\n{name}",
+    "photos.other": "מספר אחר",
+    "photos.ask": "לאיזו יחידה שייך התצלום הזה?",
+    "photos.nokeep": "לא הצלחתי לשמור את התצלום במכשיר הזה: הוא לא צולם.",
+    "chat.open": "💬 מה אמרנו",
+    "chat.say": "אמור",
+    "chat.placeholder": "אמור זאת לחדר",
+    "chat.send": "אמור",
+    "chat.none": "בחדר הזה עדיין לא נאמר דבר.",
+    "chat.nobody": "ללא שם",
+    "chat.retracted": "— נמשך —",
+    "chat.more": "{n} הודעות קודמות אינן מוצגות.",
+    "chat.boundary": "שיחה נשארת בחדר: שום דבר ממנה אינו עובר למחקר שמתפרסם.",
+    "chat.signin": "התחבר כדי לקרוא מה נאמר.",
+    "chat.nolocal": "הצומת הזה כותב למכל המקומי: אין חדר שבו מישהו מדבר.",
+    "chat.unreachable": "החדר לא ענה. בלי רשת אפשר לומר משהו — זה נכנס לתור — אבל אי אפשר לקרוא בחזרה.",
+    "chat.queued": "נאמר. החדר לא ענה, ולכן זה בתור וייצא בחזרה.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "בחדר {room}",
+    "index.head.local": "במכל המקומי",
+    "index.fields.one": "שדה אחד",
+    "index.fields.many": "{n} שדות",
+    "index.total.one": "גיליון אחד.",
+    "index.total.many": "{n} גיליונות.",
+    "index.more": "{n} מתוך {total} גיליונות אינם מוצגים.",
+    "index.empty": "כאן עדיין לא תועד דבר. הכתב, וזה יופיע.",
+    "index.signin": "התחבר כדי לראות מה כבר קיים.",
+    "index.unreachable": "מכאן איני יכול לקרוא את החדר.",
+    "index.which": "באיזה תקן לפתוח מחדש את {unit}?",
+    "index.noSchede": "הצומת הזה אינו מגיש הגדרות, ולכן אין במה לפתוח אותה מחדש.",
+    "index.back": "← חזרה לרשימה",
+    "index.noNumber": "המזהה של היחידה הזו אינו כולל מספר: אי אפשר לפתוח אותה מכאן",
+    "index.offer": "הקישור מציין את החדר «{room}», והצומת הזה כותב למקום אחר. להפנות אותו לשם?",
+    "index.refused": "הקישור ניסה לקבוע איך זה מוצג ({what}): נדחה. קישור מציין מקום, לעולם לא אופן — החלון מחליט.",
+    "room.local": "מכל מקומי",
+    "room.in": "חדר {room}",
+    "room.left.one": "פעולה אחת עדיין בתור עבור חדר שהצומת עזב.",
+    "room.left.many": "{n} פעולות עדיין בתור עבור {rooms} חדרים שהצומת עזב.",
+    "room.placeholder": "חדר, או קישור מסירה",
+    "room.point": "כתוב כאן",
+    "room.back": "מכל מקומי",
+    "room.pointing": "שואל…",
+    "room.pointed": "הופנה.",
+    "room.went.back": "חזרה למכל המקומי.",
+    "room.refused": "הצומת סירב.",
+    "room.unreachable": "הצומת לא ענה.",
+    "signin.failed": "ההתחברות נכשלה:",
+    "signin.noPending": "בכרטיסייה הזו לא הייתה התחברות בתהליך.",
+    "signin.badState": "מצב ההתחברות אינו תואם: אני דוחה קוד שהכרטיסייה הזו לא ביקשה.",
+    "signin.noKeycloak": "איני מגיע ל-Keycloak מהמכשיר הזה.",
+    "signin.noToken": "Keycloak לא החזיר טוקן.",
+    "signin.answered": "Keycloak ענה {status}",
+    "signout.local": "התנתקת מהמכשיר הזה. הצומת אינו מפרסם התנתקות מה-realm, ולכן ייתכן שהחיבור ל-Keycloak עדיין פתוח.",
+    "here": "כאן: {lat}, {lon}",
+    "lang.label": "שפה",
+    "commands.in": "הצומת הזה מבין פקודות ב{language}.",
     "view.sheet": "נייר",
     "view.fields": "שדות",
     "ctl.view": "תצוגה",
@@ -662,8 +834,114 @@ const STRINGS = {
     "w.no_photos": "עדיין אין תצלומים בחדר הזה.",
     "w.orcid_bad": "זה אינו ORCID: התבנית או ספרת הביקורת שגויות. השם נשמר, ה-ORCID לא.",
     "w.none_in_room": "עדיין אין אף אחד בחדר הזה.",
+    "act.save": "שמור",
+    "tab.dictate": "הכתבה",
+    "mode.desk": "שולחן עבודה",
+    "field.tablet": "טאבלט",
+    "field.phone": "טלפון",
+    "f.deliver_now": "מסור עכשיו",
+    "f.delivering": "מוסר…",
   },
   de: {
+    "app.subtitle": "Feldassistent",
+    "signed.as": "angemeldet als",
+    "action.signout": "Abmelden",
+    "action.signin": "✍️ Zum Start anmelden",
+    "gate.why.canSign": "Melde dich mit deiner Identität an: was du diktierst, kommt unter deinem Namen in den Graphen.",
+    "gate.why.noAuth": "Dieser Knoten verlangt keine Anmeldung, kann also niemandem zuordnen, was du sagst: Diktate würden abgelehnt.",
+    "gate.why.missing": "Es fehlt: {what}.",
+    "gate.why.unreachable": "Ich kann den Knoten nicht fragen, wie man sich anmeldet. Ohne Anmeldung kann ich kein Diktat annehmen, weil niemand sein Autor sein könnte.",
+    "action.record": "🎙 Halten und sprechen",
+    "action.shoot": "📷 Foto",
+    "action.where": "📍 Wo bin ich",
+    "action.send": "Senden",
+    "hint.type": "Wenn es kein Mikrofon gibt, tippe den Befehl unten ein.",
+    "hint.noListen": "Dieser Browser hört nicht zu: tippe den Befehl.",
+    "hint.nodeListens": "Sprich: die Aufnahme geht an den Knoten, der sie transkribiert.",
+    "listening": "Ich höre zu…",
+    "heard": "Ich habe gehört:",
+    "read": "Ich habe gelesen:",
+    "notHeard": "Ich habe nichts gehört.",
+    "notHeard.offline": "Ich habe nichts gehört — dieser Browser schickt die Aufnahme zur Transkription an einen entfernten Server, und es gibt kein Netz. Tippe den Befehl.",
+    "recording": "Aufnahme läuft… loslassen zum Senden.",
+    "node.room": "Knoten · Raum",
+    "node.local": "Knoten · lokal",
+    "node.offline": "offline",
+    "queue.mine": "{n} in der Warteschlange, ich sende sie, sobald der Knoten zurück ist.",
+    "queue.theirs.one": "1 Notiz von {who}, wartet auf die Rückkehr.",
+    "queue.theirs.many": "{n} Notizen von {who}, warten auf die Rückkehr.",
+    "queue.unsigned.one": "1 Notiz ohne Anmeldung, diktiert, bevor es die Anmeldung gab: sie bleibt in der Warteschlange.",
+    "queue.unsigned.many": "{n} Notizen ohne Anmeldung, diktiert, bevor es die Anmeldung gab: sie bleiben in der Warteschlange.",
+    "queue.sent.one": "Ich habe 1 Eintrag aus der Warteschlange gesendet.",
+    "queue.sent.many": "Ich habe {n} Einträge aus der Warteschlange gesendet.",
+    "queue.kept": "Knoten nicht erreichbar: ich habe es in die Warteschlange gestellt.",
+    "photos.waiting.one": "1 Foto wartet auf Verknüpfung.",
+    "photos.waiting.many": "{n} Fotos warten auf Verknüpfung.",
+    "photos.ready.one": "1 Foto verknüpft, wartet auf den Knoten.",
+    "photos.ready.many": "{n} Fotos verknüpft, warten auf den Knoten.",
+    "photos.unlinked": "nicht verknüpft",
+    "photos.propose": "US {us}?",
+    "photos.on": "US {us}",
+    "photos.drop": "verwerfen",
+    "photos.drop.title": "{name} verwerfen. Die Daten liegen nur auf diesem Gerät: es kommt nicht zurück.",
+    "photos.drop.ask": "Dieses Foto verwerfen? Es wurde nie gesendet, die Daten liegen also nur hier.",
+    "console.confirm": "{what}\n\n{name}\n\nDas ist der Arbeitsbereich von jemandem. Fortfahren?",
+    "console.confirm.typed": "{what}\n\nDas lässt sich NICHT rückgängig machen.\n\nTippe den Namen zur Bestätigung:\n{name}",
+    "photos.other": "andere Nummer",
+    "photos.ask": "Zu welcher Einheit gehört dieses Foto?",
+    "photos.nokeep": "Ich konnte das Foto nicht auf diesem Gerät behalten: es wurde NICHT aufgenommen.",
+    "chat.open": "💬 Was wir gesagt haben",
+    "chat.say": "Sagen",
+    "chat.placeholder": "sag es dem Raum",
+    "chat.send": "Sagen",
+    "chat.none": "In diesem Raum wurde noch nichts gesagt.",
+    "chat.nobody": "ohne Namen",
+    "chat.retracted": "— zurückgezogen —",
+    "chat.more": "{n} ältere Nachrichten werden nicht angezeigt.",
+    "chat.boundary": "Ein Gespräch bleibt im Raum: nichts davon reist in einer veröffentlichten Studie mit.",
+    "chat.signin": "Melde dich an, um zu lesen, was gesagt wurde.",
+    "chat.nolocal": "Dieser Knoten schreibt in den lokalen Container: es gibt keinen Raum, in dem jemand spricht.",
+    "chat.unreachable": "Der Raum hat nicht geantwortet. Ohne Netz kannst du etwas sagen — es kommt in die Warteschlange — aber nicht nachlesen.",
+    "chat.queued": "Gesagt. Der Raum hat nicht geantwortet, also steht es in der Warteschlange und geht auf dem Rückweg raus.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "Im Raum {room}",
+    "index.head.local": "Im lokalen Container",
+    "index.fields.one": "1 Feld",
+    "index.fields.many": "{n} Felder",
+    "index.total.one": "1 Blatt.",
+    "index.total.many": "{n} Blätter.",
+    "index.more": "{n} von {total} Blättern werden nicht angezeigt.",
+    "index.empty": "Hier ist noch nichts erfasst. Diktiere, und es erscheint.",
+    "index.signin": "Melde dich an, um zu sehen, was schon da ist.",
+    "index.unreachable": "Von hier aus kann ich den Raum nicht lesen.",
+    "index.which": "Mit welchem Standard öffnest du {unit} wieder?",
+    "index.noSchede": "Dieser Knoten liefert keine Definitionen, es gibt also nichts, womit man es wieder öffnen könnte.",
+    "index.back": "← zurück zur Liste",
+    "index.noNumber": "die ID dieser Einheit enthält keine Nummer: von hier aus lässt sie sich nicht wieder öffnen",
+    "index.offer": "Der Link nennt den Raum «{room}», und dieser Knoten schreibt woanders hin. Dorthin umstellen?",
+    "index.refused": "Der Link wollte festlegen, wie es angezeigt wird ({what}): abgelehnt. Ein Link nennt einen Ort, nie einen Modus — das Fenster entscheidet.",
+    "room.local": "lokaler Container",
+    "room.in": "Raum {room}",
+    "room.left.one": "1 Operation steht noch in der Warteschlange für einen Raum, den der Knoten verlassen hat.",
+    "room.left.many": "{n} Operationen stehen noch in der Warteschlange für {rooms} Räume, die der Knoten verlassen hat.",
+    "room.placeholder": "Raum oder ein Übergabe-Link",
+    "room.point": "Hier schreiben",
+    "room.back": "Lokaler Container",
+    "room.pointing": "Frage an…",
+    "room.pointed": "Umgestellt.",
+    "room.went.back": "Zurück zum lokalen Container.",
+    "room.refused": "Der Knoten hat abgelehnt.",
+    "room.unreachable": "Der Knoten hat nicht geantwortet.",
+    "signin.failed": "Anmeldung fehlgeschlagen:",
+    "signin.noPending": "dieser Tab hatte keine laufende Anmeldung.",
+    "signin.badState": "der Anmeldestatus stimmt nicht: ich lehne einen Code ab, den dieser Tab nicht angefordert hat.",
+    "signin.noKeycloak": "ich erreiche Keycloak von diesem Gerät aus nicht.",
+    "signin.noToken": "Keycloak hat kein Token zurückgegeben.",
+    "signin.answered": "Keycloak antwortete {status}",
+    "signout.local": "Von diesem Gerät abgemeldet. Der Knoten bietet kein Realm-Logout, die Keycloak-Sitzung kann also noch offen sein.",
+    "here": "Hier: {lat}, {lon}",
+    "lang.label": "Sprache",
+    "commands.in": "Dieser Knoten versteht Befehle auf {language}.",
     "view.sheet": "Papier",
     "view.fields": "Felder",
     "ctl.view": "Ansicht",
@@ -723,10 +1001,683 @@ const STRINGS = {
     "w.no_photos": "In diesem Raum gibt es noch keine Fotos.",
     "w.orcid_bad": "Kein ORCID: Format oder Prüfziffer stimmen nicht. Der Name bleibt, die ORCID nicht.",
     "w.none_in_room": "In diesem Raum gibt es noch keine.",
+    "act.save": "Speichern",
+    "tab.dictate": "Diktieren",
+    "mode.desk": "Schreibtisch",
+    "field.tablet": "Tablet",
+    "field.phone": "Telefon",
+    "f.deliver_now": "Jetzt übergeben",
+    "f.delivering": "Wird übergeben…",
+  },
+  ro: {
+    "app.subtitle": "asistent de teren",
+    "signed.as": "autentificat ca",
+    "action.signout": "Ieșire",
+    "action.signin": "✍️ Autentificați-vă pentru a începe",
+    "gate.why.canSign": "Autentificați-vă cu identitatea dumneavoastră: ce dictați intră în graf pe numele dumneavoastră.",
+    "gate.why.noAuth": "Acest nod nu cere autentificare, deci nu poate atribui nimănui ce ați spune: dictările ar fi refuzate.",
+    "gate.why.missing": "Lipsește: {what}.",
+    "gate.why.unreachable": "Nu pot întreba nodul cum se face autentificarea. Fără autentificare nu pot accepta dictări, pentru că nimeni nu le-ar putea fi autor.",
+    "action.record": "🎙 Țineți apăsat și vorbiți",
+    "action.shoot": "📷 Fotografie",
+    "action.where": "📍 Unde sunt",
+    "action.send": "Trimite",
+    "hint.type": "Dacă nu există microfon, scrieți comanda mai jos.",
+    "hint.noListen": "Acest browser nu ascultă: scrieți comanda.",
+    "hint.nodeListens": "Vorbiți: înregistrarea merge la nod, care o transcrie.",
+    "listening": "Ascult…",
+    "heard": "Am auzit:",
+    "read": "Am citit:",
+    "notHeard": "Nu am auzit nimic.",
+    "notHeard.offline": "Nu am auzit nimic — acest browser trimite înregistrarea unui server la distanță pentru transcriere, iar rețeaua lipsește. Scrieți comanda.",
+    "recording": "Înregistrez… eliberați pentru a trimite.",
+    "node.room": "nod · cameră",
+    "node.local": "nod · local",
+    "node.offline": "offline",
+    "queue.mine": "{n} în coadă, le trimit când revine nodul.",
+    "queue.theirs.one": "1 notă de la {who}, care așteaptă să revină.",
+    "queue.theirs.many": "{n} note de la {who}, care așteaptă să revină.",
+    "queue.unsigned.one": "1 notă fără autentificare, dictată înainte să existe autentificarea: rămâne în coadă.",
+    "queue.unsigned.many": "{n} note fără autentificare, dictate înainte să existe autentificarea: rămân în coadă.",
+    "queue.sent.one": "Am trimis 1 element din coadă.",
+    "queue.sent.many": "Am trimis {n} elemente din coadă.",
+    "queue.kept": "Nod inaccesibil: l-am pus în coadă.",
+    "photos.waiting.one": "1 fotografie așteaptă să fie legată.",
+    "photos.waiting.many": "{n} fotografii așteaptă să fie legate.",
+    "photos.ready.one": "1 fotografie legată, așteaptă nodul.",
+    "photos.ready.many": "{n} fotografii legate, așteaptă nodul.",
+    "photos.unlinked": "nelegată",
+    "photos.propose": "US {us}?",
+    "photos.on": "US {us}",
+    "photos.drop": "renunță",
+    "photos.drop.title": "Renunță la {name}. Octeții ei sunt doar pe acest dispozitiv: nu se mai întoarce.",
+    "photos.drop.ask": "Renunț la această fotografie? Nu a fost trimisă niciodată, deci octeții ei sunt doar aici.",
+    "console.confirm": "{what}\n\n{name}\n\nAcesta este spațiul de lucru al cuiva. Continui?",
+    "console.confirm.typed": "{what}\n\nAceasta NU se poate anula.\n\nScrieți numele pentru a confirma:\n{name}",
+    "photos.other": "alt număr",
+    "photos.ask": "Din ce unitate este această fotografie?",
+    "photos.nokeep": "Nu am putut păstra fotografia pe acest dispozitiv: NU a fost făcută.",
+    "chat.open": "💬 Ce ne-am spus",
+    "chat.say": "Spune",
+    "chat.placeholder": "spune-o camerei",
+    "chat.send": "Spune",
+    "chat.none": "În această cameră nu s-a spus încă nimic.",
+    "chat.nobody": "fără nume",
+    "chat.retracted": "— retras —",
+    "chat.more": "{n} mesaje mai vechi nu sunt afișate.",
+    "chat.boundary": "O conversație rămâne în cameră: nimic din ea nu călătorește într-un studiu publicat.",
+    "chat.signin": "Autentificați-vă pentru a citi ce s-a spus.",
+    "chat.nolocal": "Acest nod scrie în containerul local: nu există o cameră în care să vorbească cineva.",
+    "chat.unreachable": "Camera nu a răspuns. Fără rețea puteți spune ceva — intră în coadă — dar nu puteți reciti.",
+    "chat.queued": "Spus. Camera nu a răspuns, deci e în coadă și pleacă la întoarcere.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "În camera {room}",
+    "index.head.local": "În containerul local",
+    "index.fields.one": "1 câmp",
+    "index.fields.many": "{n} câmpuri",
+    "index.total.one": "1 fișă.",
+    "index.total.many": "{n} fișe.",
+    "index.more": "{n} din {total} fișe nu sunt afișate.",
+    "index.empty": "Aici nu s-a înregistrat încă nimic. Dictați, și apare.",
+    "index.signin": "Autentificați-vă pentru a vedea ce există deja.",
+    "index.unreachable": "De aici nu pot citi camera.",
+    "index.which": "Cu ce standard redeschideți {unit}?",
+    "index.noSchede": "Acest nod nu servește definiții, deci nu există cu ce s-o redeschideți.",
+    "index.back": "← înapoi la listă",
+    "index.noNumber": "id-ul acestei unități nu conține un număr: de aici nu se poate redeschide",
+    "index.offer": "Linkul numește camera «{room}», iar acest nod scrie în altă parte. Îl îndrept acolo?",
+    "index.refused": "Linkul a încercat să spună cum se afișează ({what}): refuzat. Un link numește un loc, niciodată un mod — decide fereastra.",
+    "room.local": "container local",
+    "room.in": "camera {room}",
+    "room.left.one": "1 operație încă în coadă pentru o cameră pe care nodul a părăsit-o.",
+    "room.left.many": "{n} operații încă în coadă pentru {rooms} camere pe care nodul le-a părăsit.",
+    "room.placeholder": "cameră sau un link de predare",
+    "room.point": "Scrie aici",
+    "room.back": "Container local",
+    "room.pointing": "Întreb…",
+    "room.pointed": "Îndreptat.",
+    "room.went.back": "Înapoi la containerul local.",
+    "room.refused": "Nodul a refuzat.",
+    "room.unreachable": "Nodul nu a răspuns.",
+    "signin.failed": "Autentificare eșuată:",
+    "signin.noPending": "această filă nu avea o autentificare în curs.",
+    "signin.badState": "starea autentificării nu corespunde: refuz un cod pe care această filă nu l-a cerut.",
+    "signin.noKeycloak": "nu pot ajunge la Keycloak de pe acest dispozitiv.",
+    "signin.noToken": "Keycloak nu a returnat niciun token.",
+    "signin.answered": "Keycloak a răspuns {status}",
+    "signout.local": "Ieșire de pe acest dispozitiv. Nodul nu publică un logout al realm-ului, deci sesiunea Keycloak poate fi încă deschisă.",
+    "here": "Aici: {lat}, {lon}",
+    "lang.label": "Limbă",
+    "commands.in": "Acest nod înțelege comenzi în {language}.",
+    "view.sheet": "Foaie",
+    "view.fields": "Câmpuri",
+    "ctl.view": "Vizualizare",
+    "ctl.faces": "Fețe",
+    "ctl.cardlang": "Limba fișei",
+    "faces.both": "Față și verso",
+    "faces.recto": "Față",
+    "faces.verso": "Verso",
+    "page.expand": "Mărește această față pentru a scrie",
+    "page.collapse": "Înapoi la față și verso",
+    "insp.thiscard": "Această fișă",
+    "insp.all": "Toate",
+    "insp.trench": "Șanț",
+    "insp.lab": "Laborator",
+    "insp.check": "De verificat",
+    "insp.required": "obligatoriu",
+    "insp.ai_todo": "AI · de confirmat",
+    "insp.ai_ok": "AI · confirmat",
+    "insp.empty": "Căsuțe goale",
+    "insp.write": "Scrie",
+    "act.confirm": "Confirm textul",
+    "f.side": "Față",
+    "f.trench_only": "Doar câmpurile de șanț",
+    "f.later": "se completează ulterior",
+    "view.sheet.none": "Această definiție nu declară o foaie: iată câmpurile ei.",
+    "w.add_unit": "Adaugă o unitate",
+    "w.to_fill": "de completat",
+    "w.remove": "Elimină",
+    "w.unit_note": "O unitate care nu există încă este creată marcată și se completează când primește fișa ei.",
+    "w.search": "Caută în vocabular",
+    "w.term_note": "În graf intră conceptul, nu cuvântul: eticheta revine în fiecare limbă.",
+    "w.what": "Ce",
+    "w.value": "Valoare",
+    "w.add_row": "Adaugă o măsurătoare",
+    "w.pick_photos": "Din fotografiile camerei",
+    "w.orcid_note": "16 cifre, ca pe orcid.org",
+    "w.new_epoch": "Perioadă sau fază nouă",
+    "exc.name": "Nume",
+    "photos.all": "Toate",
+    "nav.units": "Unități (US)",
+    "nav.prev_unit": "Unitatea precedentă",
+    "nav.next_unit": "Unitatea următoare",
+    "nav.jump": "Mergi la unitatea…",
+    "nav.no_unit": "Nicio unitate în această cameră cu numărul",
+    "flt.search": "Caută după număr sau definiție",
+    "flt.ai": "AI de confirmat",
+    "flt.incomplete": "Completate mai puțin de jumătate",
+    "flt.count": "{n} din {t}",
+    "flt.none": "Nicio unitate nu corespunde acestor filtre.",
+    "w.declared": "«{scheme}» este declarat de normă, dar nepublicat: ce scrieți rămâne un cuvânt, fără concept.",
+    "w.no_vocab": "Acest nod nu are vocabularul «{scheme}»: ce scrieți rămâne un cuvânt, fără concept.",
+    "w.free_word": "cuvânt, fără concept",
+    "w.free_add": "Scrieți-l ca un cuvânt",
+    "w.label": "Etichetă",
+    "w.unit": "Unitate de măsură",
+    "w.add_file": "Adăugați un fișier sau o referință",
+    "w.no_photos": "Încă nu există fotografii în această cameră.",
+    "w.orcid_bad": "Nu este un ORCID: formatul sau cifra de control sunt greșite. Numele rămâne, ORCID-ul nu.",
+    "w.none_in_room": "Încă nu există niciunul în această cameră.",
+    "act.save": "Salvează",
+    "tab.dictate": "Dictează",
+    "mode.desk": "Birou",
+    "field.tablet": "Tabletă",
+    "field.phone": "Telefon",
+    "f.deliver_now": "Predă acum",
+    "f.delivering": "Se predă…",
+  },
+  el: {
+    "app.subtitle": "βοηθός πεδίου",
+    "signed.as": "συνδεδεμένος ως",
+    "action.signout": "Αποσύνδεση",
+    "action.signin": "✍️ Συνδεθείτε για να ξεκινήσετε",
+    "gate.why.canSign": "Συνδεθείτε με την ταυτότητά σας: ό,τι υπαγορεύετε μπαίνει στον γράφο με το όνομά σας.",
+    "gate.why.noAuth": "Αυτός ο κόμβος δεν ζητά σύνδεση, άρα δεν μπορεί να αποδώσει σε κανέναν ό,τι θα λέγατε: οι υπαγορεύσεις θα απορρίπτονταν.",
+    "gate.why.missing": "Λείπει: {what}.",
+    "gate.why.unreachable": "Δεν μπορώ να ρωτήσω τον κόμβο πώς γίνεται η σύνδεση. Χωρίς σύνδεση δεν μπορώ να δεχτώ υπαγορεύσεις, γιατί κανείς δεν θα ήταν ο συντάκτης τους.",
+    "action.record": "🎙 Κρατήστε πατημένο και μιλήστε",
+    "action.shoot": "📷 Φωτογραφία",
+    "action.where": "📍 Πού είμαι",
+    "action.send": "Αποστολή",
+    "hint.type": "Αν δεν υπάρχει μικρόφωνο, γράψτε την εντολή παρακάτω.",
+    "hint.noListen": "Αυτό το πρόγραμμα περιήγησης δεν ακούει: γράψτε την εντολή.",
+    "hint.nodeListens": "Μιλήστε: η ηχογράφηση πηγαίνει στον κόμβο, που τη μεταγράφει.",
+    "listening": "Ακούω…",
+    "heard": "Άκουσα:",
+    "read": "Διάβασα:",
+    "notHeard": "Δεν άκουσα τίποτα.",
+    "notHeard.offline": "Δεν άκουσα τίποτα — αυτό το πρόγραμμα περιήγησης στέλνει την ηχογράφηση σε απομακρυσμένο διακομιστή για μεταγραφή, και δεν υπάρχει δίκτυο. Γράψτε την εντολή.",
+    "recording": "Ηχογραφώ… αφήστε για αποστολή.",
+    "node.room": "κόμβος · χώρος",
+    "node.local": "κόμβος · τοπικός",
+    "node.offline": "εκτός σύνδεσης",
+    "queue.mine": "{n} σε αναμονή, θα τα στείλω μόλις επιστρέψει ο κόμβος.",
+    "queue.theirs.one": "1 σημείωση του/της {who}, σε αναμονή μέχρι να επιστρέψει.",
+    "queue.theirs.many": "{n} σημειώσεις του/της {who}, σε αναμονή μέχρι να επιστρέψει.",
+    "queue.unsigned.one": "1 σημείωση χωρίς σύνδεση, υπαγορευμένη πριν υπάρξει η σύνδεση: μένει σε αναμονή.",
+    "queue.unsigned.many": "{n} σημειώσεις χωρίς σύνδεση, υπαγορευμένες πριν υπάρξει η σύνδεση: μένουν σε αναμονή.",
+    "queue.sent.one": "Έστειλα 1 στοιχείο από την αναμονή.",
+    "queue.sent.many": "Έστειλα {n} στοιχεία από την αναμονή.",
+    "queue.kept": "Ο κόμβος δεν είναι προσβάσιμος: το έβαλα σε αναμονή.",
+    "photos.waiting.one": "1 φωτογραφία περιμένει να συνδεθεί.",
+    "photos.waiting.many": "{n} φωτογραφίες περιμένουν να συνδεθούν.",
+    "photos.ready.one": "1 φωτογραφία συνδεδεμένη, περιμένει τον κόμβο.",
+    "photos.ready.many": "{n} φωτογραφίες συνδεδεμένες, περιμένουν τον κόμβο.",
+    "photos.unlinked": "μη συνδεδεμένη",
+    "photos.propose": "US {us};",
+    "photos.on": "US {us}",
+    "photos.drop": "απόρριψη",
+    "photos.drop.title": "Απόρριψη του {name}. Τα δεδομένα του υπάρχουν μόνο σε αυτή τη συσκευή: δεν επιστρέφει.",
+    "photos.drop.ask": "Να απορρίψω αυτή τη φωτογραφία; Δεν στάλθηκε ποτέ, οπότε τα δεδομένα της υπάρχουν μόνο εδώ.",
+    "console.confirm": "{what}\n\n{name}\n\nΑυτός είναι ο χώρος εργασίας κάποιου. Να συνεχίσω;",
+    "console.confirm.typed": "{what}\n\nΑυτό ΔΕΝ αναιρείται.\n\nΓράψτε το όνομα για επιβεβαίωση:\n{name}",
+    "photos.other": "άλλος αριθμός",
+    "photos.ask": "Σε ποια μονάδα ανήκει αυτή η φωτογραφία;",
+    "photos.nokeep": "Δεν μπόρεσα να κρατήσω τη φωτογραφία σε αυτή τη συσκευή: ΔΕΝ τραβήχτηκε.",
+    "chat.open": "💬 Τι είπαμε",
+    "chat.say": "Πες",
+    "chat.placeholder": "πες το στον χώρο",
+    "chat.send": "Πες",
+    "chat.none": "Σε αυτόν τον χώρο δεν έχει ειπωθεί ακόμη τίποτα.",
+    "chat.nobody": "χωρίς όνομα",
+    "chat.retracted": "— ανακλήθηκε —",
+    "chat.more": "{n} παλαιότερα μηνύματα δεν εμφανίζονται.",
+    "chat.boundary": "Μια συζήτηση μένει στον χώρο: τίποτα από αυτήν δεν ταξιδεύει σε μια δημοσιευμένη μελέτη.",
+    "chat.signin": "Συνδεθείτε για να διαβάσετε τι ειπώθηκε.",
+    "chat.nolocal": "Αυτός ο κόμβος γράφει στο τοπικό container: δεν υπάρχει χώρος όπου να μιλά κάποιος.",
+    "chat.unreachable": "Ο χώρος δεν απάντησε. Χωρίς δίκτυο μπορείτε να πείτε κάτι — μπαίνει σε αναμονή — αλλά δεν μπορείτε να το ξαναδιαβάσετε.",
+    "chat.queued": "Ειπώθηκε. Ο χώρος δεν απάντησε, οπότε είναι σε αναμονή και θα φύγει στην επιστροφή.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "Στον χώρο {room}",
+    "index.head.local": "Στο τοπικό container",
+    "index.fields.one": "1 πεδίο",
+    "index.fields.many": "{n} πεδία",
+    "index.total.one": "1 δελτίο.",
+    "index.total.many": "{n} δελτία.",
+    "index.more": "{n} από {total} δελτία δεν εμφανίζονται.",
+    "index.empty": "Εδώ δεν έχει καταγραφεί ακόμη τίποτα. Υπαγορεύστε, και εμφανίζεται.",
+    "index.signin": "Συνδεθείτε για να δείτε τι υπάρχει ήδη.",
+    "index.unreachable": "Από εδώ δεν μπορώ να διαβάσω τον χώρο.",
+    "index.which": "Με ποιο πρότυπο ξανανοίγετε το {unit};",
+    "index.noSchede": "Αυτός ο κόμβος δεν παρέχει ορισμούς, οπότε δεν υπάρχει με τι να την ξανανοίξετε.",
+    "index.back": "← πίσω στη λίστα",
+    "index.noNumber": "το id αυτής της μονάδας δεν περιέχει αριθμό: δεν ξανανοίγει από εδώ",
+    "index.offer": "Ο σύνδεσμος ονομάζει τον χώρο «{room}», και αυτός ο κόμβος γράφει αλλού. Να τον στρέψω εκεί;",
+    "index.refused": "Ο σύνδεσμος προσπάθησε να πει πώς εμφανίζεται ({what}): απορρίφθηκε. Ένας σύνδεσμος ονομάζει έναν τόπο, ποτέ έναν τρόπο — αποφασίζει το παράθυρο.",
+    "room.local": "τοπικό container",
+    "room.in": "χώρος {room}",
+    "room.left.one": "1 λειτουργία ακόμη σε αναμονή για έναν χώρο που ο κόμβος έχει αφήσει.",
+    "room.left.many": "{n} λειτουργίες ακόμη σε αναμονή για {rooms} χώρους που ο κόμβος έχει αφήσει.",
+    "room.placeholder": "χώρος ή σύνδεσμος παράδοσης",
+    "room.point": "Γράψε εδώ",
+    "room.back": "Τοπικό container",
+    "room.pointing": "Ρωτάω…",
+    "room.pointed": "Στράφηκε.",
+    "room.went.back": "Επιστροφή στο τοπικό container.",
+    "room.refused": "Ο κόμβος αρνήθηκε.",
+    "room.unreachable": "Ο κόμβος δεν απάντησε.",
+    "signin.failed": "Η σύνδεση απέτυχε:",
+    "signin.noPending": "αυτή η καρτέλα δεν είχε σύνδεση σε εξέλιξη.",
+    "signin.badState": "η κατάσταση της σύνδεσης δεν ταιριάζει: απορρίπτω έναν κωδικό που αυτή η καρτέλα δεν ζήτησε.",
+    "signin.noKeycloak": "δεν μπορώ να φτάσω στο Keycloak από αυτή τη συσκευή.",
+    "signin.noToken": "Το Keycloak δεν επέστρεψε token.",
+    "signin.answered": "Το Keycloak απάντησε {status}",
+    "signout.local": "Αποσυνδεθήκατε από αυτή τη συσκευή. Ο κόμβος δεν δημοσιεύει αποσύνδεση realm, οπότε η συνεδρία Keycloak μπορεί να είναι ακόμη ανοιχτή.",
+    "here": "Εδώ: {lat}, {lon}",
+    "lang.label": "Γλώσσα",
+    "commands.in": "Αυτός ο κόμβος καταλαβαίνει εντολές σε {language}.",
+    "view.sheet": "Φύλλο",
+    "view.fields": "Πεδία",
+    "ctl.view": "Προβολή",
+    "ctl.faces": "Όψεις",
+    "ctl.cardlang": "Γλώσσα δελτίου",
+    "faces.both": "Εμπρός και πίσω",
+    "faces.recto": "Εμπρός",
+    "faces.verso": "Πίσω",
+    "page.expand": "Μεγέθυνση αυτής της όψης για γραφή",
+    "page.collapse": "Επιστροφή σε εμπρός και πίσω",
+    "insp.thiscard": "Αυτό το δελτίο",
+    "insp.all": "Όλα",
+    "insp.trench": "Τομή",
+    "insp.lab": "Εργαστήριο",
+    "insp.check": "Προς έλεγχο",
+    "insp.required": "υποχρεωτικό",
+    "insp.ai_todo": "AI · προς επιβεβαίωση",
+    "insp.ai_ok": "AI · επιβεβαιωμένο",
+    "insp.empty": "Κενά πεδία",
+    "insp.write": "Γράψτε",
+    "act.confirm": "Επιβεβαιώνω το κείμενο",
+    "f.side": "Όψη",
+    "f.trench_only": "Μόνο πεδία τομής",
+    "f.later": "συμπληρώνεται αργότερα",
+    "view.sheet.none": "Αυτός ο ορισμός δεν δηλώνει φύλλο: ιδού τα πεδία του.",
+    "w.add_unit": "Προσθήκη μονάδας",
+    "w.to_fill": "προς συμπλήρωση",
+    "w.remove": "Αφαίρεση",
+    "w.unit_note": "Μια μονάδα που δεν υπάρχει ακόμη δημιουργείται σημειωμένη και συμπληρώνεται όταν αποκτήσει το δελτίο της.",
+    "w.search": "Αναζήτηση στο λεξιλόγιο",
+    "w.term_note": "Στον γράφο μπαίνει η έννοια, όχι η λέξη: η ετικέτα επιστρέφει σε κάθε γλώσσα.",
+    "w.what": "Τι",
+    "w.value": "Τιμή",
+    "w.add_row": "Προσθήκη μέτρησης",
+    "w.pick_photos": "Από τις φωτογραφίες του δωματίου",
+    "w.orcid_note": "16 ψηφία, όπως στο orcid.org",
+    "w.new_epoch": "Νέα περίοδος ή φάση",
+    "exc.name": "Όνομα",
+    "photos.all": "Όλες",
+    "nav.units": "Μονάδες (US)",
+    "nav.prev_unit": "Προηγούμενη μονάδα",
+    "nav.next_unit": "Επόμενη μονάδα",
+    "nav.jump": "Μετάβαση στη μονάδα…",
+    "nav.no_unit": "Καμία μονάδα σε αυτό το δωμάτιο με τον αριθμό",
+    "flt.search": "Αναζήτηση με αριθμό ή ορισμό",
+    "flt.ai": "AI προς επιβεβαίωση",
+    "flt.incomplete": "Συμπληρωμένα λιγότερα από τα μισά",
+    "flt.count": "{n} από {t}",
+    "flt.none": "Καμία μονάδα δεν ταιριάζει με αυτά τα φίλτρα.",
+    "w.declared": "Το «{scheme}» δηλώνεται από το πρότυπο αλλά δεν έχει δημοσιευτεί: ό,τι γράψετε μένει λέξη, χωρίς έννοια.",
+    "w.no_vocab": "Αυτός ο κόμβος δεν έχει το λεξιλόγιο «{scheme}»: ό,τι γράψετε μένει λέξη, χωρίς έννοια.",
+    "w.free_word": "λέξη, χωρίς έννοια",
+    "w.free_add": "Γράψτε το ως λέξη",
+    "w.label": "Ετικέτα",
+    "w.unit": "Μονάδα μέτρησης",
+    "w.add_file": "Προσθήκη αρχείου ή παραπομπής",
+    "w.no_photos": "Δεν υπάρχουν ακόμη φωτογραφίες σε αυτόν τον χώρο.",
+    "w.orcid_bad": "Δεν είναι ORCID: η μορφή ή το ψηφίο ελέγχου είναι λάθος. Το όνομα διατηρείται, το ORCID όχι.",
+    "w.none_in_room": "Δεν υπάρχει ακόμη κανένα σε αυτόν τον χώρο.",
+    "act.save": "Αποθήκευση",
+    "tab.dictate": "Υπαγόρευση",
+    "mode.desk": "Γραφείο",
+    "field.tablet": "Tablet",
+    "field.phone": "Τηλέφωνο",
+    "f.deliver_now": "Παράδοση τώρα",
+    "f.delivering": "Παράδοση…",
+  },
+  es: {
+    "app.subtitle": "asistente de campo",
+    "signed.as": "sesión iniciada como",
+    "action.signout": "Cerrar sesión",
+    "action.signin": "✍️ Inicia sesión para empezar",
+    "gate.why.canSign": "Inicia sesión con tu identidad: lo que dictes entra en el grafo a tu nombre.",
+    "gate.why.noAuth": "Este nodo no pide iniciar sesión, así que no puede atribuir a nadie lo que digas: los dictados serían rechazados.",
+    "gate.why.missing": "Falta: {what}.",
+    "gate.why.unreachable": "No puedo preguntar al nodo cómo se inicia sesión. Sin sesión no puedo aceptar dictados, porque nadie podría ser su autor.",
+    "action.record": "🎙 Mantén pulsado y habla",
+    "action.shoot": "📷 Foto",
+    "action.where": "📍 Dónde estoy",
+    "action.send": "Enviar",
+    "hint.type": "Si no hay micrófono, escribe la orden aquí abajo.",
+    "hint.noListen": "Este navegador no escucha: escribe la orden.",
+    "hint.nodeListens": "Habla: la grabación va al nodo, que la transcribe.",
+    "listening": "Escuchando…",
+    "heard": "He oído:",
+    "read": "He leído:",
+    "notHeard": "No he oído nada.",
+    "notHeard.offline": "No he oído nada — este navegador envía la grabación a un servidor remoto para transcribirla, y no hay red. Escribe la orden.",
+    "recording": "Grabando… suelta para enviar.",
+    "node.room": "nodo · sala",
+    "node.local": "nodo · local",
+    "node.offline": "sin conexión",
+    "queue.mine": "{n} en cola, los envío en cuanto vuelva el nodo.",
+    "queue.theirs.one": "1 nota de {who}, esperando a que vuelva.",
+    "queue.theirs.many": "{n} notas de {who}, esperando a que vuelva.",
+    "queue.unsigned.one": "1 nota sin firma, dictada antes de que existiera la firma: se queda en la cola.",
+    "queue.unsigned.many": "{n} notas sin firma, dictadas antes de que existiera la firma: se quedan en la cola.",
+    "queue.sent.one": "He enviado 1 cosa de la cola.",
+    "queue.sent.many": "He enviado {n} cosas de la cola.",
+    "queue.kept": "Nodo inalcanzable: lo he puesto en la cola.",
+    "photos.waiting.one": "1 foto espera ser vinculada.",
+    "photos.waiting.many": "{n} fotos esperan ser vinculadas.",
+    "photos.ready.one": "1 foto vinculada, espera al nodo.",
+    "photos.ready.many": "{n} fotos vinculadas, esperan al nodo.",
+    "photos.unlinked": "sin vincular",
+    "photos.propose": "¿US {us}?",
+    "photos.on": "US {us}",
+    "photos.drop": "descartar",
+    "photos.drop.title": "Descartar {name}. Sus bytes solo están en este dispositivo: no vuelve.",
+    "photos.drop.ask": "¿Descarto esta foto? Nunca se envió, así que sus bytes solo están aquí.",
+    "console.confirm": "{what}\n\n{name}\n\nEste es el espacio de trabajo de alguien. ¿Continúo?",
+    "console.confirm.typed": "{what}\n\nEsto NO se puede deshacer.\n\nEscribe el nombre para confirmar:\n{name}",
+    "photos.other": "otro número",
+    "photos.ask": "¿De qué unidad es esta foto?",
+    "photos.nokeep": "No he podido guardar la foto en este dispositivo: NO se ha tomado.",
+    "chat.open": "💬 Lo que nos dijimos",
+    "chat.say": "Decir",
+    "chat.placeholder": "dilo a la sala",
+    "chat.send": "Decir",
+    "chat.none": "En esta sala todavía no se ha dicho nada.",
+    "chat.nobody": "sin nombre",
+    "chat.retracted": "— retirado —",
+    "chat.more": "{n} mensajes anteriores no se muestran.",
+    "chat.boundary": "Una conversación se queda en la sala: nada de ella viaja en un estudio publicado.",
+    "chat.signin": "Inicia sesión para leer lo que se ha dicho.",
+    "chat.nolocal": "Este nodo escribe en el contenedor local: no hay una sala donde alguien esté hablando.",
+    "chat.unreachable": "La sala no ha respondido. Sin red puedes decir algo — va a la cola — pero no puedes releer.",
+    "chat.queued": "Dicho. La sala no ha respondido, así que está en la cola y sale a la vuelta.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "En la sala {room}",
+    "index.head.local": "En el contenedor local",
+    "index.fields.one": "1 campo",
+    "index.fields.many": "{n} campos",
+    "index.total.one": "1 ficha.",
+    "index.total.many": "{n} fichas.",
+    "index.more": "{n} de {total} fichas no se muestran.",
+    "index.empty": "Aquí todavía no se ha registrado nada. Dicta, y aparece.",
+    "index.signin": "Inicia sesión para ver lo que ya hay.",
+    "index.unreachable": "Desde aquí no puedo leer la sala.",
+    "index.which": "¿Con qué estándar reabres {unit}?",
+    "index.noSchede": "Este nodo no sirve definiciones, así que no hay con qué reabrirla.",
+    "index.back": "← volver a la lista",
+    "index.noNumber": "el id de esta unidad no lleva número: desde aquí no se puede reabrir",
+    "index.offer": "El enlace nombra la sala «{room}», y este nodo escribe en otro sitio. ¿Lo apunto allí?",
+    "index.refused": "El enlace intentó decir cómo se muestra ({what}): rechazado. Un enlace nombra un lugar, nunca un modo — decide la ventana.",
+    "room.local": "contenedor local",
+    "room.in": "sala {room}",
+    "room.left.one": "1 operación todavía en cola para una sala que el nodo ha dejado.",
+    "room.left.many": "{n} operaciones todavía en cola para {rooms} salas que el nodo ha dejado.",
+    "room.placeholder": "sala, o un enlace de entrega",
+    "room.point": "Escribe aquí",
+    "room.back": "Contenedor local",
+    "room.pointing": "Preguntando…",
+    "room.pointed": "Apuntado.",
+    "room.went.back": "Vuelvo al contenedor local.",
+    "room.refused": "El nodo se ha negado.",
+    "room.unreachable": "El nodo no ha respondido.",
+    "signin.failed": "Inicio de sesión fallido:",
+    "signin.noPending": "esta pestaña no tenía un inicio de sesión en curso.",
+    "signin.badState": "el estado del inicio de sesión no coincide: rechazo un código que esta pestaña no pidió.",
+    "signin.noKeycloak": "no llego a Keycloak desde este dispositivo.",
+    "signin.noToken": "Keycloak no devolvió ningún token.",
+    "signin.answered": "Keycloak respondió {status}",
+    "signout.local": "Sesión cerrada en este dispositivo. El nodo no publica un cierre de sesión del realm, así que la sesión de Keycloak puede seguir abierta.",
+    "here": "Aquí: {lat}, {lon}",
+    "lang.label": "Idioma",
+    "commands.in": "Este nodo entiende órdenes en {language}.",
+    "view.sheet": "Hoja",
+    "view.fields": "Campos",
+    "ctl.view": "Vista",
+    "ctl.faces": "Caras",
+    "ctl.cardlang": "Idioma de la ficha",
+    "faces.both": "Anverso y reverso",
+    "faces.recto": "Anverso",
+    "faces.verso": "Reverso",
+    "page.expand": "Ampliar esta cara para escribir",
+    "page.collapse": "Volver a anverso y reverso",
+    "insp.thiscard": "Esta ficha",
+    "insp.all": "Todos",
+    "insp.trench": "Trinchera",
+    "insp.lab": "Laboratorio",
+    "insp.check": "Por revisar",
+    "insp.required": "obligatorio",
+    "insp.ai_todo": "AI · por confirmar",
+    "insp.ai_ok": "AI · confirmado",
+    "insp.empty": "Casillas vacías",
+    "insp.write": "Escribir",
+    "act.confirm": "Confirmo el texto",
+    "f.side": "Cara",
+    "f.trench_only": "Solo campos de trinchera",
+    "f.later": "se rellena después",
+    "view.sheet.none": "Esta definición no declara una hoja: aquí están sus campos.",
+    "w.add_unit": "Añadir unidad",
+    "w.to_fill": "por rellenar",
+    "w.remove": "Quitar",
+    "w.unit_note": "Una unidad que aún no existe se crea marcada y se completa cuando recibe su ficha.",
+    "w.search": "Buscar en el vocabulario",
+    "w.term_note": "En el grafo va el concepto, no la palabra: la etiqueta vuelve en cada idioma.",
+    "w.what": "Qué",
+    "w.value": "Valor",
+    "w.add_row": "Añadir una medida",
+    "w.pick_photos": "De las fotos de la sala",
+    "w.orcid_note": "16 cifras, como en orcid.org",
+    "w.new_epoch": "Nuevo periodo o fase",
+    "exc.name": "Nombre",
+    "photos.all": "Todas",
+    "nav.units": "Unidades (US)",
+    "nav.prev_unit": "Unidad anterior",
+    "nav.next_unit": "Unidad siguiente",
+    "nav.jump": "Ir a la unidad…",
+    "nav.no_unit": "Ninguna unidad en esta sala con el número",
+    "flt.search": "Buscar por número o definición",
+    "flt.ai": "AI por confirmar",
+    "flt.incomplete": "Rellenadas menos de la mitad",
+    "flt.count": "{n} de {t}",
+    "flt.none": "Ninguna unidad coincide con estos filtros.",
+    "w.declared": "«{scheme}» lo declara la norma pero no está publicado: lo que escribas queda como palabra, sin concepto.",
+    "w.no_vocab": "Este nodo no tiene el vocabulario «{scheme}»: lo que escribas queda como palabra, sin concepto.",
+    "w.free_word": "palabra, sin concepto",
+    "w.free_add": "Escríbela como palabra",
+    "w.label": "Etiqueta",
+    "w.unit": "Unidad de medida",
+    "w.add_file": "Añadir un archivo o una referencia",
+    "w.no_photos": "Todavía no hay fotos en esta sala.",
+    "w.orcid_bad": "No es un ORCID: el formato o el dígito de control no cuadran. El nombre se mantiene, el ORCID no.",
+    "w.none_in_room": "Todavía no hay ninguno en esta sala.",
+    "act.save": "Guardar",
+    "tab.dictate": "Dictar",
+    "mode.desk": "Escritorio",
+    "field.tablet": "Tableta",
+    "field.phone": "Teléfono",
+    "f.deliver_now": "Entregar ahora",
+    "f.delivering": "Entregando…",
+  },
+  pl: {
+    "app.subtitle": "asystent terenowy",
+    "signed.as": "zalogowano jako",
+    "action.signout": "Wyloguj",
+    "action.signin": "✍️ Zaloguj się, aby zacząć",
+    "gate.why.canSign": "Zaloguj się swoją tożsamością: to, co dyktujesz, trafia do grafu pod twoim nazwiskiem.",
+    "gate.why.noAuth": "Ten węzeł nie wymaga logowania, więc nie może nikomu przypisać tego, co powiesz: dyktowanie zostałoby odrzucone.",
+    "gate.why.missing": "Brakuje: {what}.",
+    "gate.why.unreachable": "Nie mogę zapytać węzła, jak się zalogować. Bez logowania nie przyjmę dyktowania, bo nikt nie mógłby być jego autorem.",
+    "action.record": "🎙 Przytrzymaj i mów",
+    "action.shoot": "📷 Zdjęcie",
+    "action.where": "📍 Gdzie jestem",
+    "action.send": "Wyślij",
+    "hint.type": "Jeśli nie ma mikrofonu, wpisz polecenie poniżej.",
+    "hint.noListen": "Ta przeglądarka nie słucha: wpisz polecenie.",
+    "hint.nodeListens": "Mów: nagranie trafia do węzła, który je transkrybuje.",
+    "listening": "Słucham…",
+    "heard": "Usłyszałem:",
+    "read": "Przeczytałem:",
+    "notHeard": "Nic nie usłyszałem.",
+    "notHeard.offline": "Nic nie usłyszałem — ta przeglądarka wysyła nagranie do zdalnego serwera do transkrypcji, a sieci nie ma. Wpisz polecenie.",
+    "recording": "Nagrywam… puść, aby wysłać.",
+    "node.room": "węzeł · pokój",
+    "node.local": "węzeł · lokalny",
+    "node.offline": "offline",
+    "queue.mine": "{n} w kolejce, wyślę je, gdy węzeł wróci.",
+    "queue.theirs.one": "1 notatka od {who}, czeka na powrót tej osoby.",
+    "queue.theirs.many": "{n} notatek od {who}, czekają na powrót tej osoby.",
+    "queue.unsigned.one": "1 notatka bez podpisu, podyktowana, zanim istniało logowanie: zostaje w kolejce.",
+    "queue.unsigned.many": "{n} notatek bez podpisu, podyktowanych, zanim istniało logowanie: zostają w kolejce.",
+    "queue.sent.one": "Wysłałem 1 rzecz z kolejki.",
+    "queue.sent.many": "Wysłałem {n} rzeczy z kolejki.",
+    "queue.kept": "Węzeł nieosiągalny: dodałem to do kolejki.",
+    "photos.waiting.one": "1 zdjęcie czeka na powiązanie.",
+    "photos.waiting.many": "{n} zdjęć czeka na powiązanie.",
+    "photos.ready.one": "1 zdjęcie powiązane, czeka na węzeł.",
+    "photos.ready.many": "{n} zdjęć powiązanych, czeka na węzeł.",
+    "photos.unlinked": "niepowiązane",
+    "photos.propose": "US {us}?",
+    "photos.on": "US {us}",
+    "photos.drop": "odrzuć",
+    "photos.drop.title": "Odrzuć {name}. Jego bajty są tylko na tym urządzeniu: nie wróci.",
+    "photos.drop.ask": "Odrzucić to zdjęcie? Nigdy nie zostało wysłane, więc jego bajty są tylko tutaj.",
+    "console.confirm": "{what}\n\n{name}\n\nTo czyjaś przestrzeń robocza. Kontynuować?",
+    "console.confirm.typed": "{what}\n\nTego NIE można cofnąć.\n\nWpisz nazwę, aby potwierdzić:\n{name}",
+    "photos.other": "inny numer",
+    "photos.ask": "Do której jednostki należy to zdjęcie?",
+    "photos.nokeep": "Nie udało się zachować zdjęcia na tym urządzeniu: NIE zostało zrobione.",
+    "chat.open": "💬 Co sobie powiedzieliśmy",
+    "chat.say": "Powiedz",
+    "chat.placeholder": "powiedz to pokojowi",
+    "chat.send": "Powiedz",
+    "chat.none": "W tym pokoju nic jeszcze nie powiedziano.",
+    "chat.nobody": "bez nazwiska",
+    "chat.retracted": "— wycofane —",
+    "chat.more": "{n} starszych wiadomości nie jest wyświetlanych.",
+    "chat.boundary": "Rozmowa zostaje w pokoju: nic z niej nie trafia do opublikowanego studium.",
+    "chat.signin": "Zaloguj się, aby przeczytać, co powiedziano.",
+    "chat.nolocal": "Ten węzeł zapisuje do lokalnego kontenera: nie ma pokoju, w którym ktoś rozmawia.",
+    "chat.unreachable": "Pokój nie odpowiedział. Bez sieci możesz coś powiedzieć — trafi do kolejki — ale nie możesz odczytać.",
+    "chat.queued": "Powiedziane. Pokój nie odpowiedział, więc jest w kolejce i wyjdzie po powrocie.",
+    "mode.back": "↔ {mode}",
+    "index.head.room": "W pokoju {room}",
+    "index.head.local": "W lokalnym kontenerze",
+    "index.fields.one": "1 pole",
+    "index.fields.many": "{n} pól",
+    "index.total.one": "1 karta.",
+    "index.total.many": "{n} kart.",
+    "index.more": "{n} z {total} kart nie jest wyświetlanych.",
+    "index.empty": "Tu jeszcze nic nie zapisano. Dyktuj, a się pojawi.",
+    "index.signin": "Zaloguj się, aby zobaczyć, co już jest.",
+    "index.unreachable": "Stąd nie mogę odczytać pokoju.",
+    "index.which": "Z jakim standardem otworzyć ponownie {unit}?",
+    "index.noSchede": "Ten węzeł nie udostępnia definicji, więc nie ma czym jej otworzyć.",
+    "index.back": "← wróć do listy",
+    "index.noNumber": "id tej jednostki nie zawiera numeru: stąd nie da się jej otworzyć",
+    "index.offer": "Link wskazuje pokój «{room}», a ten węzeł zapisuje gdzie indziej. Skierować go tam?",
+    "index.refused": "Link próbował określić sposób wyświetlania ({what}): odrzucono. Link wskazuje miejsce, nigdy tryb — decyduje okno.",
+    "room.local": "lokalny kontener",
+    "room.in": "pokój {room}",
+    "room.left.one": "1 operacja wciąż w kolejce dla pokoju, który węzeł opuścił.",
+    "room.left.many": "{n} operacji wciąż w kolejce dla {rooms} pokojów, które węzeł opuścił.",
+    "room.placeholder": "pokój lub link przekazania",
+    "room.point": "Zapisuj tutaj",
+    "room.back": "Lokalny kontener",
+    "room.pointing": "Pytam…",
+    "room.pointed": "Skierowano.",
+    "room.went.back": "Powrót do lokalnego kontenera.",
+    "room.refused": "Węzeł odmówił.",
+    "room.unreachable": "Węzeł nie odpowiedział.",
+    "signin.failed": "Logowanie nie powiodło się:",
+    "signin.noPending": "ta karta nie miała rozpoczętego logowania.",
+    "signin.badState": "stan logowania się nie zgadza: odrzucam kod, o który ta karta nie prosiła.",
+    "signin.noKeycloak": "nie mogę połączyć się z Keycloak z tego urządzenia.",
+    "signin.noToken": "Keycloak nie zwrócił tokenu.",
+    "signin.answered": "Keycloak odpowiedział {status}",
+    "signout.local": "Wylogowano z tego urządzenia. Węzeł nie udostępnia wylogowania z realmu, więc sesja Keycloak może być nadal otwarta.",
+    "here": "Tutaj: {lat}, {lon}",
+    "lang.label": "Język",
+    "commands.in": "Ten węzeł rozumie polecenia w języku: {language}.",
+    "view.sheet": "Arkusz",
+    "view.fields": "Pola",
+    "ctl.view": "Widok",
+    "ctl.faces": "Strony",
+    "ctl.cardlang": "Język karty",
+    "faces.both": "Awers i rewers",
+    "faces.recto": "Awers",
+    "faces.verso": "Rewers",
+    "page.expand": "Powiększ tę stronę, aby pisać",
+    "page.collapse": "Wróć do awersu i rewersu",
+    "insp.thiscard": "Ta karta",
+    "insp.all": "Wszystkie",
+    "insp.trench": "Wykop",
+    "insp.lab": "Laboratorium",
+    "insp.check": "Do sprawdzenia",
+    "insp.required": "wymagane",
+    "insp.ai_todo": "AI · do potwierdzenia",
+    "insp.ai_ok": "AI · potwierdzone",
+    "insp.empty": "Puste pola",
+    "insp.write": "Pisz",
+    "act.confirm": "Potwierdzam tekst",
+    "f.side": "Strona",
+    "f.trench_only": "Tylko pola z wykopu",
+    "f.later": "uzupełnia się później",
+    "view.sheet.none": "Ta definicja nie deklaruje arkusza: oto jej pola.",
+    "w.add_unit": "Dodaj jednostkę",
+    "w.to_fill": "do uzupełnienia",
+    "w.remove": "Usuń",
+    "w.unit_note": "Jednostka, która jeszcze nie istnieje, zostaje utworzona z oznaczeniem i uzupełniona, gdy dostanie własną kartę.",
+    "w.search": "Szukaj w słowniku",
+    "w.term_note": "Do grafu trafia pojęcie, nie słowo: etykieta wraca w każdym języku.",
+    "w.what": "Co",
+    "w.value": "Wartość",
+    "w.add_row": "Dodaj pomiar",
+    "w.pick_photos": "Ze zdjęć pokoju",
+    "w.orcid_note": "16 cyfr, jak na orcid.org",
+    "w.new_epoch": "Nowy okres lub faza",
+    "exc.name": "Nazwa",
+    "photos.all": "Wszystkie",
+    "nav.units": "Jednostki (US)",
+    "nav.prev_unit": "Poprzednia jednostka",
+    "nav.next_unit": "Następna jednostka",
+    "nav.jump": "Przejdź do jednostki…",
+    "nav.no_unit": "Brak jednostki w tym pokoju o numerze",
+    "flt.search": "Szukaj po numerze lub definicji",
+    "flt.ai": "AI do potwierdzenia",
+    "flt.incomplete": "Wypełnione w mniej niż połowie",
+    "flt.count": "{n} z {t}",
+    "flt.none": "Żadna jednostka nie pasuje do tych filtrów.",
+    "w.declared": "«{scheme}» jest zadeklarowany w normie, ale nieopublikowany: to, co wpiszesz, pozostaje słowem, bez pojęcia.",
+    "w.no_vocab": "Ten węzeł nie ma słownika «{scheme}»: to, co wpiszesz, pozostaje słowem, bez pojęcia.",
+    "w.free_word": "słowo, bez pojęcia",
+    "w.free_add": "Wpisz jako słowo",
+    "w.label": "Etykieta",
+    "w.unit": "Jednostka miary",
+    "w.add_file": "Dodaj plik lub odnośnik",
+    "w.no_photos": "W tym pokoju nie ma jeszcze zdjęć.",
+    "w.orcid_bad": "To nie jest ORCID: format lub cyfra kontrolna są błędne. Imię zostaje, ORCID nie.",
+    "w.none_in_room": "W tym pokoju nie ma jeszcze żadnego.",
+    "act.save": "Zapisz",
+    "tab.dictate": "Dyktuj",
+    "mode.desk": "Biurko",
+    "field.tablet": "Tablet",
+    "field.phone": "Telefon",
+    "f.deliver_now": "Przekaż teraz",
+    "f.delivering": "Przekazywanie…",
   },
   // <<< ui_strings.py
-  // ── the partners' slots: same keys, empty values, falling back to `en` ──────
-  ro: {}, el: {}, es: {}, pl: {},
 };
 // Every locale carries every key of `en` — empty where nobody has translated it
 // yet, so a translator sees the whole list and a test can count the holes.
@@ -836,6 +1787,10 @@ let TOKEN = "";
 let WHO = null;
 //: how this node wants a browser to sign in (`GET /v1/auth-config`), or null.
 let AUTHCFG = null;
+//: WHAT THE ROOM SAYS THIS PERSON MAY DO HERE — `GET /v1/room`: {role,
+//: can_write, member, refused, room}. Null until asked. Never decided here:
+//: the room reads its ACL, this page only shows the answer.
+let ACCESS = null;
 //: {language, example} — WHICH language this node's commands are in, and one of
 //: its own phrases to show as an example. From `GET /v1/tools`, which publishes
 //: the vocabulary; never invented here.
@@ -848,7 +1803,15 @@ let NODE_COMMANDS = null;
 // token, and a page that forgot it on reload would be a bench trick that works
 // once. It is therefore a HAZARD in a screenshot — which is exactly why it is a
 // bench door and not the way anybody signs.
+//
+// AND IT CLOSES WHEN THE NODE SIGNS FOR REAL (25 October). A node whose
+// `/v1/auth-config` says `enforcing` has a realm, and a signature on that node
+// comes from the realm and nowhere else: `serviceDoorOpen()` below is the one
+// place that decides, and it says no. On a bench with auth off the door stays,
+// because there is no realm to go to.
 const SERVICE_TOKEN = new URLSearchParams(location.search).get("token") || "";
+const serviceDoorOpen = (config) =>
+  Boolean(SERVICE_TOKEN) && !(config && config.enforcing);
 
 // Where an ORCID lands in a Keycloak token, in the spellings a realm may use.
 // THE SAME LIST AND THE SAME ORDER as `ORCID_CLAIMS` in `app/auth.py`: the node
@@ -881,14 +1844,141 @@ function subjectOf(claims) {
 }
 
 /** Adopt a token: this is the ONE place TOKEN is assigned from. */
-function adopt(token) {
+function adopt(token, refresh) {
   TOKEN = token || "";
+  REFRESH = TOKEN ? (refresh || "") : "";
   const claims = TOKEN ? claimsOf(TOKEN) : {};
   WHO = TOKEN
     ? { subject: subjectOf(claims),
         name: claims.name || claims.preferred_username || subjectOf(claims) }
     : null;
+  scheduleRenewal();
   render();
+}
+
+// ── the signature, kept fresh ───────────────────────────────────────────────
+//
+// A token from this realm lives minutes, not a day (the bench measured 900 s on
+// `em-console`), and the room re-reads its expiry at EVERY write since 25
+// October. So the page renews it BEFORE it lapses, with the refresh token the
+// same exchange returned — in memory only, like the token: a refresh token on a
+// lent tablet's disk is a signature that outlives the person.
+//
+// When: a fifth of its life before the end, and never less than 5 s nor more
+// than a minute ahead. A 60 s test token renews at 48 s; a 900 s one at 840 s.
+let REFRESH = "";
+//: the ID token of the same exchange — in memory, and used for ONE thing: the
+//: `id_token_hint` of the realm logout. Without it Keycloak asks «do you want
+//: to log out?» on a page of its own (measured on 25 October), which on a
+//: tablet changing hands is one more screen between two people.
+let ID_TOKEN = "";
+let RENEW_TIMER = 0;
+let RENEWING = null;
+
+function renewAt(token) {
+  const claims = claimsOf(token);
+  const exp = Number(claims.exp || 0) * 1000;
+  if (!exp) return Infinity;
+  const life = exp - Number(claims.iat || claims.exp - 300) * 1000;
+  const lead = Math.max(5000, Math.min(60000, life * 0.2));
+  return exp - lead;
+}
+
+function scheduleRenewal() {
+  clearTimeout(RENEW_TIMER);
+  if (!TOKEN || !REFRESH) return;
+  const wait = renewAt(TOKEN) - Date.now();
+  RENEW_TIMER = setTimeout(() => { void renew(); }, Math.max(1000, wait));
+}
+
+/** Ask the realm for a fresh token. One at a time: two requests racing to
+ *  renew would spend the same refresh token twice, and Keycloak refuses the
+ *  second — which would sign somebody out for having been busy. */
+async function renew() {
+  if (RENEWING) return RENEWING;
+  RENEWING = (async () => {
+    if (!REFRESH || !AUTHCFG || !AUTHCFG.token_endpoint) return false;
+    try {
+      const answer = await fetch(AUTHCFG.token_endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ grant_type: "refresh_token",
+                                    client_id: AUTHCFG.client_id,
+                                    refresh_token: REFRESH }).toString(),
+      });
+      const payload = await answer.json().catch(() => null);
+      if (!answer.ok || !payload || !payload.access_token) {
+        lapse();
+        return false;
+      }
+      if (payload.id_token) ID_TOKEN = payload.id_token;
+      adopt(payload.access_token, payload.refresh_token || REFRESH);
+      return true;
+    } catch {
+      // the REALM is unreachable, not the token wrong: keep what we have and
+      // retry in a while — a trench without signal is not a sign-out
+      clearTimeout(RENEW_TIMER);
+      RENEW_TIMER = setTimeout(() => { void renew(); }, 15000);
+      return false;
+    }
+  })();
+  try { return await RENEWING; } finally { RENEWING = null; }
+}
+
+/** The token, renewed first if it is about to lapse. */
+async function freshToken() {
+  if (TOKEN && REFRESH && Date.now() >= renewAt(TOKEN)) await renew();
+  return TOKEN;
+}
+
+/** The signature cannot be renewed: say so, and keep the queue — it is this
+ *  person's, and it leaves when they sign in again. */
+function lapse() {
+  adopt("");                            // the one place TOKEN is written
+  show(false, t("signin.expired"), "", LOCALE);
+}
+
+// ── where this person writes ────────────────────────────────────────────────
+//
+// SENT WITH EVERY REQUEST since 25 October: the node no longer has one room for
+// everybody (`app/scrivani.py`), it has one writer per person and room, and the
+// room is what this page says. A place is not a credential, so it may sit on the
+// device (like the language); absent, the node writes where IT is configured.
+const WHERE_KEY = "sg.where.v1";
+function readWhere() {
+  try { return JSON.parse(localStorage.getItem(WHERE_KEY) || "null"); }
+  catch { return null; }
+}
+function setWhere(where) {
+  try {
+    if (where && where.room) localStorage.setItem(WHERE_KEY, JSON.stringify(
+      { server: where.server || "", room: where.room }));
+    else localStorage.removeItem(WHERE_KEY);
+  } catch { /* no storage: the node's own room, which is the honest default */ }
+}
+
+/** Who and where, as headers. `where` defaults to the current one; a queued
+ *  note passes the one it was dictated for. */
+function signed(extra, where) {
+  const headers = { ...(extra || {}) };
+  if (TOKEN) headers.Authorization = "Bearer " + TOKEN;
+  const w = where === undefined ? readWhere() : where;
+  if (w && w.room) {
+    headers["X-StratiGraph-Room"] = w.room;
+    if (w.server) headers["X-StratiGraph-Server"] = w.server;
+  }
+  return headers;
+}
+
+/** A request to the node, signed, renewed and — on a 401 — renewed once more
+ *  and retried: the token may have lapsed between the check and the answer. */
+async function request(path, init, where) {
+  await freshToken();
+  const go = () => fetch(NODE + path, { ...init,
+                                         headers: signed(init && init.headers, where) });
+  let res = await go();
+  if (res.status === 401 && REFRESH && await renew()) res = await go();
+  return res;
 }
 
 const $ = (id) => document.getElementById(id);
@@ -972,6 +2062,15 @@ function paintStrings() {
   if (dillo) dillo.placeholder = t("chat.placeholder");
   set("send", t("action.send"));
   set("hint", recognitionHint());
+  // LA CORNICE SCRITTA NEL MARKUP: una chiave per nodo, nell'attributo, e
+  // l'inglese nel markup come valore prima che questa riga giri. Così un testo
+  // fisso non esiste più: chi aggiunge un'etichetta aggiunge una chiave.
+  for (const node of document.querySelectorAll("[data-t]")) {
+    node.textContent = t(node.dataset.t);
+  }
+  for (const node of document.querySelectorAll("[data-t-aria]")) {
+    node.setAttribute("aria-label", t(node.dataset.tAria).replace(/[\u2066-\u2069]/g, ""));
+  }
   // senza i segni d'isolamento di `t()`: un titolo di finestra non è un
   // paragrafo, e la barra delle schede li mostrerebbe.
   document.title = "StratiGraph · " + t("app.subtitle").replace(/[\u2066-\u2069]/g, "");
@@ -1166,7 +2265,8 @@ async function signInReturn() {
     // difference between a fixable problem and a mystery.
     return fail(t("signin.noKeycloak"));
   }
-  adopt(payload.access_token || "");
+  ID_TOKEN = payload.id_token || "";
+  adopt(payload.access_token || "", payload.refresh_token || "");
   if (!TOKEN) return fail(t("signin.noToken"));
 }
 
@@ -1179,11 +2279,13 @@ async function signInReturn() {
  *  would see it. So the browser goes through `end_session_endpoint` first, and
  *  the page comes back unsigned because it comes back fresh. */
 function signOut() {
-  TOKEN = ""; WHO = null;
+  TOKEN = ""; WHO = null; REFRESH = ""; clearTimeout(RENEW_TIMER);
   if (AUTHCFG && AUTHCFG.end_session_endpoint && AUTHCFG.client_id) {
     const url = new URL(AUTHCFG.end_session_endpoint);
     url.searchParams.set("client_id", AUTHCFG.client_id);
     url.searchParams.set("post_logout_redirect_uri", redirectUri());
+    if (ID_TOKEN) url.searchParams.set("id_token_hint", ID_TOKEN);
+    ID_TOKEN = "";
     location.assign(url.toString());
     return;
   }
@@ -1201,7 +2303,23 @@ function render() {
   // della voce qui metteva i due uno sopra l'altro. Quale sia davanti lo sa la
   // conchiglia (`state.panel`), non questa funzione.
   const elsewhere = Boolean(window.SGShell) && window.SGShell.state.panel !== "voice";
-  $("work").hidden = !signed || elsewhere;
+  // COSA LA STANZA LASCIA FARE. `ACCESS` è la risposta di `GET /v1/room`, e
+  // qui si legge soltanto: un viewer vede senza «Salva», chi non è membro vede
+  // una frase al posto del lavoro. Il container locale non ha ruoli.
+  const outside = signed && ACCESS && ACCESS.member === false;
+  const reading = signed && ACCESS && ACCESS.member && ACCESS.can_write === false;
+  document.documentElement.dataset.access =
+    !signed ? "" : outside ? "none" : reading ? "read" : "write";
+  const note = $("role-note");
+  if (note) {
+    note.hidden = !(outside || reading);
+    note.textContent = outside
+      ? t("role.none", { room: ACCESS.room || "" })
+        + (ACCESS.refused ? " — " + ACCESS.refused : "")
+      : reading ? t("role.viewer", { role: ACCESS.role || "viewer" }) : "";
+  }
+  window.SGShell?.onAccess?.();
+  $("work").hidden = !signed || elsewhere || outside;
   // …e L'ELENCO, se è lui davanti, si ridipinge quando la firma arriva: aperto
   // da `#unita` prima della firma diceva «Firma per vedere» anche dopo.
   if (signed && window.SGShell && window.SGShell.state.panel === "index") {
@@ -1249,7 +2367,26 @@ window.SG = {
   get locale() { return LOCALE; },
   get signed() { return Boolean(WHO); },
   get subject() { return WHO ? WHO.subject : ""; },
+  //: what the room says this person may do here (`GET /v1/room`), or null
+  get access() { return ACCESS; },
+  get readOnly() { return Boolean(ACCESS && ACCESS.member && !ACCESS.can_write); },
   send, post, show, t, scriptDir,
+  // the three every module must use instead of its own `fetch` + header: who
+  // (renewed), where, and the retry on a lapsed token
+  headers: (extra) => signed(extra), request, freshToken,
+  where: readWhere, setWhere,
+  // ridisegna SOLO se è cambiato: arriva a ogni battito (8 s), e un render
+  // per un ruolo uguale a prima è lavoro per niente
+  setAccess: (access) => {
+    const pick = (a) => a ? JSON.stringify([a.room, a.role, a.can_write,
+                                            a.member, a.refused]) : "";
+    if (pick(access) === pick(ACCESS)) { ACCESS = access || null; return; }
+    ACCESS = access || null;
+    render();
+    // …e l'intestazione e la colonna SUBITO, non al battito dopo: misurato,
+    // dopo «Scrivi qui» dicevano «container locale» per fino a 8 s
+    void ping();
+  },
 };
 
 // ── the queue ───────────────────────────────────────────────────────────────
@@ -1298,7 +2435,13 @@ function heldBy(held) {
 function queueSentence(queue, subject) {
   const { mine, held } = partitionQueue(queue, subject);
   const lines = [];
-  if (mine.length) lines.push(t("queue.mine", { n: mine.length }));
+  const refused = mine.filter((item) => item.refused);
+  const waiting = mine.length - refused.length;
+  if (waiting) lines.push(t("queue.mine", { n: waiting }));
+  if (refused.length) {
+    lines.push(t(refused.length === 1 ? "queue.refused.one" : "queue.refused.many",
+                 { n: refused.length, why: refused[refused.length - 1].refused }));
+  }
   for (const [label, n] of heldBy(held)) {
     const many = n === 1 ? ".one" : ".many";
     lines.push(label === UNSIGNED
@@ -1312,29 +2455,57 @@ function renderQueue() {
   $("queue").textContent = queueSentence(readQueue(), WHO?.subject || "");
 }
 
-async function post(path, body) {
-  const res = await fetch(NODE + path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json",
-               ...(TOKEN ? { Authorization: "Bearer " + TOKEN } : {}) },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error("HTTP " + res.status);
+/** What went wrong, in the three kinds that have different remedies:
+ *
+ *   · `network` — the node did not answer (or answered 5xx): QUEUE, it leaves
+ *     when the node is back;
+ *   · `unsigned` — 401 after a renewal: the signature lapsed. Queue too, and
+ *     say so: it is this person's, and it leaves when they sign in again;
+ *   · `refused` — 403: the node or the room said no TO THIS PERSON (not a
+ *     member, a server this node does not trust). NOT a network problem, and
+ *     queueing it would retry for ever what will be refused for ever.
+ */
+function failure(kind, detail) {
+  return Object.assign(new Error(kind), { kind, detail: detail || "" });
+}
+
+async function post(path, body, where) {
+  let res;
+  try {
+    res = await request(path, { method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(body) }, where);
+  } catch { throw failure("network"); }
+  if (res.status === 401) throw failure("unsigned");
+  if (res.status === 403) {
+    const said = await res.json().catch(() => ({}));
+    throw failure("refused", said.detail || "");
+  }
+  if (!res.ok) throw failure("network", "HTTP " + res.status);
   return res.json();
 }
 
 async function send(path, body, describe) {
+  const where = readWhere();
   try {
-    const answer = await post(path, body);
+    const answer = await post(path, body, where);
+    // …E UNA RISPOSTA `refused` NON È UNA CONSEGNA: la stanza ha detto di no a
+    // chi scrive (ruolo, revoca). La si dice con la frase della stanza, e la
+    // nota non va in coda come se mancasse la rete.
     show(answer.ok, answer.message, answer.tool || "");
-    return true;
+    return Boolean(answer.ok);
   } catch (err) {
+    if (err.kind === "refused") {
+      show(false, err.detail || t("room.refused"), describe, LOCALE);
+      return false;
+    }
     const queue = readQueue();
-    queue.push({ path, body, at: Date.now(), describe,
+    queue.push({ path, body, at: Date.now(), describe, where,
                  subject: WHO?.subject || "", by: WHO?.name || "" });
     writeQueue(queue);
     renderQueue();
-    show(false, t("queue.kept"), describe, LOCALE);
+    show(false, err.kind === "unsigned" ? t("signin.expired") : t("queue.kept"),
+         describe, LOCALE);
     return false;
   }
 }
@@ -1345,18 +2516,46 @@ async function flush() {
   const subject = WHO?.subject || "";
   const left = [];
   let sent = 0;
+  let stopped = false;
+  //: consegnate al NODO ma rifiutate dalla stanza: il nodo le tiene, e la
+  //: frase della stanza è l'ultima cosa che questa pagina deve dire
+  let handed = 0, why = "";
   for (const item of queue) {
     // Somebody else's note WAITS. It is not refused, not re-attributed and not
     // lost — it goes back in the queue in its place, and the line under the
     // buttons says whose it is and that it is waiting for them.
-    if (!isMine(item, subject)) { left.push(item); continue; }
-    try { await post(item.path, item.body); sent++; }
-    catch { left.push(item); }          // still down: keep the ORDER
+    if (!isMine(item, subject) || stopped) { left.push(item); continue; }
+    try {
+      // …to the room it was DICTATED for, not the one this page is in now
+      const answer = await post(item.path, item.body,
+                                item.where === undefined ? null : item.where);
+      if (answer.refused && !answer.queued) {
+        // IL RUOLO È STATO TOLTO nel frattempo: la nota RESTA su questo
+        // dispositivo, con la frase della stanza accanto, e la riga sotto i
+        // bottoni lo dice. Niente si perde in silenzio.
+        left.push({ ...item, refused: answer.message });
+        continue;
+      }
+      // …e se il NODO l'ha tenuta (la stanza ha rifiutato la consegna, non
+      // l'atto), la copia di qui sarebbe un doppione: la frase si dice, la
+      // coda del nodo la mostra la colonna («Consegna ora»).
+      if (answer.refused) { handed++; why = answer.message; continue; }
+      delete item.refused;
+      sent++;
+    } catch (err) {
+      if (err.kind === "refused") {
+        left.push({ ...item, refused: err.detail || t("room.refused") });
+        continue;
+      }
+      left.push(item);                  // still down: keep the ORDER
+      stopped = true;
+    }
   }
   writeQueue(left);
   renderQueue();
-  if (sent) show(true, t("queue.sent" + (sent === 1 ? ".one" : ".many"), { n: sent }),
-                 "", LOCALE);
+  if (handed) show(false, why, "", LOCALE);
+  else if (sent) show(true, t("queue.sent" + (sent === 1 ? ".one" : ".many"),
+                             { n: sent }), "", LOCALE);
 }
 
 // ── is the node there? ──────────────────────────────────────────────────────
@@ -1365,7 +2564,11 @@ async function ping() {
     const res = await fetch(NODE + "/health", { cache: "no-store" });
     const health = await res.json();
     state.className = "state";
-    state.textContent = t(health.writes_to.startsWith("room") ? "node.room" : "node.local");
+    // …la stanza DI CHI È FIRMATO quando la si sa (`ACCESS.room`): dal 25
+    // ottobre il nodo non ha un posto solo, e la sua configurazione può dire
+    // «locale» mentre questa persona scrive in una stanza.
+    const inRoom = Boolean(ACCESS && ACCESS.room) || health.writes_to.startsWith("room");
+    state.textContent = t(inRoom ? "node.room" : "node.local");
     // Which speech road, from what the node SAYS it has — asked every time, so a
     // node that gains (or loses) a model is followed rather than remembered.
     chooseSpeechRoad(health);
@@ -1406,7 +2609,7 @@ async function boot() {
   AUTHCFG = await loadAuthConfig();
   if (returningFromIdp()) {
     await signInReturn();
-  } else if (SERVICE_TOKEN) {
+  } else if (serviceDoorOpen(AUTHCFG)) {
     adopt(SERVICE_TOKEN);               // the bench door, declared above
   }
   paintStrings();
@@ -1534,11 +2737,7 @@ async function sendRecording(blob) {
   form.append("language", nodeLanguage());
   saidBox.textContent = t("listening");
   try {
-    const res = await fetch(NODE + "/v1/listen", {
-      method: "POST",
-      headers: { ...(TOKEN ? { Authorization: "Bearer " + TOKEN } : {}) },
-      body: form,
-    });
+    const res = await request("/v1/listen", { method: "POST", body: form });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const answer = await res.json();
     if (answer.said) saidBox.textContent = t("heard") + answer.said;

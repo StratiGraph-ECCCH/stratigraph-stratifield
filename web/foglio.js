@@ -225,7 +225,7 @@ export function drawSheet(host, def, state, opts) {
   const head = el("header", { class: "fo-head" },
     el("h2", { text: def.title }));
   const clear = el("button", { class: "risky", type: "button",
-                               text: "Svuota la scheda" });
+                               text: tr("sheet.clear") });
   clear.addEventListener("click", () => state.onClear());
   head.append(clear);
   root.append(head);
@@ -247,7 +247,7 @@ export function drawSheet(host, def, state, opts) {
 
   const foot = el("footer", { class: "sheetfoot" });
   const saveIt = el("button", { class: "primary save", type: "button",
-                                text: "Salva la scheda" });
+                                text: tr("sheet.save") });
   saveIt.addEventListener("click", () => state.onSave());
   foot.append(saveIt);
   root.append(foot);

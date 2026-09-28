@@ -182,9 +182,13 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     if (!seam.signed) { nota.textContent = t("index.signin"); return; }
     let letto;
     try {
-      const risposta = await fetch(seam.node + "/v1/room/units", {
-        headers: { Authorization: "Bearer " + seam.token },
-      });
+      const risposta = await seam.request("/v1/room/units", {});
+      if (risposta.status === 403) {
+        // UNA PORTA CHIUSA SI DICE CON LA SUA FRASE, non come una rete che manca
+        nota.textContent = (await risposta.json().catch(() => ({}))).detail
+          || t("index.unreachable");
+        return;
+      }
       if (!risposta.ok) { nota.textContent = t("index.unreachable"); return; }
       letto = await risposta.json();
     } catch { nota.textContent = t("index.unreachable"); return; }

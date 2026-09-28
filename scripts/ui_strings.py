@@ -49,7 +49,7 @@ DEFAULT_XLSX = pathlib.Path(os.environ.get("SG_UI_STRINGS_XLSX") or (
     / "UI translations" / "StratiGraph_UI_strings.xlsx"))
 
 SHEET = "UI strings"
-DEFAULT_LANGS = ("he", "de")
+DEFAULT_LANGS = ("he", "de", "ro", "el", "es", "pl")
 BEGIN = "  // >>> ui_strings.py"
 END = "  // <<< ui_strings.py"
 #: gli stessi di `tests/test_locales.py::test_no_domain_term_was_translated`
@@ -137,7 +137,42 @@ def render(blocks: Dict[str, Dict[str, str]], source: pathlib.Path) -> str:
     return "\n".join(lines)
 
 
+#: La riga degli slot vuoti, `  ro: {}, el: {}, es: {}, pl: {},`.
+_SLOTS = re.compile(r"^  ((?:\w+: \{\}, ?)+)$", re.M)
+
+
+def _without_generated(page: str, generated: str) -> str:
+    """Toglie dalla riga degli slot vuoti le lingue che il blocco dichiara.
+
+    **In un letterale JS la chiave ripetuta VINCE L'ULTIMA.** Con il blocco
+    generato prima di `ro: {}, el: {}, …`, un `ro` importato veniva
+    sovrascritto da `ro: {}` e la pagina lo aveva vuoto — misurato con node il
+    28 settembre: ro/el/es/pl a 0 chiavi, he/de a 160. Il parser dei test
+    leggeva invece il primo `ro: {` e diceva il contrario. Quindi una lingua
+    generata non resta anche fra gli slot, e se non ne resta nessuna la riga
+    se ne va con il suo commento.
+    """
+    ours = set(re.findall(r"^  (\w+): \{$", generated, re.M))
+    found = _SLOTS.search(page)
+    if not found:
+        return page
+    rest = [code for code in re.findall(r"(\w+): \{\}", found.group(1))
+            if code not in ours]
+    if rest:
+        line = "  " + " ".join(f"{code}: {{}}," for code in rest)
+        return page[:found.start()] + line + page[found.end():]
+    start, stop = found.start(), found.end() + 1
+    comment = re.search(r"^  // ── the partners' slots.*\n\Z", page[:start], re.M)
+    if comment:
+        start = comment.start()
+    return page[:start] + page[stop:]
+
+
 def spliced(page: str, generated: str) -> str:
+    return _without_generated(_spliced(page, generated), generated)
+
+
+def _spliced(page: str, generated: str) -> str:
     if BEGIN in page:
         start = page.index(BEGIN)
         stop = page.index(END, start) + len(END)
