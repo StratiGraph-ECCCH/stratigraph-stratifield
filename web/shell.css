@@ -465,6 +465,12 @@
   flex: 0 1 12em; width: auto; min-width: 6em; margin: 0;
   padding: var(--sg-space-1) var(--sg-space-2);
 }
+/* «Leggi con…» — la lente (26 ottobre): gli stessi token dei bottoni accanto */
+.unav select.unav-lens {
+  width: auto; margin: 0; min-height: 34px; padding: 0 var(--sg-space-2);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface); color: var(--sg-text); font: inherit;
+}
 .unav.big button { min-width: 48px; min-height: 48px; font-size: var(--sg-text-xl); }
 .unav.big input[type="text"] { flex: 1 1 auto; min-height: 48px; }
 .unav.big .unav-here { font-size: var(--sg-text-xl); }
@@ -512,6 +518,10 @@ input[type="date"], input[type="number"], time {
 :root[data-access="read"] #tb-save,
 :root[data-access="read"] #hint,
 :root[data-access="read"] #commands-in { display: none; }
+/* la lente legge soltanto: niente Salva, niente Svuota (26 ottobre) */
+:root[data-lens="on"] .save,
+:root[data-lens="on"] .risky,
+:root[data-lens="on"] #tb-save { display: none; }
 /* chi non è membro non entra: niente elenco, niente scheda, niente gesti */
 :root[data-access="none"] #work,
 :root[data-access="none"] #index,

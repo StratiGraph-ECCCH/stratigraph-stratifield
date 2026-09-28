@@ -1,0 +1,143 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/deutlich",
+   "labels": {
+    "de": "deutlich",
+    "en": "clear"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/diffus",
+   "labels": {
+    "de": "diffus",
+    "en": "vague"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/eben",
+   "labels": {
+    "de": "eben",
+    "en": "even"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/erahnbar",
+   "labels": {
+    "de": "erahnbar"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/erkennbar",
+   "labels": {
+    "de": "erkennbar",
+    "en": "discernible"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/etwas%20verwaschen",
+   "labels": {
+    "de": "etwas verwaschen"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/flie%C3%9Fend",
+   "labels": {
+    "de": "fließend",
+    "en": "gradual"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/geneigt",
+   "labels": {
+    "de": "geneigt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/gezackt",
+   "labels": {
+    "de": "gezackt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/regelm%C3%A4%C3%9Fig",
+   "labels": {
+    "de": "regelmäßig",
+    "en": "regular"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/scharf",
+   "labels": {
+    "de": "scharf",
+    "en": "sharp"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/sehr%20deutlich",
+   "labels": {
+    "de": "sehr deutlich",
+    "en": "very clear"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/undeutlich",
+   "labels": {
+    "de": "undeutlich",
+    "en": "unclear"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/uneben",
+   "labels": {
+    "de": "uneben",
+    "en": "uneven"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/unklar",
+   "labels": {
+    "de": "unklar",
+    "en": "unclear"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/unregelm%C3%A4%C3%9Fig",
+   "labels": {
+    "de": "unregelmäßig",
+    "en": "irregular"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/verwaschen",
+   "labels": {
+    "de": "verwaschen",
+    "en": "washed out"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default/wellig",
+   "labels": {
+    "de": "wellig",
+    "en": "wavy"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Feature-featureBorders-default",
+  "en": "iDAI.field valuelist Feature-featureBorders-default",
+  "it": "Valuelist di iDAI.field Feature-featureBorders-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-feature-featureborders-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default"
+}

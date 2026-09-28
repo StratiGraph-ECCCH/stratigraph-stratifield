@@ -352,11 +352,13 @@ def test_no_variable_means_THE_VENDORED_COPY_since_2026_10_19():
     """ERA «nessuna directory = nessuna scheda», e si è rovesciato.
 
     Le schede compilate stanno nel repository (`schede/`, `sync-schede.sh`) e
-    viaggiano nell'immagine. Senza la variabile il nodo serve quelle — le tre
-    con cui è stato rilasciato, compilate, con la loro ricetta."""
+    viaggiano nell'immagine. Senza la variabile il nodo serve quelle — le cinque
+    vendorate (tre al rilascio; IAA-DANA dal 2026-09-28, DAI iDAI.field dal
+    2026-10-26), compilate, con la loro ricetta."""
     assert schede.schede_dir({}) == schede.VENDORED_DIR
     found = {s.id: s for s in schede.available({})}
-    assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026"}
+    assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026",
+                          "iaa-dana-locus-2026", "dai-idaifield-layer-2026"}
     assert all(s.compiled and s.recipe for s in found.values())
     # la più recente che l'indice vendorato dichiara, non un numero scritto qui
     index = json.loads((schede.VENDORED_DIR / "index.json").read_text(encoding="utf-8"))
@@ -503,10 +505,15 @@ def test_the_three_real_definitions_are_servable():
     """
     env = {schede.SCHEDE_DIR_VARIABLE: str(TEMPLATES)}
     found = {s.id: s for s in schede.available(env)}
-    assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026"}
+    assert set(found) == {"iccd-us-2021", "es-ue-demo-2026", "hu-rl-demo-2026",
+                          "iaa-dana-locus-2026", "dai-idaifield-layer-2026"}
     assert len(found["iccd-us-2021"].fields) == 59
     assert len(found["es-ue-demo-2026"].fields) == 15
     assert len(found["hu-rl-demo-2026"].fields) == 6
+    assert len(found["iaa-dana-locus-2026"].fields) == 45
+    assert len(found["dai-idaifield-layer-2026"].fields) == 44
+    # la prima SENZA foglio: il modulo non riceve la chiave, e la vista Campi lo dice
+    assert "sheet" not in found["dai-idaifield-layer-2026"].for_browser("de")
 
 
 @have_templates
@@ -535,8 +542,9 @@ def test_the_sheets_give_a_phone_three_different_forms():
     found = {s.id: s for s in schede.available(env)}
     sizes = {i: len(s.trench_fields()) for i, s in found.items()}
     assert sizes == {"iccd-us-2021": 25, "es-ue-demo-2026": 14,
-                     "hu-rl-demo-2026": 4}, sizes
-    assert len(set(sizes.values())) == 3
+                     "hu-rl-demo-2026": 4, "iaa-dana-locus-2026": 20,
+                     "dai-idaifield-layer-2026": 1}, sizes
+    assert len(set(sizes.values())) == len(sizes)
 
 
 @have_templates

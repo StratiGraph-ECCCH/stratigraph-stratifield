@@ -683,3 +683,14 @@
 .w-big .w-qval { grid-area: val; }
 .w-big .w-qunit { grid-area: unit; }
 .w-big .w-qlab { grid-area: lab; }
+
+/* LA LENTE (26 ottobre): la casella che il grafo non sa riempire per questo
+   standard è TRATTEGGIATA — il buco è ciò che la lente mostra. Nessun colore
+   nuovo: il tratto e il colore della linea sono quelli del tema. */
+.box.lens-hole,
+[data-field].lens-hole {
+  border: 1px dashed var(--sg-line);
+  background: none;
+  box-shadow: none;
+  opacity: 0.72;
+}

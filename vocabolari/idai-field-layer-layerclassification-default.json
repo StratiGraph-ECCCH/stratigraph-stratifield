@@ -1,0 +1,49 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default/Brandschicht",
+   "labels": {
+    "de": "Brandschicht",
+    "en": "burnt layer"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default/Kulturschicht",
+   "labels": {
+    "de": "Kulturschicht",
+    "en": "culture layer"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default/Laufhorizont",
+   "labels": {
+    "de": "Laufhorizont",
+    "en": "floor / occupation layer"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default/Planierschicht",
+   "labels": {
+    "de": "Planierschicht",
+    "en": "levelling layer"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Layer-layerClassification-default",
+  "en": "iDAI.field valuelist Layer-layerClassification-default",
+  "it": "Valuelist di iDAI.field Layer-layerClassification-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-layer-layerclassification-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default"
+}

@@ -1,0 +1,167 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Feinsand",
+   "labels": {
+    "de": "Feinsand",
+    "en": "fine sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Feinstsand",
+   "labels": {
+    "de": "Feinstsand",
+    "en": "fine sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Grobsand",
+   "labels": {
+    "de": "Grobsand",
+    "en": "fine gravel"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Lehm",
+   "labels": {
+    "de": "Lehm",
+    "en": "loam"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Lehmiger%20Sand",
+   "labels": {
+    "de": "Lehmiger Sand",
+    "en": "loamy sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Lehmiger%20Schluff",
+   "labels": {
+    "de": "Lehmiger Schluff",
+    "en": "loamy silt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Lehmiger%20Ton",
+   "labels": {
+    "de": "Lehmiger Ton",
+    "en": "loamy clay"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Mergel",
+   "labels": {
+    "de": "Mergel",
+    "en": "marl"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Mittlerer%20Sand",
+   "labels": {
+    "de": "Mittlerer Sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Sand",
+   "labels": {
+    "de": "Sand",
+    "en": "sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Sandiger%20Lehm",
+   "labels": {
+    "de": "Sandiger Lehm",
+    "en": "sandy loam"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Sandiger%20Schluff",
+   "labels": {
+    "de": "Sandiger Schluff",
+    "en": "sandy silt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Sandiger%20Ton",
+   "labels": {
+    "de": "Sandiger Ton",
+    "en": "sandy silt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Schluff",
+   "labels": {
+    "de": "Schluff",
+    "en": "silt"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Schluffiger%20Lehm",
+   "labels": {
+    "de": "Schluffiger Lehm",
+    "en": "silty loam"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Schluffiger%20Sand",
+   "labels": {
+    "de": "Schluffiger Sand",
+    "en": "silty sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Schluffiger%20Ton",
+   "labels": {
+    "de": "Schluffiger Ton",
+    "en": "silty clay"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Ton",
+   "labels": {
+    "de": "Ton",
+    "en": "clay"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Toniger%20Lehm",
+   "labels": {
+    "de": "Toniger Lehm",
+    "en": "clayey loam"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Toniger%20Sand",
+   "labels": {
+    "de": "Toniger Sand",
+    "en": "clayey sand"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default/Toniger%20Schluff",
+   "labels": {
+    "de": "Toniger Schluff",
+    "en": "clayey silt"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Layer-soilType-default",
+  "en": "iDAI.field valuelist Layer-soilType-default",
+  "it": "Valuelist di iDAI.field Layer-soilType-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-layer-soiltype-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default"
+}

@@ -234,6 +234,22 @@ def _standard_words():
             doc = yaml.safe_load(path.read_text(encoding="utf-8"))["template"]
             words.add(str(doc["id"]))
             words |= {str(f["id"]) for f in doc.get("fields") or []}
+        # iDAI.field (dal 2026-10-26) chiama i campi con parole inglesi COMUNI,
+        # che il codice aveva già come CSS (`color`, `position`), tipi di campo
+        # del formato (`identifier`, `date`) o JavaScript (`time`). Una parola
+        # comune non è uno standard imparato: queste, e solo queste, si tolgono
+        # — e solo se sono davvero id della scheda DAI, così l'esenzione non
+        # sopravvive alla ragione che la giustifica (lo stesso elenco di
+        # stratigraph-templates/tests/test_three_standards.py).
+        dai = TEMPLATES / "dai-idaifield-layer-2026" / "template.yaml"
+        if dai.is_file():
+            common_english = {"category", "color", "comparison", "date", "description",
+                              "geometry", "identifier", "position", "properties",
+                              "stratigraphy", "time"}
+            doc = yaml.safe_load(dai.read_text(encoding="utf-8"))["template"]
+            own = {str(f["id"]) for f in doc["fields"]} | {str(p["id"]) for p in doc["paragraphs"]}
+            assert common_english <= own, common_english - own
+            words -= common_english
     return words
 
 

@@ -1,0 +1,189 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/Durch%20Brand%20versiegelt",
+   "labels": {
+    "de": "Durch Brand versiegelt",
+    "en": "sealed by fire / burning"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/Oberfl%C3%A4che%20abgewaschen",
+   "labels": {
+    "de": "Oberfläche abgewaschen",
+    "en": "surface washed off"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/Oberfl%C3%A4che%20verh%C3%A4rtet",
+   "labels": {
+    "de": "Oberfläche verhärtet",
+    "en": "surface area hardened"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/fest",
+   "labels": {
+    "de": "fest",
+    "en": "firm"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/fl%C3%BCssig",
+   "labels": {
+    "de": "flüssig",
+    "en": "liquid"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/gut%20formbar",
+   "labels": {
+    "de": "gut formbar",
+    "en": "easily mouldable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/hart",
+   "labels": {
+    "de": "hart",
+    "en": "hard"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/lehmig",
+   "labels": {
+    "de": "lehmig",
+    "en": "loamy"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/locker",
+   "labels": {
+    "de": "locker",
+    "en": "loose"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/mittel%20bindend",
+   "labels": {
+    "de": "mittel bindend",
+    "en": "medium binding"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/mittel%20formbar",
+   "labels": {
+    "de": "mittel formbar",
+    "en": "medium mouldable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/nicht%20bindend",
+   "labels": {
+    "de": "nicht bindend",
+    "en": "not binding"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/nicht%20formbar",
+   "labels": {
+    "de": "nicht formbar",
+    "en": "not mouldable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/por%C3%B6s",
+   "labels": {
+    "de": "porös",
+    "en": "porous"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/sandig",
+   "labels": {
+    "de": "sandig",
+    "en": "sandy"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/schwach%20bindend",
+   "labels": {
+    "de": "schwach bindend",
+    "en": "hardly binding"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/schwach%20formbar",
+   "labels": {
+    "de": "schwach formbar",
+    "en": "hardly mouldable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/sehr%20gut%20formbar",
+   "labels": {
+    "de": "sehr gut formbar",
+    "en": "very easily mouldable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/sehr%20hart",
+   "labels": {
+    "de": "sehr hart",
+    "en": "very hard"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/sehr%20schwach%20formbar",
+   "labels": {
+    "de": "sehr schwach formbar",
+    "en": "very hardly malleable"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/sehr%20weich",
+   "labels": {
+    "de": "sehr weich",
+    "en": "very soft"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/stark%20bindend",
+   "labels": {
+    "de": "stark bindend",
+    "en": "very binding"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/steif",
+   "labels": {
+    "de": "steif",
+    "en": "rigid"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default/weich",
+   "labels": {
+    "de": "weich",
+    "en": "soft"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Layer-consistency-default",
+  "en": "iDAI.field valuelist Layer-consistency-default",
+  "it": "Valuelist di iDAI.field Layer-consistency-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-layer-consistency-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default"
+}

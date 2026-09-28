@@ -1,0 +1,154 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24); IT-Referat, DAI, 2019",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/beige",
+   "labels": {
+    "de": "beige",
+    "en": "beige"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/blass-",
+   "labels": {
+    "de": "blass-",
+    "en": "pale-"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/blau",
+   "labels": {
+    "de": "blau",
+    "en": "blue"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/braun",
+   "labels": {
+    "de": "braun",
+    "en": "brown"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/cremefarben",
+   "labels": {
+    "de": "cremefarben",
+    "en": "cream"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/dunkel-",
+   "labels": {
+    "de": "dunkel-",
+    "en": "dark-"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/gelb",
+   "labels": {
+    "de": "gelb",
+    "en": "yellow"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/gr%C3%BCn",
+   "labels": {
+    "de": "grün",
+    "en": "green"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/grau",
+   "labels": {
+    "de": "grau",
+    "en": "grey"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/hell-",
+   "labels": {
+    "de": "hell-",
+    "en": "light-"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/leuchtend-",
+   "labels": {
+    "de": "leuchtend-",
+    "en": "bright-"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/ocker",
+   "labels": {
+    "de": "ocker",
+    "en": "ochre"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/orange",
+   "labels": {
+    "de": "orange",
+    "en": "orange"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/rosa",
+   "labels": {
+    "de": "rosa",
+    "en": "rose/pink"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/rot",
+   "labels": {
+    "de": "rot",
+    "en": "red"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/schwarz",
+   "labels": {
+    "de": "schwarz",
+    "en": "black"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/t%C3%BCrkis",
+   "labels": {
+    "de": "türkis",
+    "en": "turquoise"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/violett",
+   "labels": {
+    "de": "violett",
+    "en": "violet/purple"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1/wei%C3%9F",
+   "labels": {
+    "de": "weiß",
+    "en": "white"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste colors-default-1",
+  "en": "iDAI.field valuelist colors-default-1",
+  "it": "Valuelist di iDAI.field colors-default-1"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-colors-default-1",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1"
+}

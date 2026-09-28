@@ -808,7 +808,8 @@ def submit_scheda(scheda_id: str, request: Request,
 
 
 @v1.get("/scheda/{scheda_id}/unita", tags=["scheda"])
-def read_scheda(scheda_id: str, request: Request, us: str = "") -> Dict[str, Any]:
+def read_scheda(scheda_id: str, request: Request, us: str = "",
+                lente: bool = False) -> Dict[str, Any]:
     """IL RITORNO (audit B4): i valori di un'unità, riletti dal grafo.
 
     Dal nodo dell'unità nella sezione — la stanza, o il container locale —
@@ -821,6 +822,13 @@ def read_scheda(scheda_id: str, request: Request, us: str = "") -> Dict[str, Any
     la serve, si rilegge con quella, e lo si dice (`read_with`, `note`): le
     caselle di uno standard non sono quelle di un altro, e rileggere una US
     ungherese con la ricetta ICCD darebbe una scheda vuota che sembra vera.
+
+    **Con `lente=1` si legge con QUELLA chiesta, e lo si dice** (2026-10-26): è
+    la lente ICCD ↔ DAI sulla stessa unità. Non è la rilettura per correggere —
+    le caselle di un altro standard non si riscrivono su un'unità compilata con
+    questo — ma la risposta a «che cosa di questa unità sa dire la scheda X».
+    `lens` dice con che cosa è stata scritta, quali caselle il grafo riempie e
+    quali restano vuote.
     """
     from . import scheda as schede
     from .operazioni import MARK, OperazioniError, values_from_graph
@@ -846,7 +854,9 @@ def read_scheda(scheda_id: str, request: Request, us: str = "") -> Dict[str, Any
     unit_id = str(unit["id"]) if unit else unit_id_for(number)
     declared = ((unit or {}).get("data") or {}).get(MARK) or {}
     read_with, note = asked, ""
-    if isinstance(declared, dict) and declared.get("template") and not declared.get("stub"):
+    if lente:
+        pass                           # si legge con quella chiesta: è la lente
+    elif isinstance(declared, dict) and declared.get("template") and not declared.get("stub"):
         if (declared.get("template"), declared.get("version")) != (asked.id, asked.version):
             other = schede.find(str(declared["template"]),
                                 version=str(declared.get("version") or "") or None)
@@ -860,13 +870,22 @@ def read_scheda(scheda_id: str, request: Request, us: str = "") -> Dict[str, Any
                         f"{declared.get('version') or ''}, che questo nodo non "
                         f"serve: riletta con «{asked.id}» {asked.version}")
     try:
-        read = values_from_graph(read_with, section, unit_id)
+        read = values_from_graph(read_with, section, unit_id, lens=lente)
     except OperazioniError as problem:
         raise HTTPException(status_code=404, detail=str(problem)) from None
-    return {"us": number, "node_id": unit_id,
-            "read_with": read_with.ref, "declared": read.pop("declared"),
-            "note": note, **read,
-            "where": writer_describe(scope.writer)}
+    out = {"us": number, "node_id": unit_id,
+           "read_with": read_with.ref, "declared": read.pop("declared"),
+           "note": note, **read,
+           "where": writer_describe(scope.writer)}
+    if lente:
+        written = ({"template": declared.get("template"), "version": declared.get("version")}
+                   if isinstance(declared, dict) and declared.get("template") else None)
+        filled = sorted(k for k, v in read["values"].items() if v not in (None, "", [], {}))
+        out["lens"] = {"read_with": read_with.ref, "written_with": written,
+                       "filled": filled,
+                       "holes": [str(f.get("id")) for f in read_with.fields
+                                 if str(f.get("id")) not in filled]}
+    return out
 
 
 class ValidateIn(BaseModel):

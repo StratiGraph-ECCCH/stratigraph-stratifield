@@ -1,0 +1,2165 @@
+{
+  "format": "stratigraph-templates/compiled-definition",
+  "format_version": "1",
+  "header": {
+    "id": "iaa-dana-locus-2026",
+    "version": "0.1.1",
+    "standard": {
+      "authority": "IAA",
+      "code": "DANA-locus",
+      "version": "as exported 2026-04-29",
+      "kind": "field_model",
+      "title": {
+        "en": "DANA — locus recording schema"
+      },
+      "license": "CC BY 4.0",
+      "attribution": "Israel Antiquities Authority (IAA) — DANA excavation recording system",
+      "source": "DANA FileMaker export: xml_data/loci.xml + xml_data/stratigraphy.xml (CS05 Yavneh Area M4, licence A-8999/2021)",
+      "invented": false
+    },
+    "source_language": "en",
+    "languages": [
+      "en"
+    ],
+    "vocabularies": [],
+    "digest": "sha256:00cca4566888e07d8eebd2c5cfa43fab35c6a21e1f275ce9585733fc085db457",
+    "datamodel": {
+      "nodes": "1.6.9",
+      "connections": "1.6.20",
+      "qualia": "1.6.1",
+      "em_ttl": "1.6.5",
+      "s3dgraphy": "1.6.0.dev21",
+      "taken_from": {
+        "git_commit": "bd3340dec0c8c55121533f8a05433db1e447bac2",
+        "git_dirty": false
+      },
+      "snapshot": "registry/s3dgraphy-snapshot.json"
+    },
+    "compiled_by": {
+      "name": "stratigraph-templates",
+      "version": "0.1.0"
+    }
+  },
+  "visual": {
+    "identity": {
+      "human_key": [
+        "d_site_name",
+        "d_area_name",
+        "d_locus_no_canonical"
+      ],
+      "pattern": "Locus {d_locus_no_canonical} — {d_area_name} ({d_site_name})",
+      "unit_field": "d_locus_no_canonical",
+      "uid": {
+        "policy": "minted_by_creator",
+        "opaque": true,
+        "display": "on_request",
+        "derive_from_human_key": false
+      },
+      "deduplication": "by_human_key_in_context"
+    },
+    "provenance": {
+      "per_field": true,
+      "authors": [
+        "human",
+        "ai"
+      ],
+      "states": [
+        "asserted",
+        "ai_drafted",
+        "human_validated"
+      ],
+      "clock": "s3dgraphy_crdt_field_clock"
+    },
+    "paragraphs": [
+      {
+        "id": "dana_identity",
+        "labels": {
+          "en": "Identity"
+        },
+        "fields": [
+          "d_locus_no_canonical",
+          "d_locus_no",
+          "d_locus_no_numeral",
+          "d_locus_id",
+          "d_locus_uuid",
+          "d_index"
+        ]
+      },
+      {
+        "id": "dana_context",
+        "labels": {
+          "en": "Context"
+        },
+        "fields": [
+          "d_site_name",
+          "d_area_name",
+          "d_square",
+          "d_grid_id"
+        ]
+      },
+      {
+        "id": "dana_substance",
+        "labels": {
+          "en": "Description and type"
+        },
+        "fields": [
+          "d_description",
+          "d_locus_type_id",
+          "d_locus_type_id_main",
+          "d_locus_quality"
+        ]
+      },
+      {
+        "id": "dana_elevations",
+        "labels": {
+          "en": "Elevations"
+        },
+        "fields": [
+          "d_elevation_average_upper",
+          "d_elevation_average_lower",
+          "d_elevation_average_ext_upper",
+          "d_elevation_average_ext_lower"
+        ]
+      },
+      {
+        "id": "dana_walls",
+        "labels": {
+          "en": "Walls"
+        },
+        "fields": [
+          "d_walls_length",
+          "d_walls_width",
+          "d_walls_height",
+          "d_walls_courses",
+          "d_walls_rows",
+          "d_walls_direction",
+          "d_walls_materials"
+        ]
+      },
+      {
+        "id": "dana_excavation",
+        "labels": {
+          "en": "Excavation record"
+        },
+        "fields": [
+          "d_date_opening",
+          "d_date_closing",
+          "d_date_opening_for_top_plans",
+          "d_date_closing_for_top_plans",
+          "d_date_clip_view",
+          "d_date_clip_view_aux",
+          "d_keep_locus_in_top_plans",
+          "d_locus_documentation_completed"
+        ]
+      },
+      {
+        "id": "dana_merged",
+        "labels": {
+          "en": "Merged identities"
+        },
+        "fields": [
+          "d_final_locus_no",
+          "d_final_locus_id",
+          "d_final_locus_uuid"
+        ]
+      },
+      {
+        "id": "dana_chronology",
+        "labels": {
+          "en": "Chronology"
+        },
+        "fields": [
+          "d_period"
+        ]
+      },
+      {
+        "id": "dana_rights",
+        "labels": {
+          "en": "Permit and media"
+        },
+        "fields": [
+          "d_license",
+          "k_photo_representative_uuid"
+        ]
+      },
+      {
+        "id": "dana_relations",
+        "labels": {
+          "en": "Stratigraphic relations"
+        },
+        "fields": [
+          "loci_above",
+          "loci_cutting",
+          "loci_adjoining",
+          "d_relation_type",
+          "d_adjoining_locus",
+          "d_adjoining_locus_numeral"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "d_locus_no_canonical",
+        "paragraph": "dana_identity",
+        "type": "identifier",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Locus no. (canonical)"
+        }
+      },
+      {
+        "id": "d_locus_no",
+        "paragraph": "dana_identity",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Locus no."
+        }
+      },
+      {
+        "id": "d_locus_no_numeral",
+        "paragraph": "dana_identity",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Locus no. (numeral)"
+        }
+      },
+      {
+        "id": "d_locus_id",
+        "paragraph": "dana_identity",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Locus ID (internal)"
+        }
+      },
+      {
+        "id": "d_locus_uuid",
+        "paragraph": "dana_identity",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Locus UUID (internal)"
+        }
+      },
+      {
+        "id": "d_index",
+        "paragraph": "dana_identity",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Index"
+        }
+      },
+      {
+        "id": "d_site_name",
+        "paragraph": "dana_context",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Site"
+        }
+      },
+      {
+        "id": "d_area_name",
+        "paragraph": "dana_context",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Area"
+        }
+      },
+      {
+        "id": "d_square",
+        "paragraph": "dana_context",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Square"
+        }
+      },
+      {
+        "id": "d_grid_id",
+        "paragraph": "dana_context",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Grid ID"
+        }
+      },
+      {
+        "id": "d_description",
+        "paragraph": "dana_substance",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Description"
+        }
+      },
+      {
+        "id": "d_locus_type_id",
+        "paragraph": "dana_substance",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Locus type"
+        }
+      },
+      {
+        "id": "d_locus_type_id_main",
+        "paragraph": "dana_substance",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Locus type (main)"
+        }
+      },
+      {
+        "id": "d_locus_quality",
+        "paragraph": "dana_substance",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Locus quality"
+        }
+      },
+      {
+        "id": "d_elevation_average_upper",
+        "paragraph": "dana_elevations",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Average upper elevation"
+        }
+      },
+      {
+        "id": "d_elevation_average_lower",
+        "paragraph": "dana_elevations",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Average lower elevation"
+        }
+      },
+      {
+        "id": "d_elevation_average_ext_upper",
+        "paragraph": "dana_elevations",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Upper elevation (reading count)"
+        }
+      },
+      {
+        "id": "d_elevation_average_ext_lower",
+        "paragraph": "dana_elevations",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Lower elevation (reading count)"
+        }
+      },
+      {
+        "id": "d_walls_length",
+        "paragraph": "dana_walls",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall length"
+        }
+      },
+      {
+        "id": "d_walls_width",
+        "paragraph": "dana_walls",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall width"
+        }
+      },
+      {
+        "id": "d_walls_height",
+        "paragraph": "dana_walls",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall height"
+        }
+      },
+      {
+        "id": "d_walls_courses",
+        "paragraph": "dana_walls",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall courses"
+        }
+      },
+      {
+        "id": "d_walls_rows",
+        "paragraph": "dana_walls",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall rows"
+        }
+      },
+      {
+        "id": "d_walls_direction",
+        "paragraph": "dana_walls",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall direction"
+        }
+      },
+      {
+        "id": "d_walls_materials",
+        "paragraph": "dana_walls",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Wall materials"
+        }
+      },
+      {
+        "id": "d_date_opening",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Opening date"
+        }
+      },
+      {
+        "id": "d_date_closing",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Closing date"
+        }
+      },
+      {
+        "id": "d_date_opening_for_top_plans",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Opening date (top plans)"
+        }
+      },
+      {
+        "id": "d_date_closing_for_top_plans",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Closing date (top plans)"
+        }
+      },
+      {
+        "id": "d_date_clip_view",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Clip view date"
+        }
+      },
+      {
+        "id": "d_date_clip_view_aux",
+        "paragraph": "dana_excavation",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Clip view date (aux)"
+        }
+      },
+      {
+        "id": "d_keep_locus_in_top_plans",
+        "paragraph": "dana_excavation",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Keep in top plans"
+        }
+      },
+      {
+        "id": "d_locus_documentation_completed",
+        "paragraph": "dana_excavation",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Documentation completed"
+        }
+      },
+      {
+        "id": "d_final_locus_no",
+        "paragraph": "dana_merged",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Final locus no."
+        }
+      },
+      {
+        "id": "d_final_locus_id",
+        "paragraph": "dana_merged",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Final locus ID (internal)"
+        }
+      },
+      {
+        "id": "d_final_locus_uuid",
+        "paragraph": "dana_merged",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Final locus UUID (internal)"
+        }
+      },
+      {
+        "id": "d_period",
+        "paragraph": "dana_chronology",
+        "type": "epoch_ref",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Period"
+        }
+      },
+      {
+        "id": "d_license",
+        "paragraph": "dana_rights",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Licence"
+        }
+      },
+      {
+        "id": "k_photo_representative_uuid",
+        "paragraph": "dana_rights",
+        "type": "identifier",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Representative photo (UUID)"
+        }
+      },
+      {
+        "id": "loci_above",
+        "paragraph": "dana_relations",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Loci above (relation type 1)"
+        }
+      },
+      {
+        "id": "loci_cutting",
+        "paragraph": "dana_relations",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Loci cutting this one (relation type 2)"
+        }
+      },
+      {
+        "id": "loci_adjoining",
+        "paragraph": "dana_relations",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "trench",
+        "labels": {
+          "en": "Adjoining loci (relation type 3)"
+        }
+      },
+      {
+        "id": "d_relation_type",
+        "paragraph": "dana_relations",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Relation type"
+        }
+      },
+      {
+        "id": "d_adjoining_locus",
+        "paragraph": "dana_relations",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Adjoining locus"
+        }
+      },
+      {
+        "id": "d_adjoining_locus_numeral",
+        "paragraph": "dana_relations",
+        "type": "integer",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "en": "Adjoining locus (numeral)"
+        }
+      }
+    ],
+    "sheet": {
+      "page": "A4",
+      "margins_mm": {
+        "top": 12,
+        "right": 12,
+        "bottom": 12,
+        "left": 12
+      },
+      "sides": [
+        {
+          "id": "recto",
+          "labels": {
+            "en": "front"
+          },
+          "rows": [
+            {
+              "h": 12.0,
+              "cells": [
+                {
+                  "field": "d_locus_no_canonical",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_site_name",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 40.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_area_name",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 12.0,
+              "cells": [
+                {
+                  "field": "d_locus_no",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_locus_type_id",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 45.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_locus_quality",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 30.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 70.0,
+              "cells": [
+                {
+                  "field": "d_description",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "d_elevation_average_upper",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_elevation_average_lower",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_elevation_average_ext_upper",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_elevation_average_ext_lower",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "d_walls_length",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 20.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_walls_width",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 20.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_walls_height",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 20.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_walls_courses",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 20.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_walls_rows",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 20.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 14.0,
+              "cells": [
+                {
+                  "field": "d_walls_direction",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 40.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_walls_materials",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 60.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verso",
+          "labels": {
+            "en": "back"
+          },
+          "rows": [
+            {
+              "h": 12.0,
+              "cells": [
+                {
+                  "field": "d_date_opening",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 33.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_date_closing",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 33.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_final_locus_no",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 12.0,
+              "cells": [
+                {
+                  "field": "d_period",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_license",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 45.0,
+              "cells": [
+                {
+                  "field": "loci_above",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 100.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 30.0,
+              "cells": [
+                {
+                  "field": "loci_cutting",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "loci_adjoining",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 50.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "d_locus_no_numeral",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_locus_id",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_locus_uuid",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_index",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "d_square",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_grid_id",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_locus_type_id_main",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_date_opening_for_top_plans",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "d_date_closing_for_top_plans",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_date_clip_view",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_date_clip_view_aux",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_keep_locus_in_top_plans",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "d_locus_documentation_completed",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_final_locus_id",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_final_locus_uuid",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "k_photo_representative_uuid",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 25.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            },
+            {
+              "h": 10.0,
+              "cells": [
+                {
+                  "field": "d_relation_type",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 33.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_adjoining_locus",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 33.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                },
+                {
+                  "field": "d_adjoining_locus_numeral",
+                  "block": null,
+                  "block_labels": {},
+                  "rows": [],
+                  "w": 34.0,
+                  "label": "auto",
+                  "rotated": false,
+                  "style": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": {
+      "schema_not_norm": "Questa definizione descrive uno SCHEMA DI BANCA DATI letto da un export,\nnon una norma pubblicata. Non esiste un documento DANA da citare: finche'\nl'IAA non ne pubblica uno, il punto di verita' resta l'export, ed e'\ndichiarato in `standard.source`.\n",
+      "licence_pending": "Licenza e attribuzione sono una PROPOSTA in attesa della revisione\ndell'IAA (L. Weinblum, 2026-09-28). La versione resta 0.x fino alla\nconferma.\n",
+      "no_data": "Qui stanno i campi, non i record. Nessun dato di Yavneh e' pubblicato in\nquesto repository: ne' descrizioni di scavo, ne' quote, ne' relazioni.\n",
+      "hebrew_labels": "Le etichette sono i nomi dei campi dell'export, in inglese. L'ebraico non\ne' dichiarato perche' non lo abbiamo; va chiesto all'IAA insieme al\nvocabolario dei tipi di locus.\n"
+    }
+  },
+  "recipe": {
+    "operations": [
+      "add_node",
+      "update_field",
+      "remove_node",
+      "add_edge",
+      "remove_edge"
+    ],
+    "unit": {
+      "resolve": {
+        "$unit": {
+          "find": {
+            "human_key": [
+              "d_site_name",
+              "d_area_name",
+              "d_locus_no_canonical"
+            ],
+            "rule": "by_human_key_in_context"
+          },
+          "create": true
+        }
+      },
+      "steps": [
+        {
+          "emit": {
+            "op": "add_node",
+            "node": {
+              "id": "$unit",
+              "node_type": "$unit.node_type",
+              "name": "$unit.name"
+            }
+          },
+          "when": "created"
+        }
+      ],
+      "name": {
+        "pattern": "Locus {d_locus_no_canonical} — {d_area_name} ({d_site_name})",
+        "unit_field": "d_locus_no_canonical"
+      },
+      "node_type": {
+        "decided_by": null,
+        "table": {},
+        "when_empty": "not decided by the definition",
+        "note": "decided when the unit is CREATED: update_field addresses name, description and data.* only, so an existing unit's node_type cannot be changed by an operation of this vocabulary"
+      }
+    },
+    "fields": {
+      "d_locus_no_canonical": {
+        "verdict": "identity",
+        "steps": [],
+        "names": "$unit",
+        "designator": true
+      },
+      "d_locus_no": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "iaa_locus_number",
+                "description": "$value",
+                "data": {
+                  "property_type": "iaa_locus_number"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "iaa_locus_number",
+          "registered_qualia": false
+        }
+      },
+      "d_locus_no_numeral": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_locus_id": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_locus_uuid": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_index": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_site_name": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "d_area_name": {
+        "verdict": "node",
+        "each": false,
+        "resolve": {
+          "$node": {
+            "find": {
+              "node_type": "LocationNodeGroup",
+              "name": "$value"
+            },
+            "create": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$node",
+                "node_type": "LocationNodeGroup",
+                "name": "$value"
+              }
+            },
+            "when": "created"
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_in_location",
+              "source": "$unit",
+              "target": "$node"
+            }
+          }
+        ],
+        "node": {
+          "class": "LocationNodeGroup",
+          "node_type": "LocationNodeGroup"
+        },
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "includes_location",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location",
+            "subject": "source"
+          }
+        }
+      },
+      "d_square": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_grid_id": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_description": {
+        "verdict": "property",
+        "each": false,
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "description",
+              "value": "$value"
+            }
+          }
+        ]
+      },
+      "d_locus_type_id": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "il vocabolario dei tipi di locus: l'export porta 20 identificativi numerici e nessuna etichetta",
+          "reported": "da chiedere all'IAA insieme alle etichette ebraiche"
+        }
+      },
+      "d_locus_type_id_main": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_locus_quality": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "locus_quality",
+                "description": "$value",
+                "data": {
+                  "property_type": "locus_quality"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "locus_quality",
+          "registered_qualia": false
+        }
+      },
+      "d_elevation_average_upper": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "elevation_upper",
+                "description": "$value",
+                "data": {
+                  "property_type": "elevation_upper"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "elevation_upper",
+          "registered_qualia": false
+        }
+      },
+      "d_elevation_average_lower": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "elevation_lower",
+                "description": "$value",
+                "data": {
+                  "property_type": "elevation_lower"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "elevation_lower",
+          "registered_qualia": false
+        }
+      },
+      "d_elevation_average_ext_upper": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_elevation_average_ext_lower": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_walls_length": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_length",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_length"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_length",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_width": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_width",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_width"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_width",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_height": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_height",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_height"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_height",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_courses": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_courses",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_courses"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_courses",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_rows": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_rows",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_rows"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_rows",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_direction": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_direction",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_direction"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_direction",
+          "registered_qualia": false
+        }
+      },
+      "d_walls_materials": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "wall_materials",
+                "description": "$value",
+                "data": {
+                  "property_type": "wall_materials"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "wall_materials",
+          "registered_qualia": false
+        }
+      },
+      "d_date_opening": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "excavation_opened",
+                "description": "$value",
+                "data": {
+                  "property_type": "excavation_opened"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "excavation_opened",
+          "registered_qualia": false
+        }
+      },
+      "d_date_closing": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "excavation_closed",
+                "description": "$value",
+                "data": {
+                  "property_type": "excavation_closed"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "excavation_closed",
+          "registered_qualia": false
+        }
+      },
+      "d_date_opening_for_top_plans": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_date_closing_for_top_plans": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_date_clip_view": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_date_clip_view_aux": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_keep_locus_in_top_plans": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_locus_documentation_completed": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_final_locus_no": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "equals",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#physicallyEquals",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_physically_equal_to"
+          ],
+          "spellings": [
+            "is_physically_equal_to"
+          ]
+        }
+      },
+      "d_final_locus_id": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_final_locus_uuid": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_period": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_license": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "k_photo_representative_uuid": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "loci_above": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_after",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_before",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP28_occurs_before",
+            "subject": "target"
+          }
+        }
+      },
+      "loci_cutting": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "loci_adjoining": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "generic_connection",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P130_shows_features_of",
+            "extension": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subject": "source"
+          }
+        }
+      },
+      "d_relation_type": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_adjoining_locus": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "d_adjoining_locus_numeral": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      }
+    },
+    "anchors": {},
+    "open": [
+      {
+        "field": "",
+        "what": "no field has verdict 'node_type': the definition does not say which node type the unit is, so the creator has to"
+      }
+    ]
+  }
+}

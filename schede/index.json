@@ -2,6 +2,27 @@
   "format": "stratigraph-templates/compiled-definition/index",
   "format_version": "1",
   "schede": {
+    "dai-idaifield-layer-2026": {
+      "versions": {
+        "0.1.0": {
+          "path": "dai-idaifield-layer-2026/0.1.0.json",
+          "digest": "sha256:e761101e437c0d88fa78694737c1436b3f25040c7a78a07ab4feda472ca4a917",
+          "standard": {
+            "authority": "DAI",
+            "code": "iDAI.field Layer",
+            "version": "config 4b5c1e2 (2026-09-24)",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
+        }
+      },
+      "latest": "0.1.0"
+    },
     "es-ue-demo-2026": {
       "versions": {
         "0.1.0": {
@@ -59,6 +80,43 @@
         }
       },
       "latest": "0.1.0"
+    },
+    "iaa-dana-locus-2026": {
+      "versions": {
+        "0.1.0": {
+          "path": "iaa-dana-locus-2026/0.1.0.json",
+          "digest": "sha256:9098b230a5087d9c45cf6534c520c389c6a39d6eed0cceaa50c18339125560bf",
+          "standard": {
+            "authority": "IAA",
+            "code": "DANA-locus",
+            "version": "as exported 2026-04-29",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
+        },
+        "0.1.1": {
+          "path": "iaa-dana-locus-2026/0.1.1.json",
+          "digest": "sha256:00cca4566888e07d8eebd2c5cfa43fab35c6a21e1f275ce9585733fc085db457",
+          "standard": {
+            "authority": "IAA",
+            "code": "DANA-locus",
+            "version": "as exported 2026-04-29",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
+        }
+      },
+      "latest": "0.1.1"
     },
     "iccd-us-2021": {
       "versions": {

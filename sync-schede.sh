@@ -126,6 +126,10 @@ for sid, langs in sorted(wanted.items()):
     doc = {"format": 1, "scheme": sid, "authority": scheme.authority,
            "status": scheme.status, "fixture": bool(scheme.fixture),
            "uri": scheme.uri, "license": scheme.license,
+           # the licence travels with its ATTRIBUTION (2026-10-26): Apache-2.0
+           # (iDAI.field) and CC BY-SA ask for both, and a vendored copy that
+           # drops one is the copy that breaks the licence
+           "attribution": scheme.attribution,
            "labels": scheme.labels, "languages": sorted(langs),
            "concepts": concepts}
     # SPEC §3.2-3.3 (2026-09-27): whom a provisional module stands in for, and

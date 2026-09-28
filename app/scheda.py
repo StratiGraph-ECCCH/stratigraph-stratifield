@@ -156,8 +156,15 @@ class Scheda:
         #: designator `retegszam` — the FIRST — and the browser chose
         #: `lelohely`, the place name. A scheda filed under «Aquincum» instead
         #: of under the layer number, and nothing anywhere would have said so.
-        self.unit_field: str = str(
-            ((identity.get("human_key") or {}).get("unit_field")) or "")
+        #:
+        #: ONE FIELD, NOTHING TO CHOOSE (SPEC §1.2, 2026-10-26). A key of a
+        #: single field may omit `unit_field`, and the compiled form already
+        #: writes it resolved (`unit_field_of`). The YAML path read it as "" —
+        #: harmless until the first single-field key (iDAI.field `identifier`)
+        #: made the two paths draw different modules. Same rule, same answer.
+        declared_unit = str(((identity.get("human_key") or {}).get("unit_field")) or "")
+        self.unit_field: str = declared_unit or (
+            self.human_key[0] if len(self.human_key) == 1 else "")
         self.paragraphs: List[Dict[str, Any]] = list(
             template.get("paragraphs") or [])
         if not self.fields:

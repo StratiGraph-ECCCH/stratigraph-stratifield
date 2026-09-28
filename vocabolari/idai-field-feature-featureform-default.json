@@ -1,0 +1,132 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/Befundrest",
+   "labels": {
+    "de": "Befundrest",
+    "en": "feature remnants"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/U-f%C3%B6rmig",
+   "labels": {
+    "de": "U-förmig",
+    "en": "U-shaped"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/V-f%C3%B6rmig",
+   "labels": {
+    "de": "V-förmig",
+    "en": "V-shaped"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/ann%C3%A4hernd",
+   "labels": {
+    "de": "annähernd"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/formlos",
+   "labels": {
+    "de": "formlos",
+    "en": "shapeless"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/halbmondf%C3%B6rmig",
+   "labels": {
+    "de": "halbmondförmig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/kesself%C3%B6rmig",
+   "labels": {
+    "de": "kesselförmig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/langgezogen",
+   "labels": {
+    "de": "langgezogen",
+    "en": "elongated"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/oval",
+   "labels": {
+    "de": "oval",
+    "en": "oval"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/rechteckig",
+   "labels": {
+    "de": "rechteckig",
+    "en": "rectangular"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/regelm%C3%A4%C3%9Fig",
+   "labels": {
+    "de": "regelmäßig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/rund",
+   "labels": {
+    "de": "rund",
+    "en": "round"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/sanduhrf%C3%B6rmig",
+   "labels": {
+    "de": "sanduhrförmig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/trapezf%C3%B6rmig",
+   "labels": {
+    "de": "trapezförmig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/trichterf%C3%B6rmig",
+   "labels": {
+    "de": "trichterförmig"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/unregelm%C3%A4%C3%9Fig",
+   "labels": {
+    "de": "unregelmäßig",
+    "en": "irregular"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default/wannenf%C3%B6rmig",
+   "labels": {
+    "de": "wannenförmig"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Feature-featureForm-default",
+  "en": "iDAI.field valuelist Feature-featureForm-default",
+  "it": "Valuelist di iDAI.field Feature-featureForm-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-feature-featureform-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default"
+}

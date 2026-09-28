@@ -1,0 +1,1948 @@
+{
+  "format": "stratigraph-templates/compiled-definition",
+  "format_version": "1",
+  "header": {
+    "id": "dai-idaifield-layer-2026",
+    "version": "0.1.0",
+    "standard": {
+      "authority": "DAI",
+      "code": "iDAI.field Layer",
+      "version": "config 4b5c1e2 (2026-09-24)",
+      "kind": "field_model",
+      "title": {
+        "de": "iDAI.field — Erdbefund (Layer)",
+        "en": "iDAI.field — Layer"
+      },
+      "license": "Apache-2.0",
+      "attribution": "Deutsches Archäologisches Institut (DAI) — iDAI.field / Field Desktop (github.com/dainst/idai-field @ 4b5c1e2)",
+      "source": "https://github.com/dainst/idai-field/tree/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config — Library/Categories.json, Library/Forms.json (Feature:default + Layer:default), Library/Language.de|en.json, Core/Language.de|en.json, Library/Valuelists/; relazioni e campi del core in core/src/configuration/built-in-configuration.ts e core/src/model/configuration/relation.ts",
+      "invented": false
+    },
+    "source_language": "de",
+    "languages": [
+      "de",
+      "en"
+    ],
+    "vocabularies": [
+      {
+        "id": "idai-field-colors-default-1",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#colors-default-1",
+        "license": "Apache-2.0",
+        "binding_thes_id": "colors-default-1"
+      },
+      {
+        "id": "idai-field-feature-featureform-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureForm-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Feature-featureForm-default"
+      },
+      {
+        "id": "idai-field-feature-featureborders-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Feature-featureBorders-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Feature-featureBorders-default"
+      },
+      {
+        "id": "idai-field-layer-distinguishingcriteria-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Layer-distinguishingCriteria-default"
+      },
+      {
+        "id": "idai-field-layer-layerclassification-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-layerClassification-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Layer-layerClassification-default"
+      },
+      {
+        "id": "idai-field-layer-soiltype-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-soilType-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Layer-soilType-default"
+      },
+      {
+        "id": "idai-field-layer-consistency-default",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-consistency-default",
+        "license": "Apache-2.0",
+        "binding_thes_id": "Layer-consistency-default"
+      },
+      {
+        "id": "idai-field-periods-default-1",
+        "authority": "Deutsches Archäologisches Institut (DAI)",
+        "status": "resolvable",
+        "origin": "external",
+        "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1",
+        "license": "Apache-2.0",
+        "binding_thes_id": "periods-default-1"
+      }
+    ],
+    "digest": "sha256:e761101e437c0d88fa78694737c1436b3f25040c7a78a07ab4feda472ca4a917",
+    "datamodel": {
+      "nodes": "1.6.9",
+      "connections": "1.6.20",
+      "qualia": "1.6.1",
+      "em_ttl": "1.6.5",
+      "s3dgraphy": "1.6.0.dev21",
+      "taken_from": {
+        "git_commit": "bd3340dec0c8c55121533f8a05433db1e447bac2",
+        "git_dirty": false
+      },
+      "snapshot": "registry/s3dgraphy-snapshot.json"
+    },
+    "compiled_by": {
+      "name": "stratigraph-templates",
+      "version": "0.1.0"
+    }
+  },
+  "visual": {
+    "identity": {
+      "human_key": [
+        "identifier"
+      ],
+      "pattern": "{identifier}",
+      "unit_field": "identifier",
+      "uid": {
+        "policy": "minted_by_creator",
+        "opaque": true,
+        "display": "on_request",
+        "derive_from_human_key": false
+      },
+      "deduplication": "by_human_key_in_context"
+    },
+    "provenance": {
+      "per_field": true,
+      "authors": [
+        "human",
+        "ai"
+      ],
+      "states": [
+        "asserted",
+        "ai_drafted",
+        "human_validated"
+      ],
+      "clock": "s3dgraphy_crdt_field_clock"
+    },
+    "paragraphs": [
+      {
+        "id": "stem",
+        "labels": {
+          "de": "Stammdaten",
+          "en": "Core"
+        },
+        "fields": [
+          "identifier",
+          "category",
+          "shortDescription",
+          "processor",
+          "campaign",
+          "diary",
+          "date",
+          "isSameAs"
+        ]
+      },
+      {
+        "id": "hierarchy",
+        "labels": {
+          "de": "Hierarchie",
+          "en": "Hierarchy"
+        },
+        "fields": [
+          "hasChildren"
+        ]
+      },
+      {
+        "id": "workflow",
+        "labels": {
+          "de": "Workflow",
+          "en": "Workflow"
+        },
+        "fields": [
+          "isSubjectOf",
+          "isResultOf"
+        ]
+      },
+      {
+        "id": "properties",
+        "labels": {
+          "de": "Eigenschaften",
+          "en": "Properties"
+        },
+        "fields": [
+          "description",
+          "color",
+          "hasDisturbance",
+          "featureForm",
+          "featureBorders",
+          "comparison",
+          "distinguishingCriteria",
+          "layerClassification",
+          "isNatural",
+          "soilType",
+          "consistency"
+        ]
+      },
+      {
+        "id": "stratigraphy",
+        "labels": {
+          "de": "Stratigraphie",
+          "en": "Stratigraphy"
+        },
+        "fields": [
+          "isAbove",
+          "isBelow",
+          "cuts",
+          "isCutBy",
+          "fills",
+          "isFilledBy",
+          "abuts",
+          "isAbuttedBy",
+          "bondsWith",
+          "borders"
+        ]
+      },
+      {
+        "id": "dimension",
+        "labels": {
+          "de": "Maße",
+          "en": "Dimensions"
+        },
+        "fields": [
+          "area",
+          "dimensionLength",
+          "dimensionWidth",
+          "dimensionThickness"
+        ]
+      },
+      {
+        "id": "position",
+        "labels": {
+          "de": "Lage / Kontext",
+          "en": "Position / Context"
+        },
+        "fields": [
+          "geometry",
+          "dimensionVerticalExtent",
+          "isPresentIn"
+        ]
+      },
+      {
+        "id": "time",
+        "labels": {
+          "de": "Zeit",
+          "en": "Time"
+        },
+        "fields": [
+          "period",
+          "dating",
+          "isBefore",
+          "isAfter",
+          "isContemporaryWith"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "identifier",
+        "paragraph": "stem",
+        "type": "identifier",
+        "required": true,
+        "repeatable": false,
+        "recorded_in": "trench",
+        "labels": {
+          "de": "Bezeichner",
+          "en": "Identifier"
+        },
+        "help": {
+          "de": "Eindeutiger Bezeichner dieser Ressource",
+          "en": "Unique identifier of this resource"
+        }
+      },
+      {
+        "id": "category",
+        "paragraph": "stem",
+        "type": "choice",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Kategorie",
+          "en": "Category"
+        },
+        "options": [
+          {
+            "value": "Layer",
+            "labels": {
+              "de": "Erdbefund",
+              "en": "Layer"
+            }
+          }
+        ]
+      },
+      {
+        "id": "shortDescription",
+        "paragraph": "stem",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Kurzbeschreibung",
+          "en": "Short description"
+        }
+      },
+      {
+        "id": "processor",
+        "paragraph": "stem",
+        "type": "text",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Bearbeiterin/Bearbeiter",
+          "en": "Processor"
+        },
+        "help": {
+          "de": "Die Person(en), die für die Ressource oder das Objekt während der Kampagne hauptverantwortlich ist/sind.",
+          "en": "The name of the person(s) who is/are responsible for the resource or the object during the campaign."
+        }
+      },
+      {
+        "id": "campaign",
+        "paragraph": "stem",
+        "type": "text",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Kampagne",
+          "en": "Campaign"
+        }
+      },
+      {
+        "id": "diary",
+        "paragraph": "stem",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Tagebuch",
+          "en": "Diary"
+        },
+        "help": {
+          "de": "Verweis auf Grabungstagebuch",
+          "en": "Reference to excavation diary"
+        }
+      },
+      {
+        "id": "date",
+        "paragraph": "stem",
+        "type": "date",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Datum",
+          "en": "Date"
+        },
+        "help": {
+          "de": "Datum der Aufnahme/Durchführung",
+          "en": "Date of recording/conducting"
+        }
+      },
+      {
+        "id": "isSameAs",
+        "paragraph": "stem",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Identisch mit",
+          "en": "Same as"
+        }
+      },
+      {
+        "id": "hasChildren",
+        "paragraph": "hierarchy",
+        "type": "record_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Untergeordnete Ressourcen",
+          "en": "Child resources"
+        }
+      },
+      {
+        "id": "isSubjectOf",
+        "paragraph": "workflow",
+        "type": "record_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Gegenstand von",
+          "en": "Subject of"
+        }
+      },
+      {
+        "id": "isResultOf",
+        "paragraph": "workflow",
+        "type": "record_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Ergebnis von",
+          "en": "Result of"
+        }
+      },
+      {
+        "id": "description",
+        "paragraph": "properties",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Beschreibung",
+          "en": "Description"
+        },
+        "help": {
+          "de": "Freies Beschreibungsfeld",
+          "en": "Unrestricted description field"
+        }
+      },
+      {
+        "id": "color",
+        "paragraph": "properties",
+        "type": "term_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Farbe und Intensität",
+          "en": "Color and intensity"
+        },
+        "help": {
+          "de": "Farbe, soweit erkennbar"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-colors-default-1",
+          "binding": "colors-default-1"
+        }
+      },
+      {
+        "id": "hasDisturbance",
+        "paragraph": "properties",
+        "type": "checkbox",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Störung",
+          "en": "Disturbance"
+        },
+        "help": {
+          "de": "Liegt eine Störung des Befundes vor?"
+        }
+      },
+      {
+        "id": "featureForm",
+        "paragraph": "properties",
+        "type": "term_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Form der stratigraphischen Einheit",
+          "en": "Form of the stratigraphical unit"
+        },
+        "help": {
+          "de": "Form der stratigraphischen Einheit im Planum bzw. Profil: Welche erkennbare Form kann identifiziert werden?"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-feature-featureform-default",
+          "binding": "Feature-featureForm-default"
+        }
+      },
+      {
+        "id": "featureBorders",
+        "paragraph": "properties",
+        "type": "term_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Grenzen der stratigraphischen Einheit",
+          "en": "Borders of the stratigraphical unit"
+        },
+        "help": {
+          "de": "Bestimmung der Grenzen des Befundes"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-feature-featureborders-default",
+          "binding": "Feature-featureBorders-default"
+        }
+      },
+      {
+        "id": "comparison",
+        "paragraph": "properties",
+        "type": "longtext",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Vergleich(e)",
+          "en": "Comparison"
+        },
+        "help": {
+          "de": "Vergleich mit ähnlichen Befunden, Objekten, Inschriften etc. mit Angabe einer Referenz"
+        }
+      },
+      {
+        "id": "distinguishingCriteria",
+        "paragraph": "properties",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Unterscheidungskriterium",
+          "en": "Distinguishing criteria"
+        },
+        "help": {
+          "de": "Welches Kriterium wurde zur Abgrenzung der stratigraphischen Einheit gewählt?"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-layer-distinguishingcriteria-default",
+          "binding": "Layer-distinguishingCriteria-default"
+        }
+      },
+      {
+        "id": "layerClassification",
+        "paragraph": "properties",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Bezeichnung bzw. Klassifikation Schicht",
+          "en": "Designation or classification of the layer"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-layer-layerclassification-default",
+          "binding": "Layer-layerClassification-default"
+        }
+      },
+      {
+        "id": "isNatural",
+        "paragraph": "properties",
+        "type": "choice",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Natürlich",
+          "en": "Natural"
+        },
+        "help": {
+          "de": "Ist die Schicht natürlich? ('Ja' z. B. bei Erosion)"
+        },
+        "options": [
+          {
+            "value": "natural",
+            "labels": {
+              "de": "Ja (natürlich)",
+              "en": "Yes (natural)"
+            }
+          },
+          {
+            "value": "artificial",
+            "labels": {
+              "de": "Nein",
+              "en": "No"
+            }
+          }
+        ]
+      },
+      {
+        "id": "soilType",
+        "paragraph": "properties",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Bodenart",
+          "en": "Soil type"
+        },
+        "help": {
+          "de": "Bezeichnung des Bodens nach bodenkundlicher Kartieranleitung"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-layer-soiltype-default",
+          "binding": "Layer-soilType-default"
+        }
+      },
+      {
+        "id": "consistency",
+        "paragraph": "properties",
+        "type": "term_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Konsistenz",
+          "en": "Consistency"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-layer-consistency-default",
+          "binding": "Layer-consistency-default"
+        }
+      },
+      {
+        "id": "isAbove",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Liegt über",
+          "en": "Above"
+        }
+      },
+      {
+        "id": "isBelow",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Liegt unter",
+          "en": "Below"
+        }
+      },
+      {
+        "id": "cuts",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Schneidet",
+          "en": "Cuts"
+        }
+      },
+      {
+        "id": "isCutBy",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Wird geschnitten von",
+          "en": "Cut by"
+        }
+      },
+      {
+        "id": "fills",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Verfüllt",
+          "en": "Fills"
+        }
+      },
+      {
+        "id": "isFilledBy",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Verfüllt von",
+          "en": "Filled by"
+        }
+      },
+      {
+        "id": "abuts",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Stößt an",
+          "en": "Abuts"
+        }
+      },
+      {
+        "id": "isAbuttedBy",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Wird angestoßen von",
+          "en": "Abutted by"
+        }
+      },
+      {
+        "id": "bondsWith",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Bindet ein",
+          "en": "Bonds with"
+        }
+      },
+      {
+        "id": "borders",
+        "paragraph": "stratigraphy",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Grenzt an",
+          "en": "Borders"
+        }
+      },
+      {
+        "id": "area",
+        "paragraph": "dimension",
+        "type": "decimal",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Fläche in m2",
+          "en": "Area in m2"
+        },
+        "help": {
+          "de": "Flächenangabe in Quadratmetern",
+          "en": "Area in square meters"
+        }
+      },
+      {
+        "id": "dimensionLength",
+        "paragraph": "dimension",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Länge",
+          "en": "Length"
+        },
+        "help": {
+          "de": "Angabe der Länge",
+          "en": "Measurement of the length"
+        }
+      },
+      {
+        "id": "dimensionWidth",
+        "paragraph": "dimension",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Breite",
+          "en": "Width"
+        },
+        "help": {
+          "de": "Angabe der Breite an der maximalen/minimalen Ausdehnung",
+          "en": "Indication of the width at the maximum/minimum extension"
+        }
+      },
+      {
+        "id": "dimensionThickness",
+        "paragraph": "dimension",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Stärke",
+          "en": "Thickness"
+        },
+        "help": {
+          "de": "Dicke bzw. Stärke des Objekts",
+          "en": "Thickness of the object"
+        }
+      },
+      {
+        "id": "geometry",
+        "paragraph": "position",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Geometrie",
+          "en": "Geometry"
+        }
+      },
+      {
+        "id": "dimensionVerticalExtent",
+        "paragraph": "position",
+        "type": "quantity_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Niveau",
+          "en": "Vertical extent"
+        },
+        "help": {
+          "de": "Niveau Oberkante/Unterkante bzw. Laufniveau",
+          "en": "Niveau of the upper/lower boundary or the walking level"
+        }
+      },
+      {
+        "id": "isPresentIn",
+        "paragraph": "position",
+        "type": "record_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Ist enthalten in Profil/Planum",
+          "en": "Is present in profile/planum"
+        }
+      },
+      {
+        "id": "period",
+        "paragraph": "time",
+        "type": "term",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Grobdatierung",
+          "en": "Period"
+        },
+        "vocabulary": {
+          "scheme": "idai-field-periods-default-1",
+          "binding": "periods-default-1"
+        }
+      },
+      {
+        "id": "dating",
+        "paragraph": "time",
+        "type": "text",
+        "required": false,
+        "repeatable": false,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Datierung",
+          "en": "Dating"
+        }
+      },
+      {
+        "id": "isBefore",
+        "paragraph": "time",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Zeitlich vor",
+          "en": "Before"
+        }
+      },
+      {
+        "id": "isAfter",
+        "paragraph": "time",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Zeitlich nach",
+          "en": "After"
+        }
+      },
+      {
+        "id": "isContemporaryWith",
+        "paragraph": "time",
+        "type": "unit_ref_list",
+        "required": false,
+        "repeatable": true,
+        "recorded_in": "unknown",
+        "labels": {
+          "de": "Zeitgleich mit",
+          "en": "Contemporary with"
+        }
+      }
+    ],
+    "sheet": null,
+    "notes": {
+      "source": "Letta dalla configurazione aperta di iDAI.field al commit\n4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4 (2026-09-24), con\n`stratigraph-templates extract-idai-field Layer --commit 4b5c1e2`. La bozza\n(drafts/draft-idai-field-layer.yaml) e' la lettura meccanica; questa\ndefinizione ne decide i verdetti. Le etichette de/en sono quelle del DAI.\n",
+      "no_sheet": "Nessun `sheet`: iDAI.field non ha un modello di carta. StratiField mostra i\nCampi; `print` rifiuta, e lo dice.\n",
+      "hidden_relations": "Il contesto spaziale non e' nel form: iDAI.field lo tiene in relazioni\nnascoste (isRecordedIn → Trench/ExcavationArea, liesWithin → Feature/\nFeatureGroup) che l'applicazione imposta da se'. Non sono campi, e qui non\ncompaiono; un import dei dati le leggera' come archi di contesto.\n",
+      "undecided": "14 campi sono `none` + `blocked_on` con una domanda (D1-D16 nel referto, due\ndomande — D11, D13 — riguardano campi decisi):\ne' la forma che compila di un verdetto non ancora deciso. Una risposta del DAI\nli porta a un verdetto e alza la versione (MAJOR, se un record gia' scritto\nsi leggerebbe diversamente).\n",
+      "licence": "La configurazione di iDAI.field e' Apache-2.0 (DAI). Questa definizione ne\nriporta i nomi dei campi, le etichette e i riferimenti ai valuelist, con\nattribuzione; i valori dei valuelist NON sono copiati (si risolvono dal\ncheckout al commit). V. LICENSING.md §1-quater.\n"
+    }
+  },
+  "recipe": {
+    "operations": [
+      "add_node",
+      "update_field",
+      "remove_node",
+      "add_edge",
+      "remove_edge"
+    ],
+    "unit": {
+      "resolve": {
+        "$unit": {
+          "find": {
+            "human_key": [
+              "identifier"
+            ],
+            "rule": "by_human_key_in_context"
+          },
+          "create": true
+        }
+      },
+      "steps": [
+        {
+          "emit": {
+            "op": "add_node",
+            "node": {
+              "id": "$unit",
+              "node_type": "$unit.node_type",
+              "name": "$unit.name"
+            }
+          },
+          "when": "created"
+        }
+      ],
+      "name": {
+        "pattern": "{identifier}",
+        "unit_field": "identifier"
+      },
+      "node_type": {
+        "decided_by": "category",
+        "table": {
+          "Layer": {
+            "class": "StratigraphicUnit",
+            "node_type": "US"
+          }
+        },
+        "when_empty": "not decided by the definition",
+        "note": "decided when the unit is CREATED: update_field addresses name, description and data.* only, so an existing unit's node_type cannot be changed by an operation of this vocabulary"
+      }
+    },
+    "fields": {
+      "identifier": {
+        "verdict": "identity",
+        "steps": [],
+        "names": "$unit",
+        "designator": true
+      },
+      "category": {
+        "verdict": "node_type",
+        "steps": [],
+        "decides": "unit.node_type",
+        "table": {
+          "Layer": {
+            "class": "StratigraphicUnit",
+            "node_type": "US"
+          }
+        }
+      },
+      "shortDescription": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "sapere che cosa scrive chi scava in «Kurzbeschreibung»: il form archaeoDox la chiama «Kurzbeschreibung (Klassifikation)», cioe' la DEFINIZIONE dell'unita' (in s3Dgraphy l'elemento del nodo `definition`, come la DEFINIZIONE ICCD), ma nel form di base e' una descrizione breve libera",
+          "reported": "Benjamin (DAI) — domanda D1, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "processor": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "una LISTA di persone (checkboxes sui valori del campo di progetto `staff`): questo formato ha `person_ref`, una persona sola. In ICCD le persone sono AuthorNode via has_author; qui serve dire se «Bearbeiter» e' l'autore della scheda (has_author) o il responsabile dell'unita' in campagna",
+          "reported": "Benjamin (DAI) — domanda D2, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "campaign": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "che cos'e' una campagna nel grafo: un'attivita' (ActivityNodeGroup via is_in_activity) o l'anno di scavo (in ICCD `anno` → campaign_year sull'atto di scavo). I valori vengono dal campo di progetto `campaigns`",
+          "reported": "Benjamin (DAI) — domanda D3, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "diary": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "che forma ha il rimando al diario di scavo: una pagina, un file (DocumentNode via has_documentation, come piante e sezioni ICCD) o una segnatura d'archivio",
+          "reported": "Benjamin (DAI) — domanda D4, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "date": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "l'aiuto dice «Aufnahme/Durchführung», registrazione O esecuzione: nel primo caso e' la data di rilevamento (ICCD data_rilevamento, sull'atto di registrazione), nel secondo la data dello scavo dell'unita'. Sono due atti",
+          "reported": "Benjamin (DAI) — domanda D5, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "isSameAs": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "equals",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#physicallyEquals",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_physically_equal_to"
+          ],
+          "spellings": [
+            "is_physically_equal_to"
+          ]
+        }
+      },
+      "hasChildren": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "isSubjectOf": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "isResultOf": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "description": {
+        "verdict": "property",
+        "each": false,
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "description",
+              "value": "$value"
+            }
+          }
+        ]
+      },
+      "color": {
+        "verdict": "vocabulary",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "color",
+                "description": "$item.concept",
+                "data": {
+                  "property_type": "color"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "color",
+          "registered_qualia": true
+        },
+        "scheme": "idai-field-colors-default-1"
+      },
+      "hasDisturbance": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "se «Störung» e' un giudizio sullo stato dell'unita' (qualia integrity) o l'annuncio di un'altra unita' che la disturba (un taglio: allora e' un arco, e manca a chi)",
+          "reported": "Benjamin (DAI) — domanda D6, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "featureForm": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "una qualia per la FORMA in pianta/sezione: s3Dgraphy (qualia 1.6.1) non ne ha una (ci sono geometry, footprint_area, bounding_box, non la forma nominata: U-förmig, oval, rechteckig…). O la si aggiunge, o si decide che va nella descrizione",
+          "reported": "E.D. (datamodel) e Benjamin (DAI) — domanda D7, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "featureBorders": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "una qualia per la NETTEZZA dei limiti (deutlich, diffus, scharf, verwaschen…): s3Dgraphy non ne ha una. La US ICCD non ha la casella: ha i CRITERI DI DISTINZIONE, che e' un'altra domanda (v. distinguishingCriteria)",
+          "reported": "E.D. (datamodel) e Benjamin (DAI) — domanda D8, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "comparison": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "se i confronti (con riferimento bibliografico) sono una proprieta' dell'unita' o paradata — un'interpretazione che cita una fonte, cioe' un ParadataNode con il suo documento",
+          "reported": "Benjamin (DAI) — domanda D9, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "distinguishingCriteria": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "e' la stessa domanda dei CRITERI DI DISTINZIONE della US ICCD (property criteria_of_distinction, testo libero), ma qui e' UN termine di cinque (Farbe, Form, Grenzen, Konsistenz, Komposition, radio): serve decidere se i due campi scrivono la stessa proprieta' con valori di forma diversa",
+          "reported": "E.D. e Benjamin (DAI) — domanda D10, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "layerClassification": {
+        "verdict": "property",
+        "each": false,
+        "element": {
+          "name": "definition",
+          "declared_on": "StratigraphicNode",
+          "value": "concept",
+          "rdf": {
+            "with_concept": "crm:P2_has_type",
+            "concept_class": "crm:E55_Type",
+            "label_only": null,
+            "specialised_alternative": "em:hasDefinition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "update_field",
+              "node_id": "$unit",
+              "field": "data.definition",
+              "value": "$value"
+            }
+          }
+        ],
+        "scheme": "idai-field-layer-layerclassification-default"
+      },
+      "isNatural": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "origin_type",
+                "description": "$value",
+                "data": {
+                  "property_type": "origin_type"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "origin_type",
+          "registered_qualia": true
+        }
+      },
+      "soilType": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "la qualia della CLASSE TESSITURALE del suolo (Sand, Schluff, Ton, Lehm e le loro miscele, secondo la Bodenkundliche Kartieranleitung): `granulometry` in s3Dgraphy ha valori fine/medium/coarse, un'altra scala. Stessa qualia con un vocabolario diverso, o una qualia nuova?",
+          "reported": "E.D. (datamodel) e Benjamin (DAI) — domanda D12, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "consistency": {
+        "verdict": "vocabulary",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "texture",
+                "description": "$item.concept",
+                "data": {
+                  "property_type": "texture"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "texture",
+          "registered_qualia": true
+        },
+        "scheme": "idai-field-layer-consistency-default"
+      },
+      "isAbove": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "isBelow": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "overlies",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_overlain_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#overlies",
+            "subject": "source"
+          }
+        }
+      },
+      "cuts": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "isCutBy": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "cuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_cut_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#cuts",
+            "subject": "source"
+          }
+        }
+      },
+      "fills": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "fills",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_filled_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#fills",
+            "subject": "source"
+          }
+        }
+      },
+      "isFilledBy": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "fills",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_filled_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#fills",
+            "subject": "source"
+          }
+        }
+      },
+      "abuts": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "abuts",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_abutted_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#abuts",
+            "subject": "source"
+          }
+        }
+      },
+      "isAbuttedBy": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "abuts",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_abutted_by",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#abuts",
+            "subject": "source"
+          }
+        }
+      },
+      "bondsWith": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "bonded_to",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subproperty": "https://w3id.org/em/ontology#bondedTo",
+            "subject": "source"
+          },
+          "same_rdf_as": [
+            "is_bonded_to"
+          ],
+          "spellings": [
+            "is_bonded_to"
+          ]
+        }
+      },
+      "borders": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "generic_connection",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/cidoc-crm/P130_shows_features_of",
+            "extension": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP11_has_physical_relation_to",
+            "subject": "source"
+          }
+        }
+      },
+      "area": {
+        "verdict": "property",
+        "each": false,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "area",
+                "description": "$value",
+                "data": {
+                  "property_type": "area"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "property_type": "area",
+          "registered_qualia": true
+        }
+      },
+      "dimensionLength": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "length"
+        },
+        "defaults": {
+          "$item.qualia": "length"
+        }
+      },
+      "dimensionWidth": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "width"
+        },
+        "defaults": {
+          "$item.qualia": "width"
+        }
+      },
+      "dimensionThickness": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "thickness"
+        },
+        "defaults": {
+          "$item.qualia": "thickness"
+        }
+      },
+      "geometry": {
+        "verdict": "none",
+        "steps": [],
+        "reason": "presentation: the sheet says it, the graph does not"
+      },
+      "dimensionVerticalExtent": {
+        "verdict": "property",
+        "each": true,
+        "resolve": {
+          "$prop": {
+            "mint": true
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_node",
+              "node": {
+                "id": "$prop",
+                "node_type": "property",
+                "name": "$item.qualia",
+                "description": "$item.value",
+                "data": {
+                  "property_type": "$item.qualia",
+                  "units": "$item.unit"
+                }
+              }
+            }
+          },
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_property",
+              "source": "$unit",
+              "target": "$prop"
+            }
+          }
+        ],
+        "property": {
+          "per_item_from": "$item.qualia",
+          "box": "elevation"
+        },
+        "defaults": {
+          "$item.qualia": "elevation"
+        }
+      },
+      "isPresentIn": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "che cosa sono Profil e Planum nel grafo: in iDAI.field sono RECORD (categorie con documenti propri), non file; la US ICCD rimanda a piante e sezioni come DocumentNode (has_documentation). Stesso nodo, o un'unita' di documentazione?",
+          "reported": "Benjamin (DAI) — domanda D14, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "period": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "il periodo di iDAI.field e' un INTERVALLO (dropdownRange: da … a …, su periods-default-1, 29 periodi): nel datamodel e' has_first_epoch verso l'epoca d'inizio piu' survive_in_epoch verso le successive? E le epoche sono i periodi del valuelist (EpochNode per nome) o quelle del progetto?",
+          "reported": "E.D. e Benjamin (DAI) — domanda D15, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "dating": {
+        "verdict": "none",
+        "steps": [],
+        "blocked_on": {
+          "needs": "la datazione di iDAI.field e' STRUTTURATA (range, before, after, exact, scientific con margine, fonte): la US ICCD la scrive come testo (property dating). Qui serve decidere se diventa absolute_time_start/end, TPQ/TAQ, o paradata con la sua fonte",
+          "reported": "E.D. e Benjamin (DAI) — domanda D16, referto 2026-10-26-NIGHT-la-scheda-del-dai"
+        }
+      },
+      "isBefore": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_after",
+              "source": "$item",
+              "target": "$unit"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_before",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP28_occurs_before",
+            "subject": "target"
+          }
+        }
+      },
+      "isAfter": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "is_after",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": false,
+          "reverse": "is_before",
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP28_occurs_before",
+            "subject": "target"
+          }
+        }
+      },
+      "isContemporaryWith": {
+        "verdict": "edge",
+        "each": true,
+        "resolve": {
+          "$item": {
+            "find": {
+              "human_key": "$item",
+              "kind": null
+            },
+            "when_missing": "not decided by the definition"
+          }
+        },
+        "steps": [
+          {
+            "emit": {
+              "op": "add_edge",
+              "edge_type": "has_same_time",
+              "source": "$unit",
+              "target": "$item"
+            }
+          }
+        ],
+        "edge": {
+          "canonical": true,
+          "symmetric": true,
+          "rdf": {
+            "predicate": "http://www.cidoc-crm.org/extensions/crmarchaeo/AP22_is_equal_in_time_to",
+            "subject": "source"
+          }
+        }
+      }
+    },
+    "anchors": {},
+    "open": []
+  }
+}

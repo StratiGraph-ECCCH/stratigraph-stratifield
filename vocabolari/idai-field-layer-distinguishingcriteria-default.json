@@ -1,0 +1,56 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24)",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default/Farbe",
+   "labels": {
+    "de": "Farbe",
+    "en": "Color"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default/Form",
+   "labels": {
+    "de": "Form",
+    "en": "shape"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default/Grenzen",
+   "labels": {
+    "de": "Grenzen",
+    "en": "borders"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default/Komposition",
+   "labels": {
+    "de": "Komposition",
+    "en": "composition"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default/Konsistenz",
+   "labels": {
+    "de": "Konsistenz",
+    "en": "consistency"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste Layer-distinguishingCriteria-default",
+  "en": "iDAI.field valuelist Layer-distinguishingCriteria-default",
+  "it": "Valuelist di iDAI.field Layer-distinguishingCriteria-default"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-layer-distinguishingcriteria-default",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#Layer-distinguishingCriteria-default"
+}

@@ -74,6 +74,10 @@ function savedTheme() {
 
 const state = {
   mode: "tablet",
+  // LA LENTE (26 ottobre): la stessa unità letta con la scheda di un ALTRO
+  // standard. `null` quando no; altrimenti ciò che il nodo ha detto
+  // (`lens`: con che cosa è stata scritta, quali caselle riempie, quali no).
+  lens: null,
   // QUALE dei due pannelli è a schermo — «detta» o «scheda». Non si deduce da
   // `def`: una scheda può essere caricata e il pannello della voce davanti.
   panel: "voice",
@@ -382,7 +386,7 @@ async function openScheda(id, su = null, lang = null) {
       // IL RITORNO (19 ottobre): i valori si RILEGGONO dal grafo, attraverso
       // la stessa ricetta che li ha scritti. Fino a ieri una scheda riaperta
       // mostrava solo il numero — e quello che il browser ricordava.
-      const reread = await refill(def, String(su.us));
+      const reread = await refill(def, String(su.us), Boolean(su.lens));
       if (reread && reread.other && !su.reread) {
         // l'unità dice di essere stata compilata con un'ALTRA definizione: si
         // riapre con quella, perché le sue caselle non sono queste
@@ -392,6 +396,8 @@ async function openScheda(id, su = null, lang = null) {
         says.hidden = false;
         says.textContent = reread.note;
       }
+    } else {
+      state.lens = null;
     }
     if (from === "cache") {
       says.hidden = false;
@@ -400,7 +406,7 @@ async function openScheda(id, su = null, lang = null) {
     }
     await reading;
     draw();
-    writeHash(def.id, state.us);
+    writeHash(def.id, state.us, false, Boolean(state.lens));
   } catch (err) {
     // LA DEFINIZIONE CHE IL TELEFONO NON HA MAI VISTO E NON PUÒ SCARICARE **SI
     // DICE**. Improvvisare un modulo per una scheda di cui non si conoscono le
@@ -423,8 +429,9 @@ async function openScheda(id, su = null, lang = null) {
  *  Torna `{other}` se l'unità dichiara un'altra definizione, `{note}` se c'è
  *  qualcosa da dire, `null` se il nodo non risponde (e allora la scheda si
  *  apre col solo numero, e lo si dice). */
-async function refill(def, us) {
+async function refill(def, us, lens = false) {
   const seam = SG();
+  state.lens = null;
   state.values = {};
   state.authored = {};
   state.validated = new Set();
@@ -432,7 +439,8 @@ async function refill(def, us) {
   if (state.keyField) state.values[state.keyField] = us;
   let read;
   try {
-    const path = `/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`;
+    const path = `/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`
+      + (lens ? "&lente=1" : "");
     // chi E DOVE, col token rinnovato (`SG.request`); il ripiego è per un
     // modulo caricato senza la pagina
     const answer = seam.request
@@ -449,6 +457,7 @@ async function refill(def, us) {
   }
   const withId = read.read_with && read.read_with.template;
   if (withId && withId !== def.id) return { other: withId };
+  if (lens && read.lens) state.lens = read.lens;
   for (const [key, value] of Object.entries(read.values || {})) {
     state.values[key] = value;
     state.loaded.add(key);
@@ -495,12 +504,43 @@ function draw() {
       host.prepend(note);
     }
   }
+  paintLens(host);
   paintThumbbar();
   const shown = state.mode === "phone" && !state.showAll
     ? trenchFields(state.def) : state.def.fields;
   $("nav-all-count").textContent =
     `${shown.length}/${state.def.fields.length}`;
   $("nav-all").setAttribute("aria-pressed", String(state.showAll));
+}
+
+/* ── LA LENTE (26 ottobre) ─────────────────────────────────────────────────────
+ *
+ * Una lente non disegna niente di suo: la scheda è quella di sempre, del suo
+ * standard. Dopo il disegno si dice che cosa il grafo ha riempito e che cosa
+ * no — `lens.holes` dal nodo, non ricalcolato qui — e le caselle vuote si
+ * TRATTEGGIANO: il buco è il dato che la lente è venuta a mostrare. */
+function paintLens(host) {
+  document.documentElement.dataset.lens = state.lens ? "on" : "off";
+  if (!state.lens) {
+    if (readingWatch && !SG().readOnly) watchReading();   // lente chiusa: di nuovo scrivibile
+    return;
+  }
+  const holes = new Set(state.lens.holes || []);
+  for (const box of host.querySelectorAll("[data-field]")) {
+    box.classList.toggle("lens-hole", holes.has(box.dataset.field));
+  }
+  const says = $("scheda-says");
+  const written = state.lens.written_with;
+  says.hidden = false;
+  says.dataset.why = "lens";
+  says.textContent = tr("lens.says", "", {
+    us: state.us,
+    written: written ? `${written.template} ${written.version || ""}`.trim() : "—",
+    read: `${state.def.id} ${state.def.version || ""}`.trim(),
+    filled: String((state.lens.filled || []).length),
+    holes: String(holes.size),
+  });
+  watchReading();
 }
 
 /* ── IN SOLA LETTURA (25 ottobre) ─────────────────────────────────────────────
@@ -512,8 +552,12 @@ function draw() {
  * i widget, le righe aggiunte): bloccare una volta sola dopo `draw()` lascerebbe
  * aperte le caselle che nascono dopo. «Salva» e «Svuota» li toglie il CSS
  * (`data-access="read"`). */
+/* …E LA LENTE LEGGE SOLTANTO: le caselle di uno standard non si riscrivono su
+ * un'unità compilata con un altro. Stesso blocco, stessa ragione. */
+const reading = () => Boolean(SG().readOnly || state.lens);
+
 function lockForReading(host) {
-  if (!host || !SG().readOnly) return;
+  if (!host || !reading()) return;
   for (const box of host.querySelectorAll("input, textarea")) {
     if (!box.readOnly) box.readOnly = true;
   }
@@ -530,11 +574,11 @@ let readingWatch = null;
 function watchReading() {
   const host = $("scheda-host");
   if (!host) return;
-  if (SG().readOnly && !readingWatch) {
+  if (reading() && !readingWatch) {
     readingWatch = new MutationObserver(() => lockForReading(host));
     readingWatch.observe(host, { childList: true, subtree: true });
     lockForReading(host);
-  } else if (!SG().readOnly && readingWatch) {
+  } else if (!reading() && readingWatch) {
     readingWatch.disconnect();
     readingWatch = null;
     if (state.def) draw();             // di nuovo scrivibili: si ridisegna
@@ -756,6 +800,31 @@ function paintUnav() {
   });
   bar.append(arrow(-1, "‹", "nav.prev_unit"), here, jump, options,
              arrow(1, "›", "nav.next_unit"));
+  // LEGGI CON… — la lente. Solo su un'unità che esiste, e solo alla scrivania
+  // o sul tablet: in trincea si compila, non si confrontano standard. Le schede
+  // sono quelle della colonna, cioè quelle che il NODO dichiara.
+  if (state.us && !state.create && state.mode !== "phone") {
+    const pick = make("select", { className: "unav-lens" });
+    pick.setAttribute("aria-label", t("lens.pick"));
+    pick.title = t("lens.pick");
+    pick.append(make("option", { value: "", textContent: t("lens.pick") }));
+    for (const item of document.querySelectorAll(".sidenav .navitem")) {
+      const id = item.dataset.scheda;
+      if (!id || (id === state.def.id && !state.lens)) continue;
+      pick.append(make("option", { value: id, textContent: id }));
+    }
+    if (state.lens) {
+      pick.append(make("option", { value: "-", textContent: t("lens.off") }));
+    }
+    pick.addEventListener("change", () => {
+      if (!pick.value) return;
+      window.location.hash = pick.value === "-"
+        ? hashFor(state.lens.written_with ? state.lens.written_with.template : state.def.id,
+                  state.us)
+        : hashFor(pick.value, state.us, true);
+    });
+    bar.append(pick);
+  }
 }
 
 /* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────
@@ -765,15 +834,16 @@ function paintUnav() {
  * query: la query è del link della stanza (`?server=…&room=…`, `arrivo.js`),
  * e cambiarla ricaricherebbe la pagina. Un numero, non un nome: un link non
  * porta mai il valore di una casella. */
-function hashFor(id, number) {
+function hashFor(id, number, lens = false) {
   const p = new URLSearchParams();
   p.set("scheda", id);
   if (number) p.set("us", number);
+  if (number && lens) p.set("lente", "1");
   return `#${p.toString()}`;
 }
 
-function writeHash(id, number, replace = false) {
-  const want = hashFor(id, number);
+function writeHash(id, number, replace = false, lens = false) {
+  const want = hashFor(id, number, lens);
   if (window.location.hash === want) return;
   if (replace) history.replaceState(null, "", want);
   else history.pushState(null, "", want);
@@ -783,7 +853,8 @@ function readHash() {
   const raw = window.location.hash.replace(/^#/, "");
   if (raw === "unita") return { index: true };
   const p = new URLSearchParams(raw);
-  return { scheda: p.get("scheda") || "", us: p.get("us") || "" };
+  return { scheda: p.get("scheda") || "", us: p.get("us") || "",
+           lens: p.get("lente") === "1" };
 }
 
 async function followHash() {
@@ -791,7 +862,8 @@ async function followHash() {
   if (asked.index) { await showIndex(false); return; }
   if (!asked.scheda) return;
   const same = state.def && state.def.id === asked.scheda
-    && state.panel === "scheda" && (state.us || "") === asked.us;
+    && state.panel === "scheda" && (state.us || "") === asked.us
+    && Boolean(state.lens) === asked.lens;
   if (same) return;
   if (!(await leaveUnit())) return;
   if (!asked.us && state.def && state.def.id === asked.scheda && state.us) {
@@ -801,7 +873,7 @@ async function followHash() {
     state.us = "";
     state.create = true;
   }
-  await openScheda(asked.scheda, asked.us ? { us: asked.us } : null);
+  await openScheda(asked.scheda, asked.us ? { us: asked.us, lens: asked.lens } : null);
 }
 
 /** L'ELENCO, con i filtri com'erano (vivono in `indice.js`). */

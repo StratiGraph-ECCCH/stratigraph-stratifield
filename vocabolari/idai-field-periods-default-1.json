@@ -1,0 +1,224 @@
+{
+ "attribution": "Deutsches Archäologisches Institut — iDAI.field (github.com/dainst/idai-field), core/config/Library/Valuelists, commit 4b5c1e2 (2026-09-24); IT-Referat, DAI, 2019",
+ "authority": "Deutsches Archäologisches Institut (DAI)",
+ "concepts": [
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Archaisch",
+   "labels": {
+    "de": "Archaisch",
+    "en": "Archaic"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Bronzezeitlich",
+   "labels": {
+    "de": "Bronzezeitlich",
+    "en": "Bronze age"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Byzantinisch",
+   "labels": {
+    "de": "Byzantinisch",
+    "en": "Byzantine"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Eisenzeitlich",
+   "labels": {
+    "de": "Eisenzeitlich",
+    "en": "Iron Age"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChbronzezeitlich",
+   "labels": {
+    "de": "Frühbronzezeitlich",
+    "en": "Early Bronze Age"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChbyzantinisch",
+   "labels": {
+    "de": "Frühbyzantinisch",
+    "en": "Early Byzantine"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChhellenistisch",
+   "labels": {
+    "de": "Frühhellenistisch",
+    "en": "Early Hellenistic"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChkaiserzeitlich",
+   "labels": {
+    "de": "Frühkaiserzeitlich",
+    "en": "Early imperial"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChklassisch",
+   "labels": {
+    "de": "Frühklassisch",
+    "en": "Early classical"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Fr%C3%BChmittelalter",
+   "labels": {
+    "de": "Frühmittelalter",
+    "en": "Early Middle Ages"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Geometrisch",
+   "labels": {
+    "de": "Geometrisch",
+    "en": "Geometric"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Hellenistisch",
+   "labels": {
+    "de": "Hellenistisch",
+    "en": "Hellenistic"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Hochmittelalter",
+   "labels": {
+    "de": "Hochmittelalter",
+    "en": "High Middle Ages"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Kaiserzeitlich",
+   "labels": {
+    "de": "Kaiserzeitlich",
+    "en": "Roman imperial"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Klassisch",
+   "labels": {
+    "de": "Klassisch",
+    "en": "Classical"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Mittelalter",
+   "labels": {
+    "de": "Mittelalter",
+    "en": "Middle Ages"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Neolithisch",
+   "labels": {
+    "de": "Neolithisch",
+    "en": "Neolithic"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Neuzeitlich",
+   "labels": {
+    "de": "Neuzeitlich",
+    "en": "Early modern period"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Osmanisch",
+   "labels": {
+    "de": "Osmanisch",
+    "en": "Ottoman"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Pleistoz%C3%A4n",
+   "labels": {
+    "de": "Pleistozän",
+    "en": "Pleistocene"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/R%C3%B6misch",
+   "labels": {
+    "de": "Römisch",
+    "en": "Roman"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Rezent",
+   "labels": {
+    "de": "Rezent",
+    "en": "Recent"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tantik",
+   "labels": {
+    "de": "Spätantik",
+    "en": "Late Antiquity"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tbronzezeitlich",
+   "labels": {
+    "de": "Spätbronzezeitlich",
+    "en": "Late Bronze Age"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tbyzantinisch",
+   "labels": {
+    "de": "Spätbyzantinisch",
+    "en": "Late Byzantine"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4thellenistisch",
+   "labels": {
+    "de": "Späthellenistisch",
+    "en": "Late Hellenistic"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tkaiserzeitlich",
+   "labels": {
+    "de": "Spätkaiserzeitlich",
+    "en": "Late imperial"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tklassisch",
+   "labels": {
+    "de": "Spätklassisch",
+    "en": "Late Classical"
+   }
+  },
+  {
+   "concept": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1/Sp%C3%A4tmittelalter",
+   "labels": {
+    "de": "Spätmittelalter",
+    "en": "Late Middle Ages"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "de": "iDAI.field Werteliste periods-default-1",
+  "en": "iDAI.field valuelist periods-default-1",
+  "it": "Valuelist di iDAI.field periods-default-1"
+ },
+ "languages": [
+  "de",
+  "en"
+ ],
+ "license": "Apache-2.0",
+ "scheme": "idai-field-periods-default-1",
+ "status": "resolvable",
+ "uri": "https://github.com/dainst/idai-field/blob/4b5c1e2c3c499d4bd125d0eda61cc6f5c94ffcd4/core/config/Library/Valuelists/Valuelists.json#periods-default-1"
+}

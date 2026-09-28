@@ -1022,7 +1022,7 @@ def _resolve_item(out: Plan, ctx: _Context, op, scheda: Scheda, fid: str,
 # ── IL RITORNO: dal nodo dell'unità, attraverso la stessa ricetta, ai valori ─
 
 def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
-                      unit_id: str) -> Dict[str, Any]:
+                      unit_id: str, lens: bool = False) -> Dict[str, Any]:
     """La lettura inversa (audit B4): ciò che la scheda mostra riaprendo l'unità.
 
     Attraversa i verdetti al contrario, con la STESSA ricetta che li ha scritti:
@@ -1030,6 +1030,17 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
     del campo, i nodi di contesto dagli archi, i rapporti dagli archi con
     l'unità al capo giusto. Ciò che la definizione tiene fuori dal grafo
     (`none`, `open`) NON torna, e si dice in `silent`.
+
+    **LA LENTE (`lens=True`, 2026-10-26).** Leggere un'unità con una scheda che
+    NON l'ha scritta — la US 3014 compilata con l'ICCD, letta con la scheda del
+    DAI. Il campo nativo, l'elemento del nodo (`data.definition`) e gli archi
+    sono indirizzi del GRAFO e si leggono uguali; le proprietà invece portano il
+    segno del campo che le ha coniate (`consistenza`, non `consistency`). Con la
+    lente, un campo che non trova proprietà col proprio segno prende quelle
+    appese all'unità (`has_property`) con la STESSA qualia, se nessun campo di
+    questa scheda le ha già prese. Non si traduce niente: dove le due schede
+    scrivono qualia diverse (`formation_mode` / `origin_type`) il campo resta
+    vuoto — ed è il buco che la lente deve far vedere.
     """
     from . import authorship
     from .tools import number_from_unit_id
@@ -1059,6 +1070,31 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
             minted.setdefault(str(mark["field"]), []).append(node)
     for rows in minted.values():
         rows.sort(key=lambda n: int(_mark(n).get("index") or 0))
+
+    # LA LENTE: le proprietà dell'unità per qualia, meno quelle che un campo di
+    # QUESTA scheda ha già coniato col proprio segno
+    by_qualia: Dict[str, List[Dict[str, Any]]] = {}
+    if lens:
+        own = {str(f.get("id")) for f in scheda.fields}
+        claimed = {str(n.get("id")) for fid in own for n in minted.get(fid, [])}
+        for edge in ctx.edges:
+            if edge.get("edge_type") != "has_property" or edge.get("source") != unit_id:
+                continue
+            node = ctx.nodes.get(str(edge.get("target")))
+            if not node or str(node.get("id")) in claimed:
+                continue
+            qualia = (node.get("data") or {}).get("property_type") or node.get("name")
+            if qualia:
+                by_qualia.setdefault(str(qualia), []).append(node)
+        for rows in by_qualia.values():
+            rows.sort(key=lambda n: (str(_mark(n).get("field") or ""),
+                                     int(_mark(n).get("index") or 0)))
+
+    def borrowed(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Per la lente: le proprietà della qualia che la voce conia."""
+        prop = entry.get("property") or {}
+        qualia = prop.get("property_type") or (entry.get("defaults") or {}).get("$item.qualia")
+        return list(by_qualia.get(str(qualia), [])) if qualia else []
 
     for f in scheda.fields:
         fid = str(f.get("id"))
@@ -1102,13 +1138,22 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
             if said not in (None, ""):
                 values[fid] = _typed(ftype, said)
             continue
-        if fid in minted:
+        nodes = minted.get(fid) or (borrowed(entry) if lens else [])
+        if nodes:
             rows = []
-            for node in minted[fid]:
+            for node in nodes:
                 mark = _mark(node)
                 data = node.get("data") or {}
                 said = node.get("description")
-                if bool(entry.get("each")):
+                if ftype in ("term", "term_list"):
+                    # un TERMINE, anche in lista: il concetto (o la parola
+                    # dichiarata tale), non una riga di misura — `each` lo ha
+                    # anche `term_list`, e prima di stanotte nessuna scheda lo usava
+                    rows.append({"label": mark.get("label") or said}
+                                if mark.get("uncontrolled")
+                                else {"concept": said,
+                                      **({"label": mark["label"]} if mark.get("label") else {})})
+                elif bool(entry.get("each")):
                     row: Dict[str, Any] = {}
                     if not mark.get("qualia_missing"):
                         row["qualia"] = data.get("property_type") or node.get("name")
@@ -1118,11 +1163,6 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
                     if data.get("units"):
                         row["unit"] = data["units"]
                     rows.append(row)
-                elif ftype == "term":
-                    rows.append({"label": mark.get("label") or said}
-                                if mark.get("uncontrolled")
-                                else {"concept": said,
-                                      **({"label": mark["label"]} if mark.get("label") else {})})
                 else:
                     rows.append(_typed(ftype, said))
             values[fid] = rows if entry.get("each") else rows[0]
