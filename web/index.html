@@ -247,9 +247,19 @@
 // on disk. It is not a credential, and it is a property of the DEVICE and not of
 // the person — like the queue, and unlike the token. A borrowed tablet must
 // change author, not language.
-const LOCALES = ["en", "it", "ro", "el", "es", "pl"];
+//
+// `he` (the Israeli partner) and `de` (DAI), 24 October: their strings are
+// GENERATED from the partners' xlsx by `scripts/ui_strings.py`, into the block
+// marked `>>> ui_strings.py`, before the empty slots — drafts, and only the keys
+// this page shares with the file. Hebrew is written right to left: see
+// `RTL_LOCALES` and `setLocale`.
+const LOCALES = ["en", "it", "ro", "el", "es", "pl", "he", "de"];
 const LOCALE_NAMES = { en: "English", it: "Italiano", ro: "Română",
-                       el: "Ελληνικά", es: "Español", pl: "Polski" };
+                       el: "Ελληνικά", es: "Español", pl: "Polski",
+                       he: "עברית", de: "Deutsch" };
+//: the locales whose script runs right to left. The DOCUMENT follows the
+//: interface; a sheet (il Foglio) follows ITS OWN language — see `scriptDir`.
+const RTL_LOCALES = new Set(["he", "ar", "fa", "ur", "yi"]);
 const LOCALE_KEY = "sg.locale.v1";
 
 const STRINGS = {
@@ -587,6 +597,134 @@ const STRINGS = {
     "w.orcid_bad": "Non è un ORCID: il formato o la cifra di controllo non tornano. Il nome resta, l'ORCID no.",
     "w.none_in_room": "In questa stanza non ce n'è ancora nessuno.",
   },
+  // >>> ui_strings.py
+  // GENERATO da scripts/ui_strings.py leggendo StratiGraph_UI_strings.xlsx
+  // (foglio «UI strings»): non si modifica a mano, si rilancia lo
+  // script. BOZZE dei partner, solo le chiavi che la pagina ha con
+  // lo stesso inglese; il resto ricade sull'inglese.
+  he: {
+    "view.sheet": "נייר",
+    "view.fields": "שדות",
+    "ctl.view": "תצוגה",
+    "ctl.faces": "צדדים",
+    "ctl.cardlang": "שפת הגיליון",
+    "faces.both": "פנים ואחור",
+    "faces.recto": "פנים",
+    "faces.verso": "אחור",
+    "page.expand": "הגדל את הצד הזה כדי לכתוב",
+    "page.collapse": "חזרה לפנים ולאחור",
+    "insp.thiscard": "הגיליון הזה",
+    "insp.all": "הכול",
+    "insp.trench": "שטח",
+    "insp.lab": "מעבדה",
+    "insp.check": "לבדיקה",
+    "insp.required": "חובה",
+    "insp.ai_todo": "AI · לאישור",
+    "insp.ai_ok": "AI · אושר",
+    "insp.empty": "תיבות ריקות",
+    "insp.write": "כתיבה",
+    "act.confirm": "אני מאשר את הטקסט הזה",
+    "f.side": "צד",
+    "f.trench_only": "שדות שטח בלבד",
+    "f.later": "ימולא אחר כך",
+    "view.sheet.none": "ההגדרה הזו אינה מצהירה על גיליון נייר: הנה השדות שלה.",
+    "w.add_unit": "הוסף יחידה",
+    "w.to_fill": "למילוי",
+    "w.remove": "הסר",
+    "w.unit_note": "יחידה שעדיין אינה קיימת נוצרת, מסומנת, ומושלמת כשהיא מקבלת גיליון משלה.",
+    "w.search": "חיפוש באוצר המונחים",
+    "w.term_note": "הגרף שומר את המושג, לא את המילה: התווית חוזרת בכל שפה.",
+    "w.what": "מה",
+    "w.value": "ערך",
+    "w.add_row": "הוסף מידה",
+    "w.pick_photos": "מתצלומי החדר",
+    "w.orcid_note": "16 ספרות, כמו ב-orcid.org",
+    "w.new_epoch": "תקופה או שלב חדשים",
+    "exc.name": "שם",
+    "photos.all": "הכול",
+    "nav.units": "יחידות (US)",
+    "nav.prev_unit": "היחידה הקודמת",
+    "nav.next_unit": "היחידה הבאה",
+    "nav.jump": "עבור ליחידה…",
+    "nav.no_unit": "אין בחדר הזה יחידה עם המספר",
+    "flt.search": "חיפוש לפי מספר או הגדרה",
+    "flt.ai": "AI לאישור",
+    "flt.incomplete": "מולאו פחות ממחצית",
+    "flt.count": "{n} מתוך {t}",
+    "flt.none": "אין יחידה שמתאימה למסננים האלה.",
+    "w.declared": "«{scheme}» מוצהר בתקן אך לא פורסם: מה שתכתוב יישאר מילה, ללא מושג.",
+    "w.no_vocab": "לצומת הזה אין את אוצר המונחים «{scheme}»: מה שתכתוב יישאר מילה, ללא מושג.",
+    "w.free_word": "מילה, ללא מושג",
+    "w.free_add": "כתוב כמילה",
+    "w.label": "תווית",
+    "w.unit": "יחידת מידה",
+    "w.add_file": "הוסף קובץ או הפניה",
+    "w.no_photos": "עדיין אין תצלומים בחדר הזה.",
+    "w.orcid_bad": "זה אינו ORCID: התבנית או ספרת הביקורת שגויות. השם נשמר, ה-ORCID לא.",
+    "w.none_in_room": "עדיין אין אף אחד בחדר הזה.",
+  },
+  de: {
+    "view.sheet": "Papier",
+    "view.fields": "Felder",
+    "ctl.view": "Ansicht",
+    "ctl.faces": "Seiten",
+    "ctl.cardlang": "Sprache des Blatts",
+    "faces.both": "Vorder- und Rückseite",
+    "faces.recto": "Vorderseite",
+    "faces.verso": "Rückseite",
+    "page.expand": "Diese Seite zum Schreiben vergrößern",
+    "page.collapse": "Zurück zu Vorder- und Rückseite",
+    "insp.thiscard": "Dieses Blatt",
+    "insp.all": "Alle",
+    "insp.trench": "Schnitt",
+    "insp.lab": "Labor",
+    "insp.check": "Zu prüfen",
+    "insp.required": "Pflichtfeld",
+    "insp.ai_todo": "AI · zu bestätigen",
+    "insp.ai_ok": "AI · bestätigt",
+    "insp.empty": "Leere Felder",
+    "insp.write": "Schreiben",
+    "act.confirm": "Ich bestätige diesen Text",
+    "f.side": "Seite",
+    "f.trench_only": "Nur Felder für den Schnitt",
+    "f.later": "wird später ausgefüllt",
+    "view.sheet.none": "Diese Definition hat kein Papierblatt: hier sind ihre Felder.",
+    "w.add_unit": "Einheit hinzufügen",
+    "w.to_fill": "noch auszufüllen",
+    "w.remove": "Entfernen",
+    "w.unit_note": "Eine Einheit, die es noch nicht gibt, wird angelegt, markiert und ergänzt, sobald sie ihr eigenes Blatt bekommt.",
+    "w.search": "Im Vokabular suchen",
+    "w.term_note": "Der Graph speichert den Begriff, nicht das Wort: die Bezeichnung kommt in jeder Sprache zurück.",
+    "w.what": "Was",
+    "w.value": "Wert",
+    "w.add_row": "Maß hinzufügen",
+    "w.pick_photos": "Aus den Fotos des Raums",
+    "w.orcid_note": "16 Ziffern, wie auf orcid.org",
+    "w.new_epoch": "Neue Periode oder Phase",
+    "exc.name": "Name",
+    "photos.all": "Alle",
+    "nav.units": "Einheiten (US)",
+    "nav.prev_unit": "Vorherige Einheit",
+    "nav.next_unit": "Nächste Einheit",
+    "nav.jump": "Zu Einheit…",
+    "nav.no_unit": "In diesem Raum gibt es keine Einheit mit der Nummer",
+    "flt.search": "Nach Nummer oder Ansprache suchen",
+    "flt.ai": "AI zu bestätigen",
+    "flt.incomplete": "Weniger als zur Hälfte ausgefüllt",
+    "flt.count": "{n} von {t}",
+    "flt.none": "Keine Einheit passt zu diesen Filtern.",
+    "w.declared": "«{scheme}» ist von der Norm vorgesehen, aber nicht veröffentlicht: was du schreibst, bleibt ein Wort ohne Begriff.",
+    "w.no_vocab": "Dieser Knoten hat das Vokabular «{scheme}» nicht: was du schreibst, bleibt ein Wort ohne Begriff.",
+    "w.free_word": "Wort, ohne Begriff",
+    "w.free_add": "Als Wort schreiben",
+    "w.label": "Bezeichnung",
+    "w.unit": "Maßeinheit",
+    "w.add_file": "Datei oder Verweis hinzufügen",
+    "w.no_photos": "In diesem Raum gibt es noch keine Fotos.",
+    "w.orcid_bad": "Kein ORCID: Format oder Prüfziffer stimmen nicht. Der Name bleibt, die ORCID nicht.",
+    "w.none_in_room": "In diesem Raum gibt es noch keine.",
+  },
+  // <<< ui_strings.py
   // ── the partners' slots: same keys, empty values, falling back to `en` ──────
   ro: {}, el: {}, es: {}, pl: {},
 };
@@ -613,10 +751,31 @@ let LOCALE = pickLocale();
 /** A string in the active locale, falling back to English when nobody has
  *  translated it. `{placeholders}` are filled from `values`. */
 function t(key, values) {
-  const text = (STRINGS[LOCALE] && STRINGS[LOCALE][key]) || STRINGS.en[key] || key;
-  return values
-    ? text.replace(/\{(\w+)\}/g, (_m, name) => String(values[name] ?? ""))
+  const own = STRINGS[LOCALE] && STRINGS[LOCALE][key];
+  const text = own || STRINGS.en[key] || key;
+  const rtl = scriptDir(LOCALE) === "rtl";
+  // IN RTL OGNI VALORE È ISOLATO (FSI … PDI, il `<bdi>` del testo semplice): un
+  // numero di US, un ORCID, una data dentro una frase ebraica restano leggibili
+  // e non si portano dietro la punteggiatura vicina. In LTR non serve e non si
+  // aggiunge niente.
+  const iso = rtl ? (v) => "\u2068" + v + "\u2069" : (v) => v;
+  const said = values
+    ? text.replace(/\{(\w+)\}/g, (_m, name) => iso(String(values[name] ?? "")))
     : text;
+  // E UNA FRASE CHE RICADE SULL'INGLESE resta una frase inglese: isolata da
+  // sinistra a destra (LRI … PDI), sennò il punto finale salta in testa
+  // («.If there is no microphone…», misurato il 24 ottobre in `he`).
+  return rtl && !own ? "\u2066" + said + "\u2069" : said;
+}
+
+/** The writing direction of a language: "rtl" for Hebrew (and the other
+ *  right-to-left scripts), "ltr" otherwise. ONE function, used by the document
+ *  (the interface's language) AND by the sheet (the card's language), which
+ *  are not the same thing: an ICCD card is Italian and left to right even with
+ *  the interface in Hebrew. */
+function scriptDir(code) {
+  return RTL_LOCALES.has(String(code || "").slice(0, 2).toLowerCase())
+    ? "rtl" : "ltr";
 }
 
 function setLocale(code) {
@@ -624,6 +783,7 @@ function setLocale(code) {
   LOCALE = code;
   try { localStorage.setItem(LOCALE_KEY, code); } catch { /* nothing to do */ }
   document.documentElement.lang = code;
+  document.documentElement.dir = scriptDir(code);
   paintStrings();
 }
 
@@ -812,7 +972,9 @@ function paintStrings() {
   if (dillo) dillo.placeholder = t("chat.placeholder");
   set("send", t("action.send"));
   set("hint", recognitionHint());
-  document.title = "StratiGraph · " + t("app.subtitle");
+  // senza i segni d'isolamento di `t()`: un titolo di finestra non è un
+  // paragrafo, e la barra delle schede li mostrerebbe.
+  document.title = "StratiGraph · " + t("app.subtitle").replace(/[\u2066-\u2069]/g, "");
   paintCommandLanguage();
   // I comandi della scheda (Vista, Facciate…) e le parole del Foglio sono
   // dipinti dal modulo: gli si dice che la lingua è cambiata.
@@ -1087,7 +1249,7 @@ window.SG = {
   get locale() { return LOCALE; },
   get signed() { return Boolean(WHO); },
   get subject() { return WHO ? WHO.subject : ""; },
-  send, post, show, t,
+  send, post, show, t, scriptDir,
 };
 
 // ── the queue ───────────────────────────────────────────────────────────────
@@ -1236,6 +1398,7 @@ async function boot() {
   // The language first, and the picker with it: everything drawn after this is
   // drawn once, in the right language, instead of flickering through English.
   document.documentElement.lang = LOCALE;
+  document.documentElement.dir = scriptDir(LOCALE);
   paintLanguagePicker();
   // …then WHAT THE NODE UNDERSTANDS, because the placeholder, the recognition
   // language and the voice all follow the node and not the chrome.

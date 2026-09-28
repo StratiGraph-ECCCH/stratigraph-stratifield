@@ -583,8 +583,12 @@ export function render(container, def, state) {
     ? trenchFields(def) : (def.fields || []);
 
   container.replaceChildren();
+  // Il modulo parla la lingua della SCHEDA e ne prende la direzione, come la
+  // carta del Foglio (`foglio.js::pageFor`): non quella dell'interfaccia.
   const sheet = el("div", {
     class: "sheet" + (mode === "desktop" && !state.onePage ? " two" : ""),
+    lang: def.lang || "",
+    dir: SG().scriptDir ? SG().scriptDir(def.lang) : "ltr",
   });
 
   const head = el("header", {},

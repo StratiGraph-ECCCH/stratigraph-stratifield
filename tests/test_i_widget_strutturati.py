@@ -131,6 +131,62 @@ def test_the_rows_of_a_measurement_offer_the_datamodels_measuring_qualia():
     assert "graph" not in served["misure"] and "verdict" not in served["misure"]
 
 
+def _measures(scheda_id, lang, field):
+    served = {f["id"]: f for f in S.find(scheda_id).for_browser(lang)["fields"]}
+    return {q["id"]: q for q in served[field]["measures"]["qualia"]}
+
+
+def test_the_measures_speak_the_cards_language_from_the_datamodel():
+    """2026-10-24, §C: «Thickness» diventa la parola del DATAMODEL nella lingua
+    della SCHEDA, attraverso il nodo. Una sola strada: `qualia_label` di
+    s3Dgraphy. Se la parola qui fosse scritta a mano, questo test la vedrebbe
+    uguale alla libreria per caso; lo confronta con la libreria apposta."""
+    labels = pytest.importorskip("s3dgraphy.tools.datamodel_i18n")
+    it = _measures("iccd-us-2021", "it", "misure")
+    es = _measures("es-ue-demo-2026", "es", "cota")
+    en = _measures("iccd-us-2021", "en", "misure")
+    assert it["thickness"]["label"] == "Spessore"
+    assert es["thickness"]["label"] == "Espesor"
+    assert en["thickness"]["label"] == "Thickness"
+    for q in it.values():
+        assert q["label"] == labels.qualia_label(q["id"], "it"), q["id"]
+    for q in es.values():
+        assert q["label"] == labels.qualia_label(q["id"], "es"), q["id"]
+    # il nome inglese resta, per le definizioni già in cache e per chi lo vuole
+    assert it["thickness"]["name"] == "Thickness"
+    # e il gruppo, che diventa l'optgroup del menu
+    assert it["thickness"]["group_label"] == labels.qualia_subcategory_label(
+        "dimensional", "it")
+    assert "label_lang" not in it["thickness"]
+
+
+def test_a_card_in_a_language_the_datamodel_lacks_says_its_word_is_english():
+    """La ficha ungherese (hu · it): il datamodel non ha l'ungherese, quindi la
+    parola è l'inglese — e lo dice, invece di passarla per ungherese."""
+    pytest.importorskip("s3dgraphy.tools.datamodel_i18n")
+    hu = _measures("hu-rl-demo-2026", "hu", "melyseg")
+    assert hu["thickness"]["label"] == "Thickness"
+    assert hu["thickness"]["label_lang"] == "en"
+    it = _measures("hu-rl-demo-2026", "it", "melyseg")
+    assert it["thickness"]["label"] == "Spessore" and "label_lang" not in it["thickness"]
+
+
+def test_the_measures_follow_the_card_and_not_the_interface(client):
+    """La lingua è quella chiesta al nodo per la DEFINIZIONE (`?lang=`), che
+    `shell.js::cardLanguageFor` sceglie fra quelle della scheda: l'interfaccia in
+    ebraico non la cambia. E la definizione è ciò che il telefono mette in cache
+    (`scheda.js::definitionFor`), quindi le parole valgono anche offline."""
+    c, _ = client
+    body = c.get("/v1/schede/iccd-us-2021?lang=it").json()
+    misure = {f["id"]: f for f in body["fields"]}["misure"]["measures"]
+    assert {q["id"]: q["label"] for q in misure["qualia"]}["thickness"] == "Spessore"
+    widgets = (WEB / "widgets.js").read_text(encoding="utf-8")
+    assert "q.label || q.name" in widgets
+    assert "q.group_label || q.group" in widgets
+    scheda = (WEB / "scheda.js").read_text(encoding="utf-8")
+    assert "cache.setItem(key, JSON.stringify(fresh))" in scheda
+
+
 def test_the_units_of_a_room_carry_definition_area_and_what_ai_proposed(client):
     c, _ = client
     post(c, "3005", {**BASE, "definizione": {"label": "taglio di fossa"}})
@@ -362,8 +418,14 @@ def test_the_widgets_write_through_one_function_and_have_no_road_to_the_graph():
 
 
 def test_the_new_words_are_the_mockups_keys_in_en_and_it():
-    """Le chiavi del mockup approvato (oggetto `UI`), in `en` e in `it`."""
+    """Le chiavi del mockup approvato (oggetto `UI`), in `en` e in `it`.
+
+    Contate nella parte SCRITTA A MANO della pagina: il blocco fra
+    `>>> ui_strings.py` e `<<< ui_strings.py` è generato dall'xlsx dei partner
+    (`he`, `de`, 24 ottobre) e ripete le chiavi per costruzione."""
     page = (WEB / "index.html").read_text(encoding="utf-8")
+    page = re.sub(r"  // >>> ui_strings\.py.*?  // <<< ui_strings\.py", "", page,
+                  flags=re.S)
     for key in ("w.add_unit", "w.to_fill", "w.remove", "w.unit_note", "w.search",
                 "w.term_note", "w.what", "w.value", "w.add_row", "w.pick_photos",
                 "w.orcid_note", "w.new_epoch", "nav.units", "nav.prev_unit",

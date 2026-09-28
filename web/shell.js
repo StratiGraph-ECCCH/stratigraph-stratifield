@@ -852,7 +852,12 @@ function wireShell() {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     if (state.panel !== "scheda" || !state.def || typing(event.target)) return;
     event.preventDefault();
-    void stepUnit(event.key === "ArrowLeft" ? -1 : 1);
+    // IN RTL «PRECEDENTE» STA A DESTRA: la freccia verso l'inizio della riga è
+    // la freccia verso destra, come ‹ che il browser specchia da sé (è un
+    // carattere Bidi_Mirrored). La barra è dell'interfaccia: la direzione è
+    // quella del documento, non quella della scheda.
+    const back = document.documentElement.dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+    void stepUnit(event.key === back ? -1 : 1);
   });
   // AVANTI E INDIETRO DEL BROWSER, e un link: l'indirizzo dice quale unità.
   window.addEventListener("hashchange", () => { void followHash(); });
@@ -959,10 +964,15 @@ async function land() {
 }
 
 wireShell();
-loadSchede();
+// L'ELENCO PRIMA DELL'INDIRIZZO: `cardLanguageFor` legge da lì le lingue che la
+// scheda dichiara. Senza aspettarlo, un link `#scheda=…` aperto su un
+// dispositivo nuovo chiedeva la definizione nella lingua dell'INTERFACCIA, e
+// con l'interfaccia in `he` o `de` la US ICCD (it · en) veniva rifiutata: «non
+// ho la definizione». Misurato il 24 ottobre; con `it` non si vedeva.
+const schedeLoaded = loadSchede();
 // L'INDIRIZZO VINCE sull'arrivo: un link a una scheda (`#scheda=…&us=…`) la
 // riapre, anche se il link della stanza avrebbe mostrato l'elenco.
-void land().then(() => followHash());
+void land().then(() => schedeLoaded).then(() => followHash());
 
 // Esposto per la verifica dal browser: è quello che una cattura non può
 // dimostrare (dove stanno i bersagli, quale modo è attivo, quanti campi).

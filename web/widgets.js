@@ -204,7 +204,7 @@ export function quantityText(row, field) {
   if (!row || typeof row !== "object") return String(row ?? "");
   const q = ((field && field.measures && field.measures.qualia) || [])
     .find((x) => x.id === row.qualia);
-  const what = row.label || (q ? q.name : row.qualia) || "";
+  const what = row.label || (q ? (q.label || q.name) : row.qualia) || "";
   return [what, row.value, row.unit].filter((x) => x !== undefined && x !== "")
     .join(" ");
 }
@@ -503,8 +503,14 @@ function drawQuantities(ctx) {
     const what = el("select", { "data-w": `q${i}`, class: "w-qwhat", "aria-label": tr("w.what") });
     const groups = new Map();
     for (const q of qualia) {
-      if (!groups.has(q.group)) groups.set(q.group, el("optgroup", { label: q.group }));
-      const o = el("option", { value: q.id, text: q.name });
+      // LE PAROLE DELLA SCHEDA, dal datamodel attraverso il nodo (`label`,
+      // `group_label`, nella lingua della definizione); `name` è l'inglese, il
+      // ripiego di una definizione messa in cache prima del 24 ottobre.
+      if (!groups.has(q.group)) {
+        groups.set(q.group, el("optgroup", { label: q.group_label || q.group }));
+      }
+      const o = el("option", { value: q.id, text: q.label || q.name });
+      if (q.label_lang) o.setAttribute("lang", q.label_lang);
       if (q.id === row.qualia) o.selected = true;
       groups.get(q.group).append(o);
     }

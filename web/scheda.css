@@ -92,7 +92,7 @@
   width: 15rem;
   padding: var(--sg-space-3) 0;
   background: var(--sg-surface-sunk);
-  border-right: 1px solid var(--sg-line);
+  border-inline-end: 1px solid var(--sg-line);
   overflow-y: auto;
 }
 .sidenav h3 {
@@ -108,7 +108,7 @@
 .sidenav a, .sidenav button.navitem {
   display: block;
   width: 100%;
-  text-align: left;
+  text-align: start;
   padding: var(--sg-space-2) var(--sg-space-3);
   border: 0;
   background: none;
@@ -123,7 +123,7 @@
 }
 .sidenav .navitem:hover { background: var(--sg-surface); }
 .sidenav .count {
-  float: right;
+  float: inline-end;
   font-family: var(--sg-font-mono);
   font-size: var(--sg-text-xs);
   color: var(--sg-muted);
@@ -135,7 +135,7 @@
  * telefono, e porta due regole scritte per quel mondo:
  *
  *     main   { max-width: 640px; margin: 0 auto; }
- *     button { width: 100%; text-align: left; }
+ *     button { width: 100%; text-align: start; }
  *
  * La prima teneva la scheda a 608px dentro un'area di lavoro da 1185 — misurato
  * nel browser, non dedotto: la scrivania mostrava due colonne strette in mezzo
@@ -255,7 +255,7 @@
    un'affermazione non verificata sarebbe un'affermazione che nessuno ha fatto. */
 .box.ai input, .box.ai textarea {
   border-color: var(--sg-warn);
-  border-left-width: 3px;
+  border-inline-start-width: 3px;
 }
 .box .authored {
   display: none;
@@ -269,7 +269,7 @@
 .box.validated .authored { color: var(--sg-ok-ink); }
 .box.validated input, .box.validated textarea {
   border-color: var(--sg-ok);
-  border-left-width: 3px;
+  border-inline-start-width: 3px;
 }
 .box .validate {
   padding: 2px var(--sg-space-2);
@@ -295,12 +295,12 @@
   font-size: var(--sg-text-sm);
   background: var(--sg-surface-sunk);
   color: var(--sg-muted);
-  border-left: 3px solid var(--sg-info);
+  border-inline-start: 3px solid var(--sg-info);
 }
 .completeness b { color: var(--sg-text); font-weight: var(--sg-weight-subtitle); }
 /* NON `--sg-warn`: una scheda da trincea è incompleta perché è il mestiere, e
    dipingerla come un problema insegnerebbe a chi scava che sta sbagliando. */
-.completeness.blocking { border-left-color: var(--sg-warn); }
+.completeness.blocking { border-inline-start-color: var(--sg-warn); }
 
 /* ── il modo: TELEFONO ───────────────────────────────────────────────────── */
 
@@ -314,7 +314,7 @@
   inset: auto 0 0 0;
   width: auto;
   max-height: 70dvh;
-  border-right: 0;
+  border-inline-end: 0;
   border-top: 1px solid var(--sg-line);
   border-radius: var(--sg-radius-lg) var(--sg-radius-lg) 0 0;
   box-shadow: var(--sg-shadow-lifted);
@@ -392,7 +392,7 @@
   flex: 2;
   background: var(--sg-accent-quiet);
   border-color: var(--sg-accent-quiet);
-  border-left: 4px solid var(--sg-accent);
+  border-inline-start: 4px solid var(--sg-accent);
   /* Dalla proprietà dichiarata in cima a `shell.css`, non da un token: «ink
      sopra un riempimento d'accento» è un ruolo che il tema NON ha, e passare
      tutti gli usi dallo stesso posto è ciò che rende quel debito visibile
@@ -425,7 +425,7 @@
 /* LE AZIONI DISTRUTTIVE NON STANNO DOVE CADE IL POLLICE. Vivono in cima alla
    scheda, sopra la piega dei bersagli, e sono le sole cose fuori dalla barra. */
 .sheet .risky, .fo .risky {
-  margin-left: auto;
+  margin-inline-start: auto;
   padding: 2px var(--sg-space-2);
   font-size: var(--sg-text-xs);
   color: var(--sg-muted);
@@ -570,7 +570,7 @@
   border-radius: var(--sg-radius-sm);
   background: var(--sg-surface-sunk);
   color: var(--sg-muted);
-  border-left: 3px solid var(--sg-quiet);
+  border-inline-start: 3px solid var(--sg-quiet);
   font-size: var(--sg-text-sm);
 }
 
@@ -587,7 +587,7 @@
 .w button { width: auto; margin: 0; box-shadow: none; text-align: center; }
 .w input[type="text"], .w input[type="search"], .w select { width: 100%; margin: 0; }
 .w .w-term, .w .w-btn.wide { width: 100%; }
-.w .w-term { text-align: left; }
+.w .w-term { text-align: start; }
 .w-chips { display: flex; flex-wrap: wrap; gap: var(--sg-space-1); }
 .w-chips:empty { display: none; }
 .w-chip {
@@ -635,7 +635,7 @@
   display: flex; justify-content: space-between; align-items: baseline; gap: var(--sg-space-2);
   border: 1px solid var(--sg-line); background: var(--sg-bg); color: var(--sg-text);
   border-radius: var(--sg-radius-sm); padding: var(--sg-space-1) var(--sg-space-2);
-  cursor: pointer; text-align: left; font: inherit; margin: 0; box-shadow: none;
+  cursor: pointer; text-align: start; font: inherit; margin: 0; box-shadow: none;
 }
 .w-term small { color: var(--sg-muted); font-size: var(--sg-text-xs); }
 .w-term code {
@@ -657,7 +657,7 @@
   background: var(--sg-surface-sunk); color: var(--sg-muted); margin: 0; box-shadow: none;
   display: flex; align-items: flex-end; justify-content: flex-start; padding: 2px 4px;
   font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); cursor: pointer;
-  overflow: hidden; word-break: break-all; text-align: left;
+  overflow: hidden; word-break: break-all; text-align: start;
 }
 .w-view { display: flex; flex-wrap: wrap; gap: 2px 4px; align-items: baseline; }
 .w-view .w-chip { padding: 0 var(--sg-space-1); }
@@ -667,7 +667,7 @@
 /* SUL TELEFONO, bersagli da pollice: 44 px è il minimo che le linee guida delle
  * due piattaforme danno per un tocco, e con i guanti è poco. */
 .w.w-big .w-x { width: 44px; height: 44px; }
-.w-big .w-chip { font-size: var(--sg-text-sm); padding-left: var(--sg-space-3); }
+.w-big .w-chip { font-size: var(--sg-text-sm); padding-inline-start: var(--sg-space-3); }
 .w-big input, .w-big select, .w-big .w-btn, .w-big .w-term, .w-big .w-sugg button {
   min-height: 44px; font-size: var(--sg-text-base);
 }

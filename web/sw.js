@@ -57,8 +57,15 @@ self.addEventListener("install", (e) => {
     // Individually, not `addAll`: that rejects the WHOLE install if one file is
     // missing, and an assistant with no service worker at all is a worse
     // outcome than one missing a font weight.
+    //
+    // `cache: "reload"`, NOT a bare `c.add(f)`: that goes through the browser's
+    // HTTP cache, and a file changed on the node can enter the NEW cache OLD —
+    // measured on :8024 on 22 October, a `shell.css` from the night before under
+    // a cache name that was already right. "reload" asks the network and
+    // nothing else; the node answers `no-cache` + ETag (`app/main.py
+    // ::_revalidated`), so what lands here is what is on the disk.
     .then((c) => Promise.all(SHELL_FILES.map(
-      (f) => c.add(f).catch(() => undefined))))
+      (f) => c.add(new Request(f, { cache: "reload" })).catch(() => undefined))))
     .then(() => self.skipWaiting()));
 });
 

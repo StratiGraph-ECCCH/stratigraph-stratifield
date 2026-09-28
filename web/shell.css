@@ -99,14 +99,14 @@
      changes hands changes language with it, and a settings screen is a place
      nobody finds with gloves on. */
   .lang {
-    margin-left: auto;
+    margin-inline-start: auto;
     font: inherit; font-size: var(--sg-text-xs);
     padding: 6px 8px; border-radius: var(--sg-radius-sm);
     background: var(--sg-surface); color: var(--sg-text);
     border: 1px solid var(--sg-line);
   }
   .state {
-    text-align: right;
+    text-align: end;
     font-family: var(--sg-font-mono); font-size: var(--sg-text-xs);
     color: var(--sg-muted);
   }
@@ -117,7 +117,7 @@
   /* ── the gestures. Big targets: used with gloves on, standing in a trench. ─ */
   button {
     font: inherit; width: 100%; margin-bottom: var(--sg-space-3);
-    padding: 18px; text-align: left; cursor: pointer;
+    padding: 18px; text-align: start; cursor: pointer;
     background: var(--sg-surface); color: var(--sg-text);
     border: 1px solid var(--sg-line); border-radius: var(--sg-radius);
     box-shadow: var(--sg-shadow);
@@ -158,7 +158,7 @@
   .said {
     /* A bubble on the reader's side, like the mockup's thread: right-aligned
        and NOT full width, so the two voices are distinguishable at a glance
-       before a word is read. `margin-left:auto` rather than a flex row —
+       before a word is read. `margin-inline-start:auto` rather than a flex row —
        there is no row to make, and one line of CSS beats a wrapper element
        the script would have to know about. */
     max-width: 78%; margin: var(--sg-space-1) 0 var(--sg-space-3) auto;
@@ -179,14 +179,14 @@
        thread read as a conversation rather than as a list. */
     max-width: 86%; width: fit-content;
     background: var(--sg-surface); border: 1px solid var(--sg-line);
-    border-left: 4px solid var(--sg-info);
+    border-inline-start: 4px solid var(--sg-info);
     border-radius: var(--sg-radius);
     border-bottom-left-radius: var(--sg-radius-sm);
     padding: 14px;
     margin-top: var(--sg-space-4); box-shadow: var(--sg-shadow);
   }
-  .answer.ok  { border-left-color: var(--sg-ok); }
-  .answer.bad { border-left-color: var(--sg-warn); }
+  .answer.ok  { border-inline-start-color: var(--sg-ok); }
+  .answer.bad { border-inline-start-color: var(--sg-warn); }
 
   .queue {
     font-family: var(--sg-font-mono); font-size: var(--sg-text-xs);
@@ -255,7 +255,7 @@
   .shot-face {
     display: block; width: 100%; padding: 0; margin: 0;
     background: none; color: var(--sg-text); border: 0;
-    box-shadow: none; text-align: left; border-radius: 0;
+    box-shadow: none; text-align: start; border-radius: 0;
   }
   .shot-cell[data-state="pronta"] { border-color: var(--sg-info); }
   .shot-face img {
@@ -340,7 +340,7 @@
 .chat .row { align-items: stretch; }
 .chat #chat-say { flex: 1 1 auto; width: auto; min-width: 0; margin-bottom: 0; }
 .chat #chat-send { flex: 0 0 auto; width: auto; text-align: center;
-                   padding-left: var(--sg-space-4); padding-right: var(--sg-space-4); }
+                   padding-inline-start: var(--sg-space-4); padding-inline-end: var(--sg-space-4); }
 
 @media (max-width: 26rem) {
   /* A 375 px il nome di chi parla va sopra la frase: tre colonne diventano
@@ -366,7 +366,7 @@
 .indice-riga {
   display: block;
   width: 100%;
-  text-align: left;
+  text-align: start;
   margin: 0;
   padding: var(--sg-space-2) var(--sg-space-3);
   border: 0;
@@ -381,7 +381,7 @@
 .indice-riga:hover { background: var(--sg-surface); }
 .indice-nome { font-weight: var(--sg-weight-subtitle); }
 .indice-riga .count {
-  float: right;
+  float: inline-end;
   font-family: var(--sg-font-mono);
   font-size: var(--sg-text-xs);
   color: var(--sg-muted);
@@ -397,7 +397,7 @@
 #index-list .navitem {
   display: block;
   width: 100%;
-  text-align: left;
+  text-align: start;
   margin: 0;
   padding: var(--sg-space-2) var(--sg-space-3);
   border: 0;
@@ -433,12 +433,12 @@
   font-weight: var(--sg-weight-subtitle);
 }
 .indice-conta {
-  margin-left: auto; font-family: var(--sg-font-mono);
+  margin-inline-start: auto; font-family: var(--sg-font-mono);
   font-size: var(--sg-text-xs); color: var(--sg-muted);
 }
 .indice-elenco { display: flex; flex-direction: column; }
 .indice-ai {
-  display: inline-block; margin-left: var(--sg-space-2);
+  display: inline-block; margin-inline-start: var(--sg-space-2);
   font-family: var(--sg-font-mono); font-size: var(--sg-text-xs); color: var(--sg-warn);
 }
 
@@ -468,3 +468,28 @@
 .unav.big button { min-width: 48px; min-height: 48px; font-size: var(--sg-text-xl); }
 .unav.big input[type="text"] { flex: 1 1 auto; min-height: 48px; }
 .unav.big .unav-here { font-size: var(--sg-text-xl); }
+
+/* ══ NUMERI, ORCID, DATE E MISURE RESTANO LEGGIBILI IN RTL (2026-10-24) ══════
+ *
+ * Con l'interfaccia in ebraico, un «US 3014», un ORCID o «4.80 m» dentro una
+ * riga da destra a sinistra devono restare un pezzo solo e nel loro verso: si
+ * ISOLANO, come fa `<bdi>`. `plaintext` e non `isolate`: isola E prende la
+ * direzione dal contenuto — cifre e trattini da sinistra a destra, il nome
+ * ebraico di un'unità da destra a sinistra. Con `isolate` «· 0000-0002-…»
+ * ereditava l'RTL e il punto finiva in coda (misurato). In LTR non cambia
+ * niente. Le frasi di `t()` isolano i loro valori da sé (`index.html::t`). */
+#who-name, .orcid, .unav-here, .unav input, .w-chip, .w-ref, .w-qval,
+.w-qunit, .w-qline, .fo-num, .fo-stamp, .indice-nome, .indice-ai, .count,
+input[type="date"], input[type="number"], time {
+  unicode-bidi: plaintext;
+}
+
+/* ◀ ▶ DEL POLLICE, IN RTL: al contrario di ‹ › non sono caratteri Bidi_Mirrored,
+ * quindi il browser non li gira. La barra si specchia (flex, proprietà logiche)
+ * e il glifo deve seguirla: «campo precedente» sta a destra e punta a destra. */
+:root[dir="rtl"] #tb-prev, :root[dir="rtl"] #tb-next { transform: scaleX(-1); }
+
+/* I MESSAGGI DELLA SCHEDA prendono la direzione dal loro testo: molti sono
+ * ancora italiani scritti nel codice (vedi il referto del 24 ottobre), e in una
+ * riga RTL il loro punto finale andava in testa. */
+#scheda-says, .saysit { unicode-bidi: plaintext; }

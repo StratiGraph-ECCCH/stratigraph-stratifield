@@ -397,10 +397,10 @@ class Scheda:
             if vocabulary.get("provisional"):
                 out["vocabulary_norm"] = str(vocabulary["scheme"])
         if out["type"] == "quantity_list":
-            out["measures"] = self._measures_for_browser(fid)
+            out["measures"] = self._measures_for_browser(fid, lang)
         return out
 
-    def _measures_for_browser(self, fid: str) -> Dict[str, Any]:
+    def _measures_for_browser(self, fid: str, lang: str) -> Dict[str, Any]:
         """WHAT a row of a measurement box may say it measures (2026-10-22).
 
         A `quantity_list` value is rows of `{qualia, label, value, unit}` (SPEC
@@ -411,9 +411,17 @@ class Scheda:
 
         The one thing the recipe adds is the box's DEFAULT (`defaults
         .$item.qualia`: QUOTE is `elevation` when a row says nothing), and it
-        is offered first. The names are the datamodel's: it has no Italian for
-        «Thickness», and a word nobody wrote for the datamodel is not invented
-        here — the row's own `label` is where a person writes «spessore max».
+        is offered first.
+
+        THE NAMES IN THE CARD'S LANGUAGE (2026-10-24). The datamodel now has
+        them in every language (`datamodel_translations.json`, s3Dgraphy), and
+        they are read through ONE road, the library's `qualia_label`, in the
+        language of THE CARD — not of the interface: an ICCD card says
+        «Spessore» even with the interface in Hebrew. Falling back to English is
+        the library's; `label_lang` says when that happened, so the widget can
+        show the word for what it is. They travel inside the definition, so
+        the definition's offline cache (`scheda.js::definitionFor`) carries
+        them too. The row's own `label` («spessore max») still wins.
         """
         entry = ((self.recipe or {}).get("fields") or {}).get(fid) or {}
         default = str((entry.get("defaults") or {}).get("$item.qualia") or "")
@@ -423,7 +431,7 @@ class Scheda:
             # forme devono disegnare lo stesso modulo (test_scheda).
             source = self._by_id.get(fid) or {}
             default = str(((source.get("graph") or {}).get("qualia")) or "")
-        qualia = measuring_qualia()
+        qualia = measuring_qualia(lang)
         if default:
             qualia = ([q for q in qualia if q["id"] == default]
                       + [q for q in qualia if q["id"] != default])
@@ -646,25 +654,55 @@ def find(scheda_id: str, environ: Optional[Dict[str, str]] = None, *,
 _MEASURING = ("float", "integer", "percentage")
 
 
-def measuring_qualia() -> List[Dict[str, Any]]:
+def measuring_qualia(lang: str = "en") -> List[Dict[str, Any]]:
     """Le qualia che una riga di misura può dichiarare, DAL DATAMODEL.
 
     `em_qualia_types.json` di s3Dgraphy, nell'ordine in cui le dichiara: id,
     nome, unità, e il gruppo (la sottocategoria: dimensional, spatial…) perché
     trenta voci in fila non si leggono. Solo quelle con un tipo numerico e delle
     unità: «colore» è una qualia, ma non si misura in metri.
+
+    `name` resta il nome inglese del datamodel; `label` e `group_label` sono in
+    `lang` (la lingua della SCHEDA), letti da `qualia_label` di s3Dgraphy e da
+    nessun'altra parte. `label_lang` compare quando la lingua non è fra quelle
+    del datamodel e la parola è quindi l'inglese (una ficha ungherese: «hu»).
     """
     from s3dgraphy.nodes.base_node import load_json_mapping
+
+    labels = _qualia_labels()
+    base = (lang or "en").split("-")[0].split("_")[0].lower()
+    fallen = labels is not None and base not in labels.LANGUAGES
 
     out: List[Dict[str, Any]] = []
     for category in load_json_mapping("em_qualia_types.json").get("qualia_categories") or []:
         for group, sub in (category.get("subcategories") or {}).items():
             for q in sub.get("qualia") or []:
                 if q.get("data_type") in _MEASURING and q.get("units"):
-                    out.append({"id": str(q["id"]), "name": str(q.get("name") or q["id"]),
-                                "units": [str(u) for u in q["units"]],
-                                "group": str(group)})
+                    name = str(q.get("name") or q["id"])
+                    item: Dict[str, Any] = {
+                        "id": str(q["id"]), "name": name,
+                        "units": [str(u) for u in q["units"]],
+                        "group": str(group)}
+                    if labels is not None:
+                        item["label"] = labels.qualia_label(item["id"], lang) or name
+                        item["group_label"] = (
+                            labels.qualia_subcategory_label(str(group), lang)
+                            or str(group))
+                        if fallen:
+                            item["label_lang"] = "en"
+                    out.append(item)
     return out
+
+
+def _qualia_labels() -> Any:
+    """Il lettore di s3Dgraphy (`tools.datamodel_i18n`), o None se la versione
+    installata è di prima che esistesse: allora il widget mostra `name`, come
+    prima, e non si inventa una parola."""
+    try:
+        from s3dgraphy.tools import datamodel_i18n
+    except ImportError:                     # s3dgraphy precedente al 2026-09-27
+        return None
+    return datamodel_i18n
 
 
 def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:

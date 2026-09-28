@@ -184,7 +184,8 @@ def test_il_tetto_non_e_stato_messo_rimpicciolendo_il_bersaglio():
     shell = (WEB / "shell.css").read_text(encoding="utf-8")
     assert "font-size: 19px; font-weight: 600;" in shell
     # e i bersagli restano quelli di una mano col guanto, anche sul tablet
-    assert "padding: 18px; text-align: left; cursor: pointer;" in shell
+    # (`start` e non `left` dal 24 ottobre: proprietà logica, in RTL si specchia)
+    assert "padding: 18px; text-align: start; cursor: pointer;" in shell
     scheda = (WEB / "scheda.css").read_text(encoding="utf-8")
     assert "font-size" not in scheda.split("--sf-thread: 34rem;")[1].split(
         "/* ── il modo: TABLET")[0], (

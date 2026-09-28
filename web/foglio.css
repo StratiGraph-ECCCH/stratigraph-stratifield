@@ -119,7 +119,7 @@
 }
 @container (max-width: 800px) {
   .fo-body { grid-template-columns: minmax(0, 1fr); }
-  .fo-insp { border-left: 0; border-top: 1px solid var(--sg-line); }
+  .fo-insp { border-inline-start: 0; border-top: 1px solid var(--sg-line); }
 }
 
 /* IL PIANO SCORRE IN ORIZZONTALE, non impila: sotto la scala minima le due
@@ -157,7 +157,7 @@
 .fo .fo-corner {
   position: absolute;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   z-index: 2;
   width: 34px;
   height: 34px;
@@ -180,7 +180,7 @@
 .fo-corner svg {
   position: absolute;
   top: 4px;
-  right: 4px;
+  inset-inline-end: 4px;
   width: 14px;
   height: 14px;
   fill: none;
@@ -193,7 +193,7 @@
 .fo-fixture {
   position: absolute;
   top: calc(var(--mm) * 4);
-  right: calc(var(--mm) * 4 + 30px);
+  inset-inline-end: calc(var(--mm) * 4 + 30px);
   padding: 1px 5px;
   font: 500 max(calc(var(--mm) * 2.4), 9px) var(--sg-font-mono);
   color: var(--sf-paper-ai);
@@ -215,13 +215,13 @@
 .fo-pagehead .fo-key {
   font-size: max(calc(var(--mm) * 2.2), 9px);
   color: var(--sf-paper-label);
-  text-align: right;
+  text-align: end;
 }
 
 /* ── la griglia ──────────────────────────────────────────────────────────── */
 .fo-grid {
   border: 1px solid var(--sf-paper-rule);
-  border-right: 0;
+  border-inline-end: 0;
   border-bottom: 0;
 }
 .fo-row {
@@ -235,7 +235,7 @@
   flex-shrink: 0;
   min-width: 0;
   padding: calc(var(--mm) * .9) calc(var(--mm) * 1.1);
-  border-right: 1px solid var(--sf-paper-rule);
+  border-inline-end: 1px solid var(--sf-paper-rule);
   overflow-wrap: anywhere;
 }
 .fo-f { cursor: text; }
@@ -261,7 +261,7 @@
 .fo-inner { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .fo-inner > .fo-row { flex: 1 0 auto; }
 .fo-inner > .fo-row:last-child { border-bottom: 0; }
-.fo-inner > .fo-row > .fo-cell:last-child { border-right: 0; }
+.fo-inner > .fo-row > .fo-cell:last-child { border-inline-end: 0; }
 .fo-blab {
   padding: calc(var(--mm) * .8);
   font: 500 max(calc(var(--mm) * 1.6), 8.5px) var(--sg-font-sans);
@@ -273,7 +273,7 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   text-align: center;
-  border-left: 1px solid var(--sf-paper-rule);
+  border-inline-start: 1px solid var(--sf-paper-rule);
 }
 .fo-block:not(.fo-rotated) > .fo-blab { border-bottom: 1px solid var(--sf-paper-rule); }
 
@@ -289,7 +289,7 @@
 .fo-req { color: var(--sg-accent); }
 .fo-stamp {
   display: inline-block;
-  margin-left: 5px;
+  margin-inline-start: 5px;
   padding: 1px 3px;
   font: 500 max(calc(var(--mm) * 1.6), 8.5px)/1 var(--sg-font-mono);
   border: 1px solid currentColor;
@@ -334,7 +334,7 @@
    risultato — chip, righe di misura — e si scrive nel pannello a destra. È un
    bottone per la tastiera, non per l'occhio: niente bordo, niente sfondo, il
    valore allineato come quello di una casella di testo. */
-.fo .fo-val.fo-struct { text-align: left; cursor: pointer; box-shadow: none; }
+.fo .fo-val.fo-struct { text-align: start; cursor: pointer; box-shadow: none; }
 /* SULLA CARTA l'inchiostro è quello della carta, in tutti e due i temi: il
    chip del tema scuro (testo chiaro) sul foglio chiaro non si leggeva —
    misurato, rgb(241,235,227) su carta. «Da compilare» col colore del bollo. */
@@ -388,7 +388,7 @@
   flex-direction: column;
   min-width: 0;
   background: var(--sg-surface);
-  border-left: 1px solid var(--sg-line);
+  border-inline-start: 1px solid var(--sg-line);
 }
 .fo-insp section { padding: var(--sg-space-4); border-bottom: 1px solid var(--sg-line); }
 .fo-insp h2 {
@@ -498,12 +498,12 @@
   color: var(--sg-muted);
   background: none;
   border: 0;
-  border-right: 1px solid var(--sg-line);
+  border-inline-end: 1px solid var(--sg-line);
   border-radius: 0;
   box-shadow: none;
   cursor: pointer;
 }
-.fo-seg button:last-child { border-right: 0; }
+.fo-seg button:last-child { border-inline-end: 0; }
 .fo-strip button[aria-pressed="true"] {
   color: var(--sg-text);
   background: var(--sg-surface-sunk);

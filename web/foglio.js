@@ -294,8 +294,13 @@ export function drawSheet(host, def, state, opts) {
 function pageFor(side, ctx) {
   const { def, state, opts } = ctx;
   const m = (def.sheet && def.sheet.margins_mm) || {};
+  // LA CARTA NELLA DIREZIONE DELLA SUA SCHEDA, non dell'interfaccia: una US
+  // ICCD è italiana e si scrive da sinistra a destra anche con l'interfaccia in
+  // ebraico (2026-10-24). `lang` perché la sillabazione e la voce la seguano.
   const page = el("article", {
     class: "fo-page",
+    lang: def.lang || "",
+    dir: SG().scriptDir ? SG().scriptDir(def.lang) : "ltr",
     "data-side": side.id,
     "aria-label": side.label,
     style: `--fo-mt:${m.top || 0};--fo-mr:${m.right || 0};` +

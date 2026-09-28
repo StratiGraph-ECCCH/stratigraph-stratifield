@@ -41,7 +41,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import (APIRouter, Body, FastAPI, File, Form, HTTPException,
                      Request, UploadFile)
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field
 
 from . import assets, handoff
@@ -1346,7 +1346,7 @@ def unpoint(request: Request) -> Dict[str, Any]:
 # ── the device ────────────────────────────────────────────────────────────────
 
 @public.get("/", response_class=HTMLResponse, tags=["device"])
-def device() -> Any:
+def device(request: Request) -> Any:
     """The field client, served by the node itself (design note §6).
 
     A PWA rather than a native app: ATRIUM is already a web app, the ecosystem
@@ -1354,13 +1354,51 @@ def device() -> Any:
     with camera, microphone and GPS through the browser. The heavy AI stays on
     the node; the device stays thin.
     """
-    from pathlib import Path
-    page = Path(__file__).resolve().parent.parent / "web" / "index.html"
+    page = _WEB / "index.html"
     if not page.is_file():
         return HTMLResponse("<h1>stratigraph-chatbot</h1>"
                             "<p>Il client di campo non è installato su questo "
                             "nodo.</p>", status_code=200)
-    return FileResponse(page, media_type="text/html")
+    return _revalidated(request, page.read_bytes(), "text/html")
+
+
+# ── MAI UN FILE VECCHIO (2026-10-24) ─────────────────────────────────────────
+#
+# Il nome della cache del worker cambia col digest, ma `install` la riempie
+# passando dalla CACHE HTTP del browser: senza istruzioni, il browser può tenersi
+# un `shell.css` di ieri per euristica (misurato sulla :8024 il 22 ottobre) e
+# metterlo DENTRO la cache nuova, che ha il nome giusto e il contenuto sbagliato.
+#
+# Due argini, uno per parte. Il worker scarica con `cache: "reload"` (web/sw.js);
+# il nodo serve la shell con `Cache-Control: no-cache` e un ETag di CONTENUTO, e
+# risponde 304 a chi ha già quei byte. `no-cache` non vuol dire «non tenere»: vuol
+# dire «chiedi prima di usare». La domanda costa un 304 senza corpo, la risposta
+# è sempre il file sul disco.
+#
+# L'ETag è un digest dei byte e non mtime+dimensione (quello di `FileResponse`):
+# un file riscritto uguale non costa uno scaricamento, uno cambiato della stessa
+# lunghezza nello stesso secondo non passa per vecchio.
+_REVALIDATE = "no-cache"
+
+#: La directory della shell, UNA per le tre rotte che la servono (`/`, `/sw.js`,
+#: il jolly): un nome solo, così un test la può puntare su una copia e cambiare
+#: un file «sul disco» senza toccare `web/`.
+_WEB = pathlib.Path(__file__).resolve().parent.parent / "web"
+
+
+def _etag_of(body: bytes) -> str:
+    import hashlib
+    return '"' + hashlib.sha256(body).hexdigest()[:32] + '"'
+
+
+def _revalidated(request: Request, body: bytes, media_type: str) -> Response:
+    """`body` con ETag di contenuto e `no-cache`, o un 304 se chi chiede lo ha."""
+    etag = _etag_of(body)
+    headers = {"ETag": etag, "Cache-Control": _REVALIDATE}
+    asked = request.headers.get("if-none-match", "")
+    if etag in {tag.strip().removeprefix("W/") for tag in asked.split(",")}:
+        return Response(status_code=304, headers=headers)
+    return Response(content=body, media_type=media_type, headers=headers)
 
 
 #: What never goes in the precache, whatever is on disk. Two kinds of thing:
@@ -1397,7 +1435,7 @@ def _shell_files(web: pathlib.Path) -> List[str]:
 
 
 @public.get("/sw.js", tags=["device"])
-def service_worker() -> Any:
+def service_worker(request: Request) -> Any:
     """The service worker, with its precache list and cache name SUBSTITUTED.
 
     Two things are filled in, and both are things a person forgets:
@@ -1415,7 +1453,7 @@ def service_worker() -> Any:
     import hashlib
     import json as _json
 
-    web = pathlib.Path(__file__).resolve().parent.parent / "web"
+    web = _WEB
     worker = web / "sw.js"
     if not worker.is_file():
         raise HTTPException(status_code=404, detail="no service worker")
@@ -1431,11 +1469,14 @@ def service_worker() -> Any:
     source = worker.read_text(encoding="utf-8")
     source = source.replace("__SHELL_FILES__", _json.dumps(files))
     source = source.replace("__SHELL_VERSION__", digest.hexdigest()[:12])
-    return Response(content=source, media_type="application/javascript")
+    # Il worker si rivalida come il resto: il browser lo ricontrolla da sé a
+    # ogni navigazione (è la regola dei worker), e un 304 lì costa zero byte.
+    return _revalidated(request, source.encode("utf-8"),
+                        "application/javascript")
 
 
 @public.get("/{shell_file:path}", tags=["device"], include_in_schema=False)
-def shell_file(shell_file: str) -> Any:
+def shell_file(shell_file: str, request: Request) -> Any:
     """Any file of the shell, from `web/`.
 
     ONE DIRECTORY, ONE SOURCE. `_shell_files` decides what the service worker
@@ -1452,7 +1493,7 @@ def shell_file(shell_file: str) -> Any:
     `.py` or a `.md` next to the page is not the shell, and the resolved path is
     checked to be INSIDE `web/` so `..` cannot walk out of it.
     """
-    web = pathlib.Path(__file__).resolve().parent.parent / "web"
+    web = _WEB
     candidate = (web / shell_file).resolve()
     try:
         candidate.relative_to(web.resolve())
@@ -1467,7 +1508,7 @@ def shell_file(shell_file: str) -> Any:
             ".svg": "image/svg+xml", ".json": "application/json",
             ".webmanifest": "application/manifest+json"}.get(
                 candidate.suffix.lower(), "application/octet-stream")
-    return FileResponse(candidate, media_type=kind)
+    return _revalidated(request, candidate.read_bytes(), kind)
 
 
 # The BRAND, served beside the page that asks for it. Static files, no route of
@@ -1480,7 +1521,17 @@ def shell_file(shell_file: str) -> Any:
 _BRAND = pathlib.Path(__file__).resolve().parent.parent / "web" / "brand"
 if _BRAND.is_dir():
     from fastapi.staticfiles import StaticFiles
-    app.mount("/brand", StaticFiles(directory=str(_BRAND)), name="brand")
+
+    class _BrandFiles(StaticFiles):
+        """`StaticFiles` fa già ETag e 304; manca solo l'ordine di chiedere
+        prima di usare, che è la metà che conta (vedi `_REVALIDATE`)."""
+
+        def file_response(self, *args: Any, **kwargs: Any) -> Response:
+            answer = super().file_response(*args, **kwargs)
+            answer.headers["Cache-Control"] = _REVALIDATE
+            return answer
+
+    app.mount("/brand", _BrandFiles(directory=str(_BRAND)), name="brand")
 
 # L'ORDINE CONTA, ED È QUESTO PER UNA RAGIONE MISURATA.
 #
