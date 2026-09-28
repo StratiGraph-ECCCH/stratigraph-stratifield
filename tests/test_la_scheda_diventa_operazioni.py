@@ -362,6 +362,15 @@ def test_E2_the_RDF_projection_carries_every_field_that_has_operations():
         if fid == "descrizione":
             count = len(list(graph.triples((rdflib.URIRef(base + "US3014"), None,
                                             rdflib.Literal(RECORD[fid])))))
+        elif iccd().recipe["fields"][fid].get("element"):
+            # un ELEMENTO DEL NODO (la DEFINIZIONE, 1.0.1): nessun nodo e nessun
+            # arco, un `update_field` sull'unità — e con un concetto la tripla è
+            # <unità> <rdf.with_concept> <concetto> (datamodel 1.6.9). Fino al
+            # 2026-09-27 questo ramo mancava e il test contava 0 per costruzione;
+            # non se ne accorgeva nessuno perché senza rdflib si salta.
+            concept = (RECORD[fid] or {}).get("concept")
+            count = len(list(graph.triples((rdflib.URIRef(base + "US3014"), None,
+                                            rdflib.URIRef(concept))))) if concept else 0
         else:
             count = sum(1 for s, _p, o in graph
                         if any(str(s) == base + i or str(s).startswith(base + i + "/")

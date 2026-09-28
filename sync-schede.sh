@@ -81,7 +81,9 @@ echo "  vendored size    $(du -sh "$DST" | cut -f1)"
 # A `declared` scheme (the ICCD field models: the norm prescribes a vocabulary
 # and no SKOS exists) is vendored TOO, with no concepts: the node then SAYS it
 # is declared instead of looking like a node that lost the file. Nothing here
-# invents a concept.
+# invents a concept. A declared scheme that names a PROVISIONAL one
+# (stratigraph-templates SPEC §3.2) has its stand-in listed right after it in
+# the header, so the stand-in is vendored here with its concepts.
 #
 # Beside `schede/` and not inside it: every `*.json` under `schede/` is read as
 # a definition.
@@ -97,12 +99,15 @@ from stratigraph_templates.vocab import Vocabularies, VocabularyError
 schede, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 vocab = Vocabularies.load()
 wanted = {}                                   # scheme -> languages asked for
+stands_in = {}                                # provisional scheme -> the norm's
 for path in sorted(schede.rglob("*.json")):
     if path.name == "index.json":
         continue
     header = json.loads(path.read_text(encoding="utf-8"))["header"]
     for entry in header.get("vocabularies") or []:
         wanted.setdefault(entry["id"], set()).update(header.get("languages") or [])
+        if entry.get("provisional_for"):
+            stands_in[entry["id"]] = entry["provisional_for"]
 for sid, langs in sorted(wanted.items()):
     scheme = vocab.schemes.get(sid)
     if scheme is None:
@@ -123,6 +128,14 @@ for sid, langs in sorted(wanted.items()):
            "uri": scheme.uri, "license": scheme.license,
            "labels": scheme.labels, "languages": sorted(langs),
            "concepts": concepts}
+    # SPEC §3.2-3.3 (2026-09-27): whom a provisional module stands in for, and
+    # which of its languages nobody has verified yet — said, not hidden.
+    if sid in stands_in:
+        doc["provisional_for"] = stands_in[sid]
+    if scheme.provisional:
+        doc["provisional"] = scheme.provisional
+    if scheme.unverified_languages:
+        doc["unverified_languages"] = sorted(scheme.unverified_languages)
     (out / f"{sid}.json").write_text(
         json.dumps(doc, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
         encoding="utf-8")

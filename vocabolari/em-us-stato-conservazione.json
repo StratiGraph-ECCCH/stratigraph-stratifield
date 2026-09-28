@@ -1,0 +1,71 @@
+{
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/buono",
+   "labels": {
+    "en": "good",
+    "it": "buono"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/discreto",
+   "labels": {
+    "en": "fair",
+    "it": "discreto"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/insufficiente",
+   "labels": {
+    "en": "insufficient",
+    "it": "insufficiente"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/ottimo",
+   "labels": {
+    "en": "excellent",
+    "it": "ottimo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/pessimo",
+   "labels": {
+    "en": "very poor",
+    "it": "pessimo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/scarso",
+   "labels": {
+    "en": "poor",
+    "it": "scarso"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "State of preservation of the unit (US sheet, Extended Matrix)",
+  "it": "Stato di conservazione dell'unità (scheda US, Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "provisional_for": "iccd-us-stato-conservazione",
+ "scheme": "em-us-stato-conservazione",
+ "status": "resolvable",
+ "unverified_languages": [
+  "de",
+  "el",
+  "en",
+  "es",
+  "he",
+  "pl",
+  "ro"
+ ],
+ "uri": "https://w3id.org/extendedmatrix/vocab/us-stato-conservazione/"
+}

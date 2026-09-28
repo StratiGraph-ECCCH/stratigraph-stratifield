@@ -12,6 +12,7 @@
   "it"
  ],
  "license": "CC BY-SA 4.0 (modello US 2021) — vocabolario non ancora pubblicato in SKOS",
+ "provisional": "em-us-consistenza",
  "scheme": "iccd-us-consistenza",
  "status": "declared",
  "uri": null

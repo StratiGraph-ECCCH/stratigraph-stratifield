@@ -1,0 +1,71 @@
+{
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/argillosa",
+   "labels": {
+    "en": "clayey",
+    "it": "argillosa"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/compatta",
+   "labels": {
+    "en": "compact",
+    "it": "compatta"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/friabile",
+   "labels": {
+    "en": "friable",
+    "it": "friabile"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/plastica",
+   "labels": {
+    "en": "plastic",
+    "it": "plastica"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/sabbiosa",
+   "labels": {
+    "en": "sandy",
+    "it": "sabbiosa"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-consistenza/sciolta",
+   "labels": {
+    "en": "loose",
+    "it": "sciolta"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Consistency of the deposit (US sheet, Extended Matrix)",
+  "it": "Consistenza del deposito (scheda US, Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "provisional_for": "iccd-us-consistenza",
+ "scheme": "em-us-consistenza",
+ "status": "resolvable",
+ "unverified_languages": [
+  "de",
+  "el",
+  "en",
+  "es",
+  "he",
+  "pl",
+  "ro"
+ ],
+ "uri": "https://w3id.org/extendedmatrix/vocab/us-consistenza/"
+}

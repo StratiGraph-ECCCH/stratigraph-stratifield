@@ -93,9 +93,25 @@
             "qualia": "1.6.1",
             "em_ttl": "1.6.5"
           }
+        },
+        "1.0.2": {
+          "path": "iccd-us-2021/1.0.2.json",
+          "digest": "sha256:0489882dc822a899be967c88e6f7dad48078f79e6195bab095db69e2926a1076",
+          "standard": {
+            "authority": "ICCD",
+            "code": "US",
+            "version": "2021",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.9",
+            "connections": "1.6.20",
+            "qualia": "1.6.1",
+            "em_ttl": "1.6.5"
+          }
         }
       },
-      "latest": "1.0.1"
+      "latest": "1.0.2"
     }
   }
 }

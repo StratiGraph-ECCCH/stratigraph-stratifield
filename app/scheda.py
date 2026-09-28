@@ -388,7 +388,14 @@ class Scheda:
             # list a box belongs to, and a node with the vocabulary can offer
             # it (`GET /v1/vocabolario/{scheme}`); a node without it still
             # shows the box.
-            out["vocabulary"] = str(vocabulary["scheme"])
+            #
+            # A norm's scheme that is only DECLARED may name a PROVISIONAL one
+            # (stratigraph-templates SPEC §3.2, 2026-09-27): the box keeps
+            # citing the norm and is OFFERED the concepts of the stand-in —
+            # the one `sync-schede.sh` vendored with concepts.
+            out["vocabulary"] = str(vocabulary.get("provisional") or vocabulary["scheme"])
+            if vocabulary.get("provisional"):
+                out["vocabulary_norm"] = str(vocabulary["scheme"])
         if out["type"] == "quantity_list":
             out["measures"] = self._measures_for_browser(fid)
         return out
@@ -690,6 +697,8 @@ def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
                                              "label_there": other[1]})})
     return {"scheme": doc.get("scheme"), "status": doc.get("status"),
             "authority": doc.get("authority"), "fixture": bool(doc.get("fixture")),
+            **({"provisional_for": doc["provisional_for"]} if doc.get("provisional_for") else {}),
+            "unverified": lang in (doc.get("unverified_languages") or []),
             "label": (doc.get("labels") or {}).get(lang), "lang": lang,
             "concepts": concepts}
 

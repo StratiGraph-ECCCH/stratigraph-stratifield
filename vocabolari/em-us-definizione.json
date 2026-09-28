@@ -1,0 +1,281 @@
+{
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/battuto",
+   "labels": {
+    "en": "beaten earth floor",
+    "it": "battuto"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/deposito",
+   "labels": {
+    "en": "deposit",
+    "it": "deposito"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/fondazione-in-muratura",
+   "labels": {
+    "en": "masonry foundation",
+    "it": "fondazione in muratura"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/piano-d-uso",
+   "labels": {
+    "en": "use surface",
+    "it": "piano d'uso"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/rasatura",
+   "labels": {
+    "en": "razing",
+    "it": "rasatura"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/riempimento",
+   "labels": {
+    "en": "fill",
+    "it": "riempimento"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/riempimento-taglio-di-buca",
+   "labels": {
+    "en": "pit fill",
+    "it": "riempimento taglio di buca"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/spoliazione",
+   "labels": {
+    "en": "robbing",
+    "it": "spoliazione"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato",
+   "labels": {
+    "en": "layer",
+    "it": "strato"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-argilla",
+   "labels": {
+    "en": "clay layer",
+    "it": "strato di argilla"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-argilla-concotta",
+   "labels": {
+    "en": "burnt clay layer",
+    "it": "strato di argilla concotta"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-calpestio",
+   "labels": {
+    "en": "trampled layer",
+    "it": "strato di calpestio"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-carbone",
+   "labels": {
+    "en": "charcoal layer",
+    "it": "strato di carbone"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-carbone-e-cenere",
+   "labels": {
+    "en": "charcoal and ash layer",
+    "it": "strato di carbone e cenere"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-cenere",
+   "labels": {
+    "en": "ash layer",
+    "it": "strato di cenere"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-cenere-vulcanica",
+   "labels": {
+    "en": "volcanic ash layer",
+    "it": "strato di cenere vulcanica"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-ciottoli",
+   "labels": {
+    "en": "pebble layer",
+    "it": "strato di ciottoli"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-crollo",
+   "labels": {
+    "en": "collapse layer",
+    "it": "strato di crollo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-ghiaia",
+   "labels": {
+    "en": "gravel layer",
+    "it": "strato di ghiaia"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-intonaco",
+   "labels": {
+    "en": "plaster layer",
+    "it": "strato di intonaco"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-laterizi",
+   "labels": {
+    "en": "brick and tile layer",
+    "it": "strato di laterizi"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-legno-carbonizzato",
+   "labels": {
+    "en": "charred wood layer",
+    "it": "strato di legno carbonizzato"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-livellamento",
+   "labels": {
+    "en": "levelling layer",
+    "it": "strato di livellamento"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-macerie",
+   "labels": {
+    "en": "rubble layer",
+    "it": "strato di macerie"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-malta",
+   "labels": {
+    "en": "mortar layer",
+    "it": "strato di malta"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-pietra",
+   "labels": {
+    "en": "stone layer",
+    "it": "strato di pietra"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-pietrisco",
+   "labels": {
+    "en": "crushed stone layer",
+    "it": "strato di pietrisco"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-resti-scheletrici",
+   "labels": {
+    "en": "skeletal remains layer",
+    "it": "strato di resti scheletrici"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-sabbia",
+   "labels": {
+    "en": "sand layer",
+    "it": "strato di sabbia"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-sabbia-concotta",
+   "labels": {
+    "en": "burnt sand layer",
+    "it": "strato di sabbia concotta"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-terra",
+   "labels": {
+    "en": "earth layer",
+    "it": "strato di terra"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-di-terreno-concottato",
+   "labels": {
+    "en": "burnt soil layer",
+    "it": "strato di terreno concottato"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/strato-geologico-naturale",
+   "labels": {
+    "en": "natural geological layer",
+    "it": "strato geologico naturale"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/struttura-in-muratura",
+   "labels": {
+    "en": "masonry structure",
+    "it": "struttura in muratura"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/taglio",
+   "labels": {
+    "en": "cut",
+    "it": "taglio"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-definizione/taglio-di-fondazione",
+   "labels": {
+    "en": "foundation cut",
+    "it": "taglio di fondazione"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Definition of the stratigraphic unit (US sheet, Extended Matrix)",
+  "it": "Definizione dell'unità stratigrafica (scheda US, Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "provisional_for": "iccd-us-definizione",
+ "scheme": "em-us-definizione",
+ "status": "resolvable",
+ "unverified_languages": [
+  "de",
+  "el",
+  "en",
+  "es",
+  "he",
+  "pl",
+  "ro"
+ ],
+ "uri": "https://w3id.org/extendedmatrix/vocab/us-definizione/"
+}

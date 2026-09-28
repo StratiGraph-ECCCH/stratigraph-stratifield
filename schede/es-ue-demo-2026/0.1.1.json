@@ -39,9 +39,9 @@
       "connections": "1.6.20",
       "qualia": "1.6.1",
       "em_ttl": "1.6.5",
-      "s3dgraphy": "1.6.0.dev20",
+      "s3dgraphy": "1.6.0.dev21",
       "taken_from": {
-        "git_commit": "f0de0a1d04169acb34ce6e93ab97e56c1e234c70",
+        "git_commit": "bd3340dec0c8c55121533f8a05433db1e447bac2",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"

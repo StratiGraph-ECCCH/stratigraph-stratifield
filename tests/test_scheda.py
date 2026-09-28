@@ -462,17 +462,31 @@ def test_a_YAML_definition_is_drawn_and_NOT_saved(tmp_path):
 def test_the_compiled_visual_half_draws_the_same_module_as_the_yaml():
     """`for_browser` nasce dalla metà visiva della forma compilata, e deve dare
     al browser ESATTAMENTE ciò che dava lo YAML: stesse etichette, stessi
-    paragrafi, stesso foglio. Misurato su tre definizioni, in ogni lingua."""
+    paragrafi, stesso foglio. Misurato su tre definizioni, in ogni lingua.
+
+    UNA differenza è voluta, e il test la nomina invece di ignorarla: il ponte
+    dello schema provvisorio (SPEC §3.2, 2026-09-27) vive negli schemi e non
+    nella definizione, quindi solo il compilato sa che la casella citata
+    `iccd-us-definizione` si offre con `em-us-definizione`. Il compilato deve
+    allora citare la STESSA norma dello YAML (`vocabulary_norm`)."""
     if not TEMPLATES.is_dir():
         pytest.skip("stratigraph-templates non è accanto")
+    bridged = 0
     for compiled in schede.available({}):
         source = schede.load(TEMPLATES / compiled.id / "template.yaml")
         for lang in compiled.languages:
             a, b = compiled.for_browser(lang), source.for_browser(lang)
+            for fa in a.get("fields") or []:
+                if fa.get("vocabulary_norm"):
+                    fb = next(f for f in b["fields"] if f["id"] == fa["id"])
+                    assert fa.pop("vocabulary_norm") == fb["vocabulary"], (compiled.id, fa["id"])
+                    fa["vocabulary"] = fb["vocabulary"]
+                    bridged += 1
             for key in set(a) | set(b):
                 if key in ("saveable", "standard"):
                     continue
                 assert a.get(key) == b.get(key), (compiled.id, lang, key)
+    assert bridged == 5 * 2, "le cinque caselle a vocabolario della US, in it ed en"
 
 
 # ── 7 · LE DEFINIZIONI VERE, quando ci sono ─────────────────────────────────

@@ -1,0 +1,169 @@
+{
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/arancione",
+   "labels": {
+    "en": "orange",
+    "it": "arancione"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/azzurro",
+   "labels": {
+    "en": "light blue",
+    "it": "azzurro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/bianco",
+   "labels": {
+    "en": "white",
+    "it": "bianco"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/blu",
+   "labels": {
+    "en": "blue",
+    "it": "blu"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/giallo",
+   "labels": {
+    "en": "yellow",
+    "it": "giallo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/giallo-chiaro",
+   "labels": {
+    "en": "light yellow",
+    "it": "giallo chiaro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/giallo-scuro",
+   "labels": {
+    "en": "dark yellow",
+    "it": "giallo scuro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/giallorosso",
+   "labels": {
+    "en": "yellowish red",
+    "it": "giallorosso"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/grigio",
+   "labels": {
+    "en": "grey",
+    "it": "grigio"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/grigio-azzurro",
+   "labels": {
+    "en": "bluish grey",
+    "it": "grigio-azzurro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/grigio-chiaro",
+   "labels": {
+    "en": "light grey",
+    "it": "grigio chiaro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/grigio-scuro",
+   "labels": {
+    "en": "dark grey",
+    "it": "grigio scuro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/grigio-verde",
+   "labels": {
+    "en": "greenish grey",
+    "it": "grigio-verde"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/marrone",
+   "labels": {
+    "en": "brown",
+    "it": "marrone"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/marrone-chiaro",
+   "labels": {
+    "en": "light brown",
+    "it": "marrone chiaro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/marrone-scuro",
+   "labels": {
+    "en": "dark brown",
+    "it": "marrone scuro"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/nero",
+   "labels": {
+    "en": "black",
+    "it": "nero"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/rosato",
+   "labels": {
+    "en": "pinkish",
+    "it": "rosato"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/rosso",
+   "labels": {
+    "en": "red",
+    "it": "rosso"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/us-colore/verde",
+   "labels": {
+    "en": "green",
+    "it": "verde"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Colour of the deposit (US sheet, Extended Matrix)",
+  "it": "Colore del deposito (scheda US, Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "provisional_for": "iccd-us-colore",
+ "scheme": "em-us-colore",
+ "status": "resolvable",
+ "unverified_languages": [
+  "de",
+  "el",
+  "en",
+  "es",
+  "he",
+  "pl",
+  "ro"
+ ],
+ "uri": "https://w3id.org/extendedmatrix/vocab/us-colore/"
+}
