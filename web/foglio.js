@@ -51,7 +51,7 @@
  * si interrogano con node, come `thumbbarPlan`.
  */
 
-import { authorshipOf, isFilled, shown as asText, writeValue } from "./scheda.js";
+import { authorshipOf, datamodelNotice, isFilled, shown as asText, writeValue } from "./scheda.js";
 import { isStructured, mountWidget, valueView } from "./widgets.js";
 
 const SG = () => (typeof window !== "undefined" && window.SG) || {};
@@ -229,6 +229,9 @@ export function drawSheet(host, def, state, opts) {
   clear.addEventListener("click", () => state.onClear());
   head.append(clear);
   root.append(head);
+  // lo stesso avviso della vista «Campi», dalla stessa funzione
+  const notice = datamodelNotice(def);
+  if (notice) root.append(notice);
 
   const body = el("div", { class: "fo-body" });
   const desk = el("div", { class: "fo-desk" });

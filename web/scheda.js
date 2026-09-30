@@ -342,6 +342,43 @@ export function completeness(def, values) {
   };
 }
 
+/* ── IL DATAMODEL SU CUI LA SCHEDA È STATA COSTRUITA (2026-10-01) ──────────
+ *
+ * Il servizio confronta `header.datamodel` della scheda (versioni e impronta)
+ * con la s3dgraphy che porta con sé, e manda l'esito in `def.datamodel_check`
+ * (`app/scheda.py::check_datamodel`). Qui lo si DICE, e basta: una differenza
+ * non blocca — la ricetta sono cinque operazioni che la stanza applica con la
+ * sua s3dgraphy — ma chi compila deve poterla vedere.
+ *
+ * Tre voci: `differs` (un'altra impronta: ogni datamodel che si è mosso ha il
+ * suo nome), `no_digest` (una scheda compilata prima dell'impronta: avviso più
+ * morbido), `unchecked` (questo nodo non sa calcolarla). `aligned` non dice
+ * niente: una riga che c'è sempre è una riga che nessuno legge.
+ */
+export function datamodelNotice(def) {
+  const check = def && def.datamodel_check;
+  if (!check || check.state === "aligned") return null;
+  const t = (key, values, fallback) => (SG().t ? SG().t(key, values) : fallback);
+  const lines = (check.differences || []).map((d) => d.name
+    ? t("sheet.dm.line", { name: t(`dm.${d.name}`, null, d.name),
+                           sheet: d.scheda, here: d.here },
+        `${d.name} ${d.scheda}, here ${d.here}`)
+    : t("sheet.dm.content", null, "same versions, different content"));
+  const head = {
+    differs: t("sheet.dm.differs", null, "Built on another datamodel than this node's:"),
+    no_digest: t("sheet.dm.nodigest", null,
+                 "Compiled before the datamodel fingerprint: it cannot be checked in full."),
+    unchecked: t("sheet.dm.unchecked", null,
+                 "This node cannot compute the datamodel fingerprint: the sheet is not checked."),
+  }[check.state];
+  if (!head) return null;
+  const box = el("p", { class: "dm-notice" + (check.state === "differs" ? " differs" : ""),
+                        role: "status", "data-state": check.state });
+  box.append(el("b", { text: head }));
+  if (lines.length) box.append(el("span", { text: lines.join(" · ") }));
+  return box;
+}
+
 export function completenessLine(def, values, mode) {
   const state = completeness(def, values);
   const bits = [];
@@ -609,6 +646,8 @@ export function render(container, def, state) {
   clear.addEventListener("click", () => state.onClear());
   head.append(clear);
   sheet.append(head);
+  const notice = datamodelNotice(def);
+  if (notice) sheet.append(notice);
 
   sheet.append(completenessLine(def, state.values, mode));
 

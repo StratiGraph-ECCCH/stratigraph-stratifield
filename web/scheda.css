@@ -302,6 +302,25 @@
    dipingerla come un problema insegnerebbe a chi scava che sta sbagliando. */
 .completeness.blocking { border-inline-start-color: var(--sg-warn); }
 
+/* ── il datamodel della scheda contro quello del nodo: si vede, non blocca ── */
+
+.dm-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sg-space-2);
+  margin: 0 0 var(--sg-space-3);
+  padding: var(--sg-space-2) var(--sg-space-3);
+  border-radius: var(--sg-radius-sm);
+  font-size: var(--sg-text-sm);
+  background: var(--sg-surface-sunk);
+  color: var(--sg-muted);
+  border-inline-start: 3px solid var(--sg-info);
+}
+.dm-notice b { color: var(--sg-text); font-weight: var(--sg-weight-subtitle); }
+/* un'impronta DIVERSA chiede una persona; una scheda vecchia senza impronta no */
+.dm-notice.differs { border-inline-start-color: var(--sg-warn); }
+
 /* ── il modo: TELEFONO ───────────────────────────────────────────────────── */
 
 /* Una colonna, un campo per volta, e i bersagli nella METÀ BASSA. La colonna

@@ -170,6 +170,19 @@ class Scheda:
         if not self.fields:
             raise SchedaError(f"«{self.id}» non dichiara nessun campo")
         self._by_id = {str(f.get("id")): f for f in self.fields}
+        self._datamodel_check: Optional[Dict[str, Any]] = None
+        if self.compiled:
+            self.datamodel_check()   # said in the log AT LOAD, not at first draw
+
+    def datamodel_check(self) -> Optional[Dict[str, Any]]:
+        """The scheda's datamodel against this node's (see `check_datamodel`).
+        None for a YAML source: it was never compiled against anything."""
+        if not self.compiled:
+            return None
+        if self._datamodel_check is None:
+            self._datamodel_check = check_datamodel(self.datamodel, datamodel_here())
+            _say_datamodel(self, self._datamodel_check)
+        return self._datamodel_check
 
     @property
     def ref(self) -> Dict[str, str]:
@@ -285,6 +298,11 @@ class Scheda:
             "version": self.version,
             "saveable": self.recipe is not None,
         }
+        # THE DATAMODEL IT WAS BUILT ON, against this node's: never blocking,
+        # always visible (see `check_datamodel`). Absent for a YAML source.
+        check = self.datamodel_check()
+        if check is not None:
+            out["datamodel_check"] = check
         # The running head of the sheet spells the unit with the definition's
         # own pattern (SPEC §1.2), so the browser does not invent «US 12».
         pattern = ((self.raw.get("identity") or {}).get("human_key")
@@ -480,6 +498,104 @@ VOCABULARY_DIR = pathlib.Path(__file__).resolve().parent.parent / "vocabolari"
 
 _log = logging.getLogger("stratigraph-chatbot.scheda")
 _said_override: set = set()
+
+
+# ── THE DATAMODEL A SCHEDA WAS BUILT ON, AGAINST THE ONE HERE (2026-10-01) ──
+#
+# A compiled scheda says, in `header.datamodel`, which s3Dgraphy datamodel it
+# was checked against: one version per datamodel and, since stratigraph-
+# templates snapshot format 4, `digest` — s3Dgraphy's datamodel FINGERPRINT
+# (`api.datamodel_fingerprint`). Until tonight nobody read it (the audit of the
+# chain, D3): a scheda compiled against nodes 1.6.12 was served by a node
+# carrying 1.6.17 and nothing said so.
+#
+# It does NOT block. The recipe is five CRDT operations and the room applies
+# them with its own s3Dgraphy; a scheda one version behind usually still says
+# the right thing, and refusing it in a trench would cost the record. What it
+# does is make the difference VISIBLE: once in the log, and on the scheda
+# itself (`for_browser` → `datamodel_check`, drawn by `web/scheda.js`).
+#
+# Three answers, and a fourth when the question cannot be asked:
+#   aligned    — same digest;
+#   differs    — another digest: each datamodel that moved is named;
+#   no_digest  — a scheda compiled before the fingerprint: the versions it has
+#                are compared, and the softer warning says it cannot be checked
+#                in full;
+#   unchecked  — this node's s3dgraphy cannot compute the fingerprint (older
+#                than the one that introduced it).
+
+#: how the log names each datamodel; the interface has its own keys (`dm.*`)
+DATAMODEL_NAMES_IT = {
+    "nodes": "nodi", "node_registry": "registro dei nodi",
+    "connections": "connessioni", "visual_rules": "regole visive",
+    "qualia": "qualia", "translations": "traduzioni",
+}
+_said_datamodel: set = set()
+_here_cache: Dict[str, Any] = {}
+
+
+def datamodel_here() -> Optional[Dict[str, Any]]:
+    """The fingerprint of the s3dgraphy this node carries, or None when that
+    s3dgraphy cannot compute one. Read once: the package does not change under a
+    running process."""
+    if "fp" not in _here_cache:
+        try:
+            from s3dgraphy.datamodel import datamodel_fingerprint
+            _here_cache["fp"] = datamodel_fingerprint()
+        except Exception as exc:          # ImportError on an older s3dgraphy
+            _log.info("[scheda] questa s3dgraphy non calcola l'impronta del "
+                      "datamodel (%s): le schede non si controllano", exc)
+            _here_cache["fp"] = None
+    return _here_cache["fp"]
+
+
+def check_datamodel(declared: Dict[str, Any],
+                    here: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """`header.datamodel` of a scheda against the fingerprint `here`.
+
+    Returns `{state, differences: [{name, scheda, here}], digest, here_digest}`.
+    A difference with `name: None` means «same versions, different content».
+    Pure: no log, no cache — `Scheda.datamodel_check` does those.
+    """
+    out: Dict[str, Any] = {"state": "unchecked", "differences": [],
+                           "digest": declared.get("digest"),
+                           "here_digest": (here or {}).get("digest")}
+    if here is None:
+        return out
+    versions = here.get("versions") or {}
+    diffs = [{"name": name, "scheda": declared.get(name), "here": version}
+             for name, version in versions.items()
+             if name in declared and declared.get(name) != version]
+    out["differences"] = diffs
+    if not declared.get("digest"):
+        out["state"] = "no_digest"
+    elif declared["digest"] == here.get("digest"):
+        out["state"] = "aligned"
+    else:
+        out["state"] = "differs"
+        if not diffs:
+            out["differences"] = [{"name": None, "scheda": None, "here": None}]
+    return out
+
+
+def _say_datamodel(scheda: "Scheda", check: Dict[str, Any]) -> None:
+    """Once per scheda version and datamodel: the directory is re-read on every
+    request, and a warning repeated at every listing is a warning nobody reads."""
+    key = (scheda.id, scheda.version, check.get("digest"), check["state"])
+    if check["state"] == "aligned" or key in _said_datamodel:
+        return
+    _said_datamodel.add(key)
+    what = "; ".join(
+        f"{DATAMODEL_NAMES_IT.get(d['name'], d['name'])} {d['scheda']}, qui {d['here']}"
+        if d["name"] else "stesse versioni, contenuto diverso"
+        for d in check["differences"])
+    if check["state"] == "differs":
+        _log.warning("[scheda] %s %s costruita su un altro datamodel: %s",
+                     scheda.id, scheda.version, what)
+    elif check["state"] == "no_digest":
+        _log.info("[scheda] %s %s compilata prima dell'impronta del datamodel: "
+                  "non si controlla per intero%s", scheda.id, scheda.version,
+                  f" ({what})" if what else "")
 
 
 def _raw_from_compiled(doc: Dict[str, Any]) -> Dict[str, Any]:

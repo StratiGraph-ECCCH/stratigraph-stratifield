@@ -485,7 +485,10 @@ def test_the_compiled_visual_half_draws_the_same_module_as_the_yaml():
                     fa["vocabulary"] = fb["vocabulary"]
                     bridged += 1
             for key in set(a) | set(b):
-                if key in ("saveable", "standard"):
+                # `datamodel_check`: only a COMPILED form was checked against a
+                # datamodel, so only it can say how that compares with this
+                # node's (2026-10-01) — not a difference in what is drawn
+                if key in ("saveable", "standard", "datamodel_check"):
                     continue
                 assert a.get(key) == b.get(key), (compiled.id, lang, key)
     assert bridged == 5 * 2, "le cinque caselle a vocabolario della US, in it ed en"

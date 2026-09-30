@@ -68,6 +68,38 @@ for sid, entry in sorted(index["schede"].items()):
 EOF
 echo "  vendored size    $(du -sh "$DST" | cut -f1)"
 
+# ── THE DATAMODEL FINGERPRINT, BOTH SIDES (2026-10-01) ────────────────────────
+#
+# A compiled scheda carries s3Dgraphy's datamodel fingerprint in
+# `header.datamodel.digest` (stratigraph-templates snapshot format 4); the app
+# compares it at load with the s3dgraphy it runs on (`app/scheda.py`
+# `check_datamodel`) and says so in the log and on the scheda. Printed here too,
+# so that whoever syncs sees at once whether the schede and this node's
+# s3dgraphy agree — the latest version of each scheda, and the installed
+# package's own fingerprint, read with the python this app runs on.
+APP_PY="$HERE/.venv/bin/python"
+[ -x "$APP_PY" ] || APP_PY="python3"
+"$APP_PY" - "$DST" <<'EOF'
+import json, pathlib, sys
+dst = pathlib.Path(sys.argv[1])
+index = json.loads((dst / "index.json").read_text(encoding="utf-8"))
+try:
+    import s3dgraphy
+    from s3dgraphy.datamodel import datamodel_fingerprint
+    here = datamodel_fingerprint()["digest"]
+    print(f"  s3dgraphy here   {s3dgraphy.__version__}  datamodel {here}")
+except Exception as exc:  # absent, or older than the fingerprint
+    here = None
+    print(f"  s3dgraphy here   no fingerprint ({exc.__class__.__name__}: {exc})")
+for sid, entry in sorted(index["schede"].items()):
+    latest = entry["latest"]
+    head = json.loads((dst / entry["versions"][latest]["path"]).read_text(encoding="utf-8"))
+    digest = (head["header"].get("datamodel") or {}).get("digest")
+    mark = ("=" if digest == here else "≠") if digest and here else "·"
+    print(f"  {mark} {sid:<26} {latest:<8} datamodel "
+          f"{digest or '— compiled before the fingerprint'}")
+EOF
+
 # ── THE VOCABULARIES THE VENDORED SCHEDE NAME (2026-10-22) ────────────────────
 #
 # A `term` box offers the concepts of ITS scheme (SPEC §3), and the phone has to
