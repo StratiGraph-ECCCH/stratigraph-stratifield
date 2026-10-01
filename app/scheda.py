@@ -523,6 +523,15 @@ _said_override: set = set()
 #                in full;
 #   unchecked  — this node's s3dgraphy cannot compute the fingerprint (older
 #                than the one that introduced it).
+#
+# WHICH FILES (2026-10-26, s3Dgraphy dev25): a scheda compiled since then also
+# carries `header.datamodel.files`, the digest and version of each datamodel
+# file stratigraph-templates READ to build it (nodes, node_registry,
+# connections, qualia). When it is there, those files are compared and nothing
+# else: a node whose visual rules or translations moved serves the same scheda,
+# and saying «another datamodel» about it would be a warning about nothing. The
+# one `digest` is still carried and shown; without `files` (an older scheda) it
+# is what is compared, as before.
 
 #: how the log names each datamodel; the interface has its own keys (`dm.*`)
 DATAMODEL_NAMES_IT = {
@@ -563,6 +572,25 @@ def check_datamodel(declared: Dict[str, Any],
     if here is None:
         return out
     versions = here.get("versions") or {}
+    files = declared.get("files")
+    if isinstance(files, dict) and files:
+        # the files the scheda was built from, each on its own digest
+        digests = here.get("digests") or {}
+        out["compared"] = sorted(files)
+        diffs = [{"name": name, "scheda": (entry or {}).get("version"),
+                  "here": versions.get(name)}
+                 for name, entry in sorted(files.items())
+                 if (entry or {}).get("version") != versions.get(name)]
+        moved = [name for name, entry in sorted(files.items())
+                 if (entry or {}).get("digest") != digests.get(name)]
+        out["differences"] = diffs
+        if not moved and not diffs:
+            out["state"] = "aligned"
+        else:
+            out["state"] = "differs"
+            if not diffs:
+                out["differences"] = [{"name": None, "scheda": None, "here": None}]
+        return out
     diffs = [{"name": name, "scheda": declared.get(name), "here": version}
              for name, version in versions.items()
              if name in declared and declared.get(name) != version]

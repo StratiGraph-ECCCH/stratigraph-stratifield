@@ -17,7 +17,8 @@
             "nodes": "1.6.9",
             "connections": "1.6.20",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.5"
+            "em_ttl": "1.6.5",
+            "digest": null
           }
         },
         "0.2.0": {
@@ -30,10 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.9",
-            "connections": "1.6.20",
-            "qualia": "1.6.2",
-            "em_ttl": "1.6.5"
+            "nodes": "1.6.18",
+            "connections": "1.6.32",
+            "qualia": "1.6.3",
+            "em_ttl": "1.6.9",
+            "digest": "sha256:aab44dda08bffbecac38e77e3049919362d4b3504b4190240a368871c3823260"
           }
         }
       },
@@ -54,7 +56,8 @@
             "nodes": "1.6.8",
             "connections": "1.6.19",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.2"
+            "em_ttl": "1.6.2",
+            "digest": null
           }
         },
         "0.1.1": {
@@ -67,10 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.9",
-            "connections": "1.6.20",
-            "qualia": "1.6.2",
-            "em_ttl": "1.6.5"
+            "nodes": "1.6.18",
+            "connections": "1.6.32",
+            "qualia": "1.6.3",
+            "em_ttl": "1.6.9",
+            "digest": "sha256:aab44dda08bffbecac38e77e3049919362d4b3504b4190240a368871c3823260"
           }
         }
       },
@@ -88,10 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.9",
-            "connections": "1.6.20",
-            "qualia": "1.6.2",
-            "em_ttl": "1.6.5"
+            "nodes": "1.6.18",
+            "connections": "1.6.32",
+            "qualia": "1.6.3",
+            "em_ttl": "1.6.9",
+            "digest": "sha256:aab44dda08bffbecac38e77e3049919362d4b3504b4190240a368871c3823260"
           }
         }
       },
@@ -132,7 +137,8 @@
           }
         }
       },
-      "latest": "0.1.1"
+      "latest": "0.1.1",
+      "only_here": true
     },
     "iccd-us-2021": {
       "versions": {
@@ -149,7 +155,8 @@
             "nodes": "1.6.8",
             "connections": "1.6.19",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.2"
+            "em_ttl": "1.6.2",
+            "digest": null
           }
         },
         "1.0.1": {
@@ -165,7 +172,8 @@
             "nodes": "1.6.9",
             "connections": "1.6.20",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.5"
+            "em_ttl": "1.6.5",
+            "digest": null
           }
         },
         "1.0.2": {
@@ -181,7 +189,8 @@
             "nodes": "1.6.9",
             "connections": "1.6.20",
             "qualia": "1.6.1",
-            "em_ttl": "1.6.5"
+            "em_ttl": "1.6.5",
+            "digest": null
           }
         },
         "2.0.0": {
@@ -194,10 +203,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.9",
-            "connections": "1.6.20",
-            "qualia": "1.6.2",
-            "em_ttl": "1.6.5"
+            "nodes": "1.6.18",
+            "connections": "1.6.32",
+            "qualia": "1.6.3",
+            "em_ttl": "1.6.9",
+            "digest": "sha256:aab44dda08bffbecac38e77e3049919362d4b3504b4190240a368871c3823260"
           }
         }
       },

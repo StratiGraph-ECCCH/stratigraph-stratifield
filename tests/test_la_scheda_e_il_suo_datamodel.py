@@ -170,4 +170,58 @@ def test_the_words_of_the_notice_exist_in_en_and_it():
 def test_sync_prints_both_fingerprints():
     script = (ROOT / "sync-schede.sh").read_text(encoding="utf-8")
     assert "from s3dgraphy.datamodel import datamodel_fingerprint" in script
-    assert '(head["header"].get("datamodel") or {}).get("digest")' in script
+    assert 'dm = head["header"].get("datamodel") or {}' in script
+    # since dev25 the mark compares the files the scheda was built from
+    assert 'digest, files = dm.get("digest"), dm.get("files")' in script
+
+
+# ── l'impronta per file (s3Dgraphy dev25) ────────────────────────────────────
+
+HERE_FILES = dict(HERE, digests={n: f"sha256:{n[0] * 64}" for n in HERE["versions"]})
+READS = ("nodes", "node_registry", "connections", "qualia")
+
+
+def _header_with_files(**moved):
+    files = {n: {"digest": HERE_FILES["digests"][n], "version": HERE["versions"][n]}
+             for n in READS}
+    for name, entry in moved.items():
+        files[name] = dict(files[name], **entry)
+    return dict(HERE["versions"], digest="sha256:" + "e" * 64, files=files)
+
+
+def test_with_files_only_the_files_the_scheda_was_built_from_are_compared(monkeypatch):
+    """Le regole visive o le traduzioni di questo nodo sono altre (l'impronta
+    unica differisce): la scheda è costruita su nodi, registro, connessioni e
+    qualia, che sono gli stessi, e non si dice niente."""
+    monkeypatch.setattr(S, "datamodel_here", lambda: HERE_FILES)
+    check = S.Scheda(_compiled(_header_with_files())).datamodel_check()
+    assert check["state"] == "aligned" and check["differences"] == []
+    assert check["compared"] == sorted(READS)
+
+
+def test_with_files_a_moved_file_is_named(monkeypatch):
+    monkeypatch.setattr(S, "datamodel_here", lambda: HERE_FILES)
+    check = S.Scheda(_compiled(_header_with_files(
+        nodes={"version": "1.6.12", "digest": "sha256:" + "f" * 64}))).datamodel_check()
+    assert check["state"] == "differs"
+    assert check["differences"] == [{"name": "nodes", "scheda": "1.6.12", "here": "1.6.17"}]
+    same_version = S.Scheda(_compiled(_header_with_files(
+        qualia={"digest": "sha256:" + "f" * 64}))).datamodel_check()
+    assert same_version["state"] == "differs"
+    assert same_version["differences"] == [{"name": None, "scheda": None, "here": None}]
+
+
+def test_the_vendored_schede_carry_files_and_agree_with_this_node():
+    """Dopo il sync del 26 ott: le versioni correnti portano `files`, e con la
+    s3dgraphy di questo checkout sono allineate (le vecchie e la IAA, compilate
+    prima, no: lo dicono)."""
+    pytest.importorskip("s3dgraphy.datamodel")
+    S._here_cache.clear()
+    index = json.loads((ROOT / "schede" / "index.json").read_text(encoding="utf-8"))
+    for sid, entry in index["schede"].items():
+        if entry.get("only_here"):
+            continue
+        doc = json.loads((ROOT / "schede" / entry["versions"][entry["latest"]]["path"])
+                         .read_text(encoding="utf-8"))
+        assert set(doc["header"]["datamodel"]["files"]) == set(READS), sid
+        assert S.Scheda(doc).datamodel_check()["state"] == "aligned", sid

@@ -17,9 +17,16 @@
 # `STRATIGRAPH_SCHEDE_DIR` still overrides this directory, for development only,
 # and `app/scheda.py` says so in the log.
 #
-# Never edit `schede/` by hand: the next sync overwrites it. Review the diff —
-# a version that CHANGED rather than appeared is the thing to look for, and
-# `stratigraph-templates build` already refuses to produce one.
+# Never edit a vendored scheda by hand: the next sync overwrites it. Review the
+# diff — a version that CHANGED rather than appeared is the thing to look for,
+# and `stratigraph-templates build` already refuses to produce one.
+#
+# A scheda that `dist/` does NOT have is not touched (2026-10-26): it was added
+# here, not vendored from templates — today `iaa-dana-locus-2026`, which moves
+# to stratigraph-templates once its licence is cleared. The sync lists it as
+# «only here», with the date and commit of its last change, and keeps it in
+# `index.json`. Until that day the sync began with `rm -rf schede/`, which
+# would have lost it.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -41,17 +48,65 @@ if [ -z "$SRC" ] && has_dist "$SIBLING"; then SRC="$SIBLING"; fi
   exit 1
 }
 
-# The whole directory, replaced: `index.json` names every version present, and
-# a version file left behind that the index no longer names would be served by
-# nobody and believed by whoever reads the directory.
-rm -rf "$DST"
+# Each scheda `dist/` has is REPLACED whole, its directory emptied first: a
+# version file left behind that the index no longer names would be served by
+# nobody and believed by whoever reads the directory. A scheda `dist/` does not
+# have is left as it is (see the top), and named.
 mkdir -p "$DST"
-cp "$SRC/dist/schede/index.json" "$DST/"
-( cd "$SRC/dist/schede" && find . -mindepth 2 -name '*.json' -print0 ) |
-  while IFS= read -r -d '' rel; do
-    mkdir -p "$DST/$(dirname "$rel")"
-    cp "$SRC/dist/schede/$rel" "$DST/$rel"
-  done
+ONLY_HERE=()
+for dir in "$DST"/*/; do
+  [ -d "$dir" ] || continue
+  sid="$(basename "$dir")"
+  [ -d "$SRC/dist/schede/$sid" ] || ONLY_HERE+=("$sid")
+done
+for dir in "$SRC/dist/schede"/*/; do
+  [ -d "$dir" ] || continue
+  sid="$(basename "$dir")"
+  rm -rf "${DST:?}/$sid"
+  mkdir -p "$DST/$sid"
+  ( cd "$dir" && find . -name '*.json' -print0 ) |
+    while IFS= read -r -d '' rel; do
+      mkdir -p "$DST/$sid/$(dirname "$rel")"
+      cp "$dir/$rel" "$DST/$sid/$rel"
+    done
+done
+# The index: templates' own, byte for byte when nothing is only here; else
+# with one entry per scheda only here, in the same shape
+# (stratigraph-templates compile.write_index), marked `only_here`.
+python3 - "$SRC/dist/schede/index.json" "$DST" ${ONLY_HERE[@]+"${ONLY_HERE[@]}"} <<'EOF'
+import json, pathlib, re, sys
+src, dst, only_here = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), sys.argv[3:]
+if not only_here:
+    (dst / "index.json").write_bytes(src.read_bytes())
+    sys.exit(0)
+index = json.loads(src.read_text(encoding="utf-8"))
+
+def semver(v):
+    return tuple(int(x) if x.isdigit() else 0 for x in re.split(r"[.+-]", v))
+
+for sid in only_here:
+    versions = {}
+    for f in sorted((dst / sid).glob("*.json")):
+        head = json.loads(f.read_text(encoding="utf-8")).get("header") or {}
+        if head.get("id") != sid or not head.get("version"):
+            continue
+        dm = head.get("datamodel") or {}
+        versions[head["version"]] = {
+            "path": f.relative_to(dst).as_posix(),
+            "digest": head.get("digest"),
+            "standard": {k: (head.get("standard") or {}).get(k)
+                         for k in ("authority", "code", "version", "invented")},
+            "datamodel": {k: dm[k] for k in ("nodes", "connections", "qualia", "em_ttl", "digest")
+                          if k in dm},
+        }
+    if versions:
+        ordered = sorted(versions, key=semver)
+        index["schede"][sid] = {"versions": {v: versions[v] for v in ordered},
+                                "latest": ordered[-1], "only_here": True}
+index["schede"] = dict(sorted(index["schede"].items()))
+(dst / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n",
+                                encoding="utf-8")
+EOF
 
 commit=$(git -C "$SRC" rev-parse --short HEAD 2>/dev/null || echo "?")
 dirty=$(git -C "$SRC" status --porcelain -- dist/schede 2>/dev/null | head -1)
@@ -67,6 +122,11 @@ for sid, entry in sorted(index["schede"].items()):
           f"datamodel nodes {dm['nodes']} · connections {dm['connections']}")
 EOF
 echo "  vendored size    $(du -sh "$DST" | cut -f1)"
+for sid in ${ONLY_HERE[@]+"${ONLY_HERE[@]}"}; do
+  last="$(git -C "$HERE" log -1 --format='%ad %h' --date=short -- "schede/$sid" 2>/dev/null || true)"
+  edited="$(git -C "$HERE" status --porcelain -- "schede/$sid" 2>/dev/null | head -1 || true)"
+  echo "  only here, not from templates: $sid  (last change ${last:-never committed}${edited:+; uncommitted edits})"
+done
 
 # ── THE DATAMODEL FINGERPRINT, BOTH SIDES (2026-10-01) ────────────────────────
 #
@@ -76,7 +136,10 @@ echo "  vendored size    $(du -sh "$DST" | cut -f1)"
 # `check_datamodel`) and says so in the log and on the scheda. Printed here too,
 # so that whoever syncs sees at once whether the schede and this node's
 # s3dgraphy agree — the latest version of each scheda, and the installed
-# package's own fingerprint, read with the python this app runs on.
+# package's own fingerprint, read with the python this app runs on. Since
+# s3Dgraphy dev25 a scheda also carries `header.datamodel.files`, the files it
+# was built from, and the mark compares those (as `check_datamodel` does); the
+# one digest is printed beside it either way.
 APP_PY="$HERE/.venv/bin/python"
 [ -x "$APP_PY" ] || APP_PY="python3"
 "$APP_PY" - "$DST" <<'EOF'
@@ -86,18 +149,25 @@ index = json.loads((dst / "index.json").read_text(encoding="utf-8"))
 try:
     import s3dgraphy
     from s3dgraphy.datamodel import datamodel_fingerprint
-    here = datamodel_fingerprint()["digest"]
+    fp = datamodel_fingerprint()
+    here, here_d = fp["digest"], fp.get("digests") or {}
     print(f"  s3dgraphy here   {s3dgraphy.__version__}  datamodel {here}")
 except Exception as exc:  # absent, or older than the fingerprint
-    here = None
+    here, here_d = None, {}
     print(f"  s3dgraphy here   no fingerprint ({exc.__class__.__name__}: {exc})")
 for sid, entry in sorted(index["schede"].items()):
     latest = entry["latest"]
     head = json.loads((dst / entry["versions"][latest]["path"]).read_text(encoding="utf-8"))
-    digest = (head["header"].get("datamodel") or {}).get("digest")
-    mark = ("=" if digest == here else "≠") if digest and here else "·"
+    dm = head["header"].get("datamodel") or {}
+    digest, files = dm.get("digest"), dm.get("files")
+    if files and here:
+        moved = [n for n, e in sorted(files.items()) if (e or {}).get("digest") != here_d.get(n)]
+        mark, on = ("≠" if moved else "="), f" on {', '.join(sorted(files))}"
+    else:
+        mark = ("=" if digest == here else "≠") if digest and here else "·"
+        on = ""
     print(f"  {mark} {sid:<26} {latest:<8} datamodel "
-          f"{digest or '— compiled before the fingerprint'}")
+          f"{digest or '— compiled before the fingerprint'}{on}")
 EOF
 
 # ── THE VOCABULARIES THE VENDORED SCHEDE NAME (2026-10-22) ────────────────────
@@ -119,12 +189,20 @@ EOF
 #
 # Beside `schede/` and not inside it: every `*.json` under `schede/` is read as
 # a definition.
+#
+# The same rule as the schede (2026-10-26): what the sync resolves is written
+# over its old copy, and a vocabulary it does not resolve is NOT deleted — it is
+# listed as «only here», with the date and commit of its last change. Measured
+# that day: none is (every vendored vocabulary is named by a vendored scheda,
+# and `iaa-dana-locus-2026` names none), so the list is empty; it is there for
+# the day a vocabulary is added here first.
 VOC="$HERE/vocabolari"
 PY="$SRC/.venv/bin/python"
 [ -x "$PY" ] || PY="python3"
-rm -rf "$VOC"
 mkdir -p "$VOC"
-PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" - "$DST" "$VOC" <<'EOF'
+VOC_NEW="$(mktemp -d)"
+trap 'rm -rf "$VOC_NEW"' EXIT
+PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" - "$DST" "$VOC_NEW" <<'EOF'
 import json, pathlib, sys
 from stratigraph_templates.vocab import Vocabularies, VocabularyError
 
@@ -177,6 +255,16 @@ for sid, langs in sorted(wanted.items()):
         encoding="utf-8")
     print(f"  vocabulary {sid:<28} {scheme.status:<10} {len(concepts)} concepts")
 EOF
+for f in "$VOC"/*.json; do
+  [ -f "$f" ] || continue
+  name="$(basename "$f")"
+  [ -f "$VOC_NEW/$name" ] && continue
+  last="$(git -C "$HERE" log -1 --format='%ad %h' --date=short -- "vocabolari/$name" 2>/dev/null || true)"
+  echo "  only here, not from templates: vocabolari/$name  (last change ${last:-never committed})"
+done
+for f in "$VOC_NEW"/*.json; do
+  [ -f "$f" ] && cp "$f" "$VOC/"
+done
 
 # ── APACHE-2.0: THE LICENCE AND A NOTICE BESIDE WHAT IS VENDORED (2026-09-28) ──
 #

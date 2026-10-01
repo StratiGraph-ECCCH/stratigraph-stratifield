@@ -107,10 +107,63 @@ def test_the_vendored_copy_is_the_compiled_form_and_not_stale():
             assert doc["header"]["digest"] == item["digest"]
     if DIST.is_dir():
         for path in DIST.rglob("*.json"):
+            if path == DIST / "index.json":
+                continue                      # below: it may name schede only here
             mine = vendored / path.relative_to(DIST)
             assert mine.is_file(), f"{path.relative_to(DIST)} non è vendorata"
             assert mine.read_bytes() == path.read_bytes(), (
                 f"{path.relative_to(DIST)} è cambiata di là: ./sync-schede.sh")
+        # l'indice è quello di templates, più le schede SOLO QUI (2026-10-26:
+        # iaa-dana-locus-2026, che templates non ha), marcate `only_here`
+        theirs = json.loads((DIST / "index.json").read_text(encoding="utf-8"))
+        only_here = {sid for sid, e in index["schede"].items() if e.get("only_here")}
+        assert only_here == {d.name for d in vendored.iterdir()
+                             if d.is_dir() and not (DIST / d.name).is_dir()}
+        assert {k: v for k, v in index.items() if k != "schede"} == \
+            {k: v for k, v in theirs.items() if k != "schede"}
+        assert {sid: e for sid, e in index["schede"].items() if sid not in only_here} == \
+            theirs["schede"], "l'indice è cambiato di là: ./sync-schede.sh"
+        if not only_here:
+            assert (vendored / "index.json").read_bytes() == (DIST / "index.json").read_bytes()
+
+
+def test_a_scheda_only_here_survives_the_sync(tmp_path):
+    """D6 del MICRO-DERIVA: `sync-schede.sh` cominciava con `rm -rf schede/` e
+    avrebbe perso `iaa-dana-locus-2026`, che c'è solo qui. Ora copia quello che
+    `dist/` ha, e una cartella che `dist/` non ha resta com'è, nominata."""
+    import shutil
+    import subprocess
+    templates = DIST.parent.parent
+    if not (DIST / "index.json").is_file():
+        pytest.skip("stratigraph-templates/dist accanto a questo repo non c'è")
+    here = tmp_path / "node"
+    (here / "schede").mkdir(parents=True)
+    shutil.copy(ROOT / "sync-schede.sh", here / "sync-schede.sh")
+    # una scheda che templates non ha: la IAA con un altro id
+    src = ROOT / "schede" / "iaa-dana-locus-2026" / "0.1.1.json"
+    doc = json.loads(src.read_text(encoding="utf-8"))
+    doc["header"]["id"] = "solo-qui-prova"
+    mine = here / "schede" / "solo-qui-prova" / "0.1.1.json"
+    mine.parent.mkdir()
+    mine.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+    before = mine.read_bytes()
+    # e una versione lasciata indietro in una scheda che templates HA: sparisce
+    stale = here / "schede" / "iccd-us-2021" / "0.0.1.json"
+    stale.parent.mkdir()
+    stale.write_text("{}", encoding="utf-8")
+
+    run = subprocess.run(["bash", str(here / "sync-schede.sh"), str(templates)],
+                         capture_output=True, text=True, timeout=300)
+    assert run.returncode == 0, run.stderr
+    assert mine.read_bytes() == before, "la scheda solo qui è stata toccata"
+    assert "only here, not from templates: solo-qui-prova" in run.stdout
+    assert not stale.exists(), "una versione che dist/ non nomina è rimasta"
+    index = json.loads((here / "schede" / "index.json").read_text(encoding="utf-8"))
+    entry = index["schede"]["solo-qui-prova"]
+    assert entry["only_here"] is True and entry["latest"] == "0.1.1"
+    assert entry["versions"]["0.1.1"]["path"] == "solo-qui-prova/0.1.1.json"
+    for sid in json.loads((DIST / "index.json").read_text(encoding="utf-8"))["schede"]:
+        assert sid in index["schede"] and not index["schede"][sid].get("only_here")
 
 
 def test_the_image_carries_the_schede():
