@@ -118,8 +118,16 @@ def _process_node(kind: str, author: Optional[str], about: str,
         "name": kind,
         "description": detail or f"{kind} · {about}",
         "data": {"created_by": author, "created_at": _now(),
-                 "tool": kind, "source": "stratigraph-chatbot"},
+                 "tool": kind, "source": "stratigraph-chatbot",
+                 # s3Dgraphy dev28 (decision 12): the language a node is born in
+                 # travels in the op, decided by its producer. This description is
+                 # written by THIS code, in Italian: it is born `it`.
+                 "lang": PROCESS_TEXT_LANG},
     }
+
+
+#: the language of the sentences this service writes into its D7 (`_process_node`)
+PROCESS_TEXT_LANG = "it"
 
 
 

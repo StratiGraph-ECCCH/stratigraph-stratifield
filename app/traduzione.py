@@ -79,8 +79,15 @@ def source_of(section: Dict[str, Any], node_id: str, field: str) -> Dict[str, An
     if not text or not text.strip():
         raise TraduzioneError(
             f"«{node_id}» non ha testo in {f}: non c'è niente da tradurre.")
-    return {"text": text, "field": f,
-            "from_lang": node_language(node) or working_language(graph) or ""}
+    from_lang = node_language(node) or working_language(graph) or ""
+    if from_lang.strip().lower() == "und":
+        # dev28: a text born where nobody knew its language says `und`, and a
+        # translation of it would be a translation from a language nobody
+        # named — the model would guess it. Declare it first.
+        raise TraduzioneError(
+            f"la lingua del testo di «{node_id}» non è nota («und»): dichiarala "
+            f"prima — la lingua dell'originale non si indovina (never guessed).")
+    return {"text": text, "field": f, "from_lang": from_lang}
 
 
 def address_of_box(scheda, section: Dict[str, Any], unit_id: str,
@@ -216,9 +223,16 @@ def plan_translation(section: Dict[str, Any], node_id: str, field: str,
 
     born = api.graph_to_emjson(graph)["graph"]
     out.minted = [m for m in minted]
+    from s3dgraphy.crdt import is_text_node
+    from s3dgraphy.language import working_language
+    study = working_language(graph) or "und"
     for node in born.get("nodes") or []:
         if node.get("id") in before_nodes:
             continue
+        if is_text_node(node) and not (node.get("data") or {}).get("lang"):
+            # s3Dgraphy dev28: the producer puts the language in the op — an
+            # author minted here is born in the study's language, else `und`
+            node = {**node, "data": {**(node.get("data") or {}), "lang": study}}
         out.ops.append(api.make_op("add_node", id=node["id"], node=node, ts=ts))
     for edge in born.get("edges") or []:
         if edge.get("id") in before_edges:

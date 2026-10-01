@@ -108,12 +108,20 @@ def test_every_node_the_plan_creates_is_born_in_it_and_no_other():
     assert later.lang_differs == ["US3005"]
 
 
-def test_no_language_declared_writes_none():
+def test_no_language_declared_writes_und():
     """Un adattatore (PyArchInit, ATRIUM) non sa in che lingua sono i dati che
-    porta: niente `data.lang`, e la lingua non si indovina."""
+    porta, e la lingua non si indovina. Dalla dev28 di s3Dgraphy (decisione 12)
+    la lingua sta NELL'OP e la mette chi crea il nodo: «non nota» si dice
+    `und`, la stessa in ogni copia della stanza. Con uno studio che dichiara la
+    sua, quella."""
     plan = O.plan(iccd(), {"descrizione": "x"}, number="12",
                   section={"nodes": [], "edges": []}, ts=TS, create=True)
-    assert all("lang" not in (op["node"].get("data") or {})
+    born = [op["node"] for op in plan.ops if op["op"] == "add_node"]
+    assert born and all((n.get("data") or {}).get("lang") == "und" for n in born)
+    study = {"nodes": [{"id": "g", "node_type": "graph", "data": {"language": "la"}}],
+             "edges": []}
+    plan = O.plan(iccd(), {"descrizione": "x"}, number="12", section=study, ts=TS, create=True)
+    assert all((op["node"].get("data") or {}).get("lang") == "la"
                for op in plan.ops if op["op"] == "add_node")
 
 
@@ -163,13 +171,14 @@ def test_a_language_the_scheda_does_not_declare_is_refused(client):
     assert writer.node("US41") is None
 
 
-def test_a_form_that_says_no_language_writes_none(client):
-    """Una pagina vecchia, o un salvataggio rimasto in coda da prima."""
+def test_a_form_that_says_no_language_writes_und(client):
+    """Una pagina vecchia, o un salvataggio rimasto in coda da prima: la
+    lingua non è nota, e lo si dice (`und`, dev28) invece di indovinarla."""
     c, writer = client
     answer = c.post("/v1/scheda/iccd-us-2021", json={
         "us": "42", "create": True, "values": {"descrizione": "x"}})
     assert answer.json()["ok"], answer.json()
-    assert "lang" not in (writer.node("US42").get("data") or {})
+    assert (writer.node("US42").get("data") or {}).get("lang") == "und"
 
 
 def test_the_page_sends_the_language_it_is_drawn_in():

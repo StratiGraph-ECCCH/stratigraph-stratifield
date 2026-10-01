@@ -233,8 +233,11 @@ def _born_in(node: Optional[Dict[str, Any]], existing: Optional[Dict[str, Any]],
     la lingua si decide alla nascita, come il tipo."""
     if not isinstance(node, dict):
         return
-    if existing is not None and str(((existing.get("data") or {}).get(LANG)) or "").strip():
-        return
+    had = str(((existing or {}).get("data") or {}).get(LANG) or "").strip()
+    if had:
+        # dev28: an add_node carries its language in the op even when it merges
+        # into a node that is there — the one that node has, so nothing changes
+        lang = had
     data = dict(node.get("data") or {})
     data.setdefault(LANG, lang)
     node["data"] = data
@@ -569,11 +572,18 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
     def drop(kind: str, **fields: Any) -> None:
         removals.append((current["field"], kind, fields))
 
+    # s3Dgraphy dev28 (decision 12): the language a node is born in travels IN
+    # THE OP and the producer decides it once — the form's (`lang`), else the
+    # study's working language of this section, else `und` (not known, never
+    # guessed). Read at arrival from each copy's study it could differ.
+    from s3dgraphy.crdt import _section_language
+    born_lang = out.lang or _section_language(section or {}) or "und"
+
     def op(kind: str, **fields: Any) -> Dict[str, Any]:
         from s3dgraphy import api
-        if kind == "add_node" and out.lang:
+        if kind == "add_node":
             _born_in(fields.get("node"), ctx.nodes.get(str(fields.get("id"))),
-                     out.lang)
+                     born_lang)
         made = api.make_op(kind, ts=ts, **fields)
         out.ops.append(made)
         out.op_fields.append(current["field"])

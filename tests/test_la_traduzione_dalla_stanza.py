@@ -179,7 +179,8 @@ def test_no_model_on_the_node_writes_nothing_and_says_so(tmp_path, monkeypatch):
 
 def test_a_unit_with_no_language_is_not_guessed(client):
     """Una US nata senza lingua (un adattatore, una pagina vecchia) in uno
-    studio che non dichiara la sua: `add_translation` rifiuta, niente scritto."""
+    studio che non dichiara la sua: dalla dev28 nasce `und`, e da `und` non si
+    traduce — niente scritto."""
     c, writer, _ = client
     answer = c.post("/v1/scheda/iccd-us-2021", json={
         "us": "13", "create": True, "values": {"descrizione": "x"}})
