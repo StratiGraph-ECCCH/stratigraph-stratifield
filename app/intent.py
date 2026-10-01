@@ -378,6 +378,17 @@ SYSTEM_PROMPT = (
 )
 
 
+#: What the model is told when it TRANSLATES. Closed for the same reason: the
+#: answer becomes a record (a TranslationNode, marked AI and waiting for a
+#: person), so it must be the translation and nothing around it.
+TRANSLATE_PROMPT = (
+    "You translate a text written on an archaeological excavation from the "
+    "language tagged {source} into the language tagged {target} (BCP 47). "
+    "Answer with the translation only: no quotes, no comments, no notes. Keep "
+    "unit numbers, codes and proper names as they are."
+)
+
+
 class IntentModelError(RuntimeError):
     """The configuration is half-done. Raised at STARTUP, where somebody is
     watching, and never converted into a quiet fallback."""
@@ -435,6 +446,40 @@ class OpenAICompatibleIntentModel:
         where = self.endpoint if self.local else f"{self.endpoint} — NOT LOCAL"
         return f"openai-compatible ({self.model} @ {where})"
 
+    def _complete(self, messages: List[Dict[str, str]]) -> Optional[str]:
+        """ONE POST to `/chat/completions`, the answer's text or None.
+
+        Shared by the two things the node's model is asked — routing a
+        sentence (`parse`) and translating a text (`translate`) — so the
+        endpoint, the timeout and the refusal to raise are one rule, not two.
+        """
+        import json
+        import urllib.error
+        import urllib.request
+
+        body = json.dumps({
+            "model": self.model,
+            "temperature": 0,
+            "messages": messages,
+        }).encode("utf-8")
+        request = urllib.request.Request(
+            f"{self.endpoint}/chat/completions", data=body,
+            headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as answer:
+                payload = json.loads(answer.read())
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            log.warning("the model at %s did not answer (%s) — the rules had "
+                        "their turn and the assistant will say it did not "
+                        "understand", self.endpoint, exc)
+            return None
+        try:
+            return str(payload["choices"][0]["message"]["content"])
+        except (KeyError, IndexError, TypeError):
+            log.warning("the model at %s answered a shape this build does "
+                        "not know", self.endpoint)
+            return None
+
     def parse(self, transcript: str, tools: List[Dict[str, Any]]
               ) -> Optional[Dict[str, Any]]:
         """A sentence and the available tools in, `{tool, slots}` out or None.
@@ -445,46 +490,25 @@ class OpenAICompatibleIntentModel:
         somebody's dictation.
         """
         import json
-        import urllib.error
-        import urllib.request
 
         catalogue = [
             {"name": tool.get("name"), "intents": tool.get("intents"),
              "slots": tool.get("slots")}
             for tool in tools
         ]
-        body = json.dumps({
-            "model": self.model,
-            "temperature": 0,
-            "messages": [
-                {"role": "system",
-                 "content": SYSTEM_PROMPT + "\n\nTools:\n"
-                            + json.dumps(catalogue, ensure_ascii=False)},
-                {"role": "user", "content": transcript},
-            ],
-        }).encode("utf-8")
-        request = urllib.request.Request(
-            f"{self.endpoint}/chat/completions", data=body,
-            headers={"Content-Type": "application/json"}, method="POST")
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as answer:
-                payload = json.loads(answer.read())
-        except (urllib.error.URLError, OSError, ValueError) as exc:
-            log.warning("intent model at %s did not answer (%s) — the rules had "
-                        "their turn and the assistant will say it did not "
-                        "understand", self.endpoint, exc)
-            return None
-        try:
-            content = payload["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError):
-            log.warning("intent model at %s answered a shape this build does "
-                        "not know", self.endpoint)
+        content = self._complete([
+            {"role": "system",
+             "content": SYSTEM_PROMPT + "\n\nTools:\n"
+                        + json.dumps(catalogue, ensure_ascii=False)},
+            {"role": "user", "content": transcript},
+        ])
+        if content is None:
             return None
         # A local model often wraps its JSON in prose or a fence. Reading the
         # first `{...}` is not sloppiness: refusing an otherwise good answer
         # because it arrived inside a code fence would make the capability look
         # broken on half the models an operator might install.
-        text = str(content).strip()
+        text = content.strip()
         start, end = text.find("{"), text.rfind("}")
         if start < 0 or end <= start:
             return None
@@ -492,6 +516,25 @@ class OpenAICompatibleIntentModel:
             return json.loads(text[start:end + 1])
         except ValueError:
             return None
+
+    def translate(self, text: str, *, source: str, target: str
+                  ) -> Optional[str]:
+        """The text in another language, or None — the second thing the node's
+        model is asked (2026-10-31, «Traduci»). Same endpoint, same refusal
+        to raise; what it answers becomes a TranslationNode `method: ai`, never
+        the original (`app/traduzione.py`)."""
+        content = self._complete([
+            {"role": "system",
+             "content": TRANSLATE_PROMPT.format(source=source, target=target)},
+            {"role": "user", "content": text},
+        ])
+        if content is None:
+            return None
+        said = content.strip()
+        # a fence around a plain text is the same habit as around JSON
+        if said.startswith("```") and said.endswith("```"):
+            said = said.strip("`").split("\n", 1)[-1].strip()
+        return said or None
 
 
 def intent_model_from_env(environ: Optional[Dict[str, str]] = None

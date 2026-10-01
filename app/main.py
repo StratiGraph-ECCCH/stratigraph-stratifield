@@ -172,7 +172,6 @@ STT = stt_from_env()
 #: quello che lo costruisce, e costruirlo è un giro di rete. Un nodo di campo
 #: con la dispensa non deve chiedere niente a nessuno per accendersi.
 STORE = LARDER if LARDER is not None else assets.ASSET_STORE
-REGISTRY = build_registry(WRITER, STORE)
 
 #: The intent model is OPTIONAL and absent by default. The rules answer the
 #: field card's commands, which is what the MVP needs; a model is used on the
@@ -189,6 +188,14 @@ REGISTRY = build_registry(WRITER, STORE)
 #: predictable, and occasionally wrong. And the model still chooses only among
 #: the tools the registry declares (`llm_parse`).
 INTENT_MODEL = intent_model_from_env()
+
+#: «TRADUCI» (2026-10-31) — the node's model, asked the second thing it can be
+#: asked. Not a second configuration: one model on the node, the one
+#: `EM_CHATBOT_INTENT_MODEL` names. What it translates becomes a TranslationNode
+#: `method: ai` beside the original (`tools.translate_text`), never the original.
+TRANSLATOR = (INTENT_MODEL if callable(getattr(INTENT_MODEL, "translate", None))
+              else None)
+REGISTRY = build_registry(WRITER, STORE, translator=TRANSLATOR)
 
 v1 = APIRouter(prefix="/v1", dependencies=[AuthDependency])
 public = APIRouter()
@@ -309,13 +316,20 @@ def _capabilities() -> List[Capability]:
             missing=([] if INTENT_MODEL is not None
                      else [INTENT_MODEL_VAR, INTENT_ENDPOINT_VAR]),
         ),
+        Capability(
+            name="translation",
+            state="configured" if TRANSLATOR is not None else "absent",
+            engine=intent_describe(TRANSLATOR),
+            missing=([] if TRANSLATOR is not None
+                     else [INTENT_MODEL_VAR, INTENT_ENDPOINT_VAR]),
+        ),
     ]
     # …and the one configuration that can send an excavation's words off the
     # site is SAID here as well as logged at startup. Design note §5: silent is
     # what makes it an incident.
     local = getattr(INTENT_MODEL, "local", True)
     if INTENT_MODEL is not None and not local:
-        capabilities[-1].missing.append(
+        next(c for c in capabilities if c.name == "intent").missing.append(
             "WARNING: the intent endpoint is NOT local — every dictated "
             "sentence leaves this node")
     return capabilities
@@ -930,6 +944,34 @@ def validate(request: Request, body: ValidateIn = Body(...)) -> Answer:
                   **_told(result, scope, prima))
 
 
+class TranslateIn(BaseModel):
+    """«Traduci» su un testo: di quale unità (o nodo), quale casella (o campo),
+    in quale lingua. NIENTE TESTO: la traduzione la compone il modello del nodo,
+    e un testo mandato da fuori e marcato `ai` sarebbe un'attribuzione falsa."""
+
+    us: str = ""
+    node_id: str = ""
+    #: la casella della scheda (`descrizione`, `osservazioni`) o il campo del
+    #: grafo (`description`, `data.<chiave>`)
+    field: str = ""
+    lang: str = ""
+    scheda: str = ""
+    version: str = ""
+
+
+@v1.post("/translate", response_model=Answer, tags=["scheda"])
+def translate(request: Request, body: TranslateIn = Body(...)) -> Answer:
+    """A text, translated by the node's model: a TranslationNode beside the
+    original, `method: ai`, waiting for a person (`api.to_review`)."""
+    scope = _scope(request)
+    prima = (_refusals(scope), _queued(scope))
+    slots = {k: v for k, v in body.model_dump().items() if v}
+    result: ToolResult = invoke(scope.registry.get("translate_text"), slots,
+                                scope.who, registry=scope.registry)
+    return Answer(ok=result.ok, tool="translate_text", data=result.data,
+                  **_told(result, scope, prima))
+
+
 @v1.post("/listen", response_model=Answer, tags=["assistant"])
 async def listen(request: Request,
                  audio: UploadFile = File(...),
@@ -1032,7 +1074,8 @@ HEADER_ROOM = "X-StratiGraph-Room"
 #: IL REGISTRO DEGLI SCRIVANI PER PERSONA. Riceve il container e la dispensa
 #: costruiti qui sopra — gli stessi, per la ragione scritta accanto a `LOCAL`.
 SCRIVANI = Scrivani(local=LOCAL, spool=LARDER,
-                    build_registry=lambda writer: build_registry(writer, STORE))
+                    build_registry=lambda writer: build_registry(
+                        writer, STORE, translator=TRANSLATOR))
 
 
 class Scope(BaseModel):

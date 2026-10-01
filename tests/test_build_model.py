@@ -76,11 +76,11 @@ def test_the_unit_number_comes_out_of_the_sentence_when_it_is_in_it():
         "costruisci il modello 3D di questa US dalle foto", registry).slots
 
 
-def test_the_registry_now_holds_ten_tools():
+def test_the_registry_now_holds_eleven_tools():
     """The membership AND the count, so a tool that appears without anybody
     deciding to add it shows up here.
 
-    It has grown twice, and both times this test is what said so:
+    It has grown three times, and each time this test is what said so:
 
     * 2026-08-30 — `open_in_emstudio`, the round-trip's voice;
     * 2026-09-21 — `update_su`, because a scheda is opened on a unit that
@@ -96,12 +96,16 @@ def test_the_registry_now_holds_ten_tools():
     * 2026-09-21 — `validate_field`, because a value a model composed and
       nobody confirmed must not look like any other value, and confirming it
       is an act of its own: «I read it and it is right» is not «I changed it».
+    * 2026-10-31 — `translate_text` («Traduci», VLONG dev27 part F): the
+      node's model writes a TranslationNode `method: ai` BESIDE the original,
+      waiting in `api.to_review` for a person. A translation is not a
+      correction of the text, so it could not be `update_su`.
     """
     registry = build_registry(FakeNode(), InMemoryAssetStore())
     assert {d.name for d in registry.list()} == {
         "create_su", "update_su", "relate_su", "validate_field",
         "which_project", "attach_photo_to_su", "ingest_photos", "query_kg",
-        "build_model", "open_in_emstudio"}
+        "build_model", "open_in_emstudio", "translate_text"}
 
 
 # ── 2 · what the node is asked ───────────────────────────────────────────────

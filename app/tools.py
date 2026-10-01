@@ -1301,9 +1301,142 @@ def make_open_in_emstudio(graph_writer, asset_store) -> ToolDescriptor:
         service="rest", writes=False, handler=handler)
 
 
+# ── 1quinquies · translate_text — «Traduci», accanto e mai sopra ────────────
+
+def make_translate_text(graph_writer, translator=None) -> ToolDescriptor:
+    """Il modello del nodo traduce un testo; nasce una TRADUZIONE, non un valore.
+
+    Un `TranslationNode` con `method: ai` e `ai_assisted` (s3Dgraphy
+    `api.add_translation`, via `app/traduzione.py`), raggiunto dall'originale
+    con `has_translation` e firmato da chi l'ha chiesta. **L'originale non si
+    tocca**: nessuna operazione della lista lo nomina. E la traduzione aspetta
+    una persona (`api.to_review`, ragione `ai`) finché qualcuno non la firma —
+    oggi in EMStudio (`api.verify`): `validate_field` qui accanto valida le
+    CASELLE composte da un modello (`data.authorship.<casella>`), che è
+    un'altra cosa, e non si allarga a un nodo per somiglianza.
+
+    Senza un modello sul nodo il tool c'è e lo dice: «If the node has an AI you
+    have functions; if it does not, you do not — and the surface says so.»
+    """
+
+    def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from . import traduzione as T
+        from .scheda import SchedaError
+
+        lang = str(slots.get("lang") or "").strip()
+        field = str(slots.get("field") or "").strip()
+        number = str(slots.get("us") or "").strip()
+        node_id = str(slots.get("node_id") or "").strip()
+        if translator is None or not callable(getattr(translator, "translate", None)):
+            return ToolResult(
+                ok=False,
+                message=("Questo nodo non ha un modello che traduca "
+                         "(EM_CHATBOT_INTENT_MODEL, EM_CHATBOT_INTENT_ENDPOINT): "
+                         "una traduzione la puoi scrivere tu, in EMStudio."),
+                data={"reason": "no-model"})
+        if not (number or node_id):
+            return ToolResult(ok=False,
+                              message="Mi serve l'unità, o il nodo, da tradurre.")
+
+        section = graph_writer.section()
+        try:
+            if node_id:
+                where, what = node_id, field
+            else:
+                unit_id = unit_id_for(number)
+                if not graph_writer.has_node(unit_id):
+                    return ToolResult(
+                        ok=False,
+                        message=f"Non trovo la US {number} in questo grafo.")
+                try:
+                    scheda, _why = scheda_for(
+                        graph_writer, number,
+                        scheda_id=str(slots.get("scheda") or ""),
+                        version=str(slots.get("version") or ""))
+                except SchedaError:
+                    scheda = None
+                if scheda is not None and field in scheda._by_id:
+                    where, what = T.address_of_box(scheda, section, unit_id, field)
+                else:
+                    where, what = unit_id, field or "description"
+            source = T.source_of(section, where, what)
+        except T.TraduzioneError as wrong:
+            return ToolResult(ok=False, message=str(wrong))
+
+        said = translator.translate(source["text"], source=source["from_lang"] or "und",
+                                    target=lang)
+        if not said or not str(said).strip():
+            return ToolResult(
+                ok=False,
+                message="Il modello non ha risposto: nessuna traduzione scritta.",
+                data={"reason": "model-silent"})
+
+        model = str(getattr(translator, "model", "") or type(translator).__name__)
+        stamp = _now()
+        try:
+            made = T.plan_translation(section, where, source["field"], lang,
+                                      str(said).strip(), orcid=author or "",
+                                      model=model, ts=stamp)
+        except T.TraduzioneError as wrong:
+            return ToolResult(ok=False, message=str(wrong))
+
+        data = {"translation_id": made.translation_id, "of": made.of,
+                "field": made.field, "lang": made.lang,
+                "from_lang": made.from_lang, "method": T.METHOD,
+                "model": model, "text": str(said).strip(),
+                "to_review": True, "already": made.already,
+                "minted": list(made.minted)}
+        if made.already:
+            return ToolResult(
+                ok=True,
+                message=(f"Questa traduzione in {made.lang} c'è già: non ne "
+                         f"scrivo un'altra."),
+                data=data)
+
+        from s3dgraphy import api
+        process = _process_node(
+            "translate_text", author, made.translation_id,
+            f"{made.of}.{made.field} tradotto in {made.lang} da {model}")
+        ops = list(made.ops) + [api.make_op("add_node", id=process["id"],
+                                            node=process, ts=stamp)]
+        try:
+            outcomes = graph_writer.send(ops, author=author)
+        except Exception as exc:                                 # noqa: BLE001
+            return ToolResult(ok=False, message=str(exc))
+        data["queued"] = any(o.get("queued") for o in outcomes)
+        refused = [o for o in outcomes if not o.get("applied")
+                   and o.get("reason") not in ("queued",)]
+        if refused:
+            data["refused"] = refused
+            return ToolResult(ok=False, message=(
+                f"La stanza non ha preso la traduzione: "
+                f"{refused[0].get('reason')}."), data=data)
+        return ToolResult(
+            ok=True,
+            message=(f"Tradotto in {made.lang}: «{data['text']}». L'ha fatto "
+                     f"{model}: resta da verificare, e l'originale è com'era."),
+            delta=GraphDelta(process=process, author=author),
+            data=data)
+
+    return ToolDescriptor(
+        name="translate_text",
+        intents=["traduci"],
+        input_schema=[
+            Slot("lang", "string", True, "la lingua in cui tradurre (it, en, he…)"),
+            Slot("us", "string", False, "il numero dell'unità"),
+            Slot("field", "string", False,
+                 "la casella della scheda, o il campo del grafo "
+                 "(description, data.<chiave>)"),
+            Slot("node_id", "string", False, "il nodo, se non è un'unità"),
+        ],
+        description="Traduce un testo col modello del nodo: nasce una "
+                    "traduzione AI accanto all'originale, da verificare.",
+        service="s3dgraphy", handler=handler)
+
+
 # ── the five, registered ─────────────────────────────────────────────────────
 
-def build_registry(graph_writer, asset_store) -> ToolRegistry:
+def build_registry(graph_writer, asset_store, *, translator=None) -> ToolRegistry:
     """The registry. Adding a partner's capability is one more line here plus a
     descriptor — which is the whole claim of the contract, and `build_model`
     (2026-08-29) is the first time somebody else's capability was added by
@@ -1313,6 +1446,7 @@ def build_registry(graph_writer, asset_store) -> ToolRegistry:
     registry.register(make_update_su(graph_writer))
     registry.register(make_relate_su(graph_writer))
     registry.register(make_validate_field(graph_writer))
+    registry.register(make_translate_text(graph_writer, translator))
     registry.register(make_which_project(graph_writer))
     registry.register(make_attach_photo(graph_writer, asset_store))
     registry.register(make_ingest_photos(graph_writer, asset_store))

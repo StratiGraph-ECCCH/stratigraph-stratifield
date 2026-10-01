@@ -514,6 +514,15 @@ function boxFor(field, state) {
                                 text: "Ho controllato" });
   button.addEventListener("click", () => state.onValidate(field.id));
   strip.append(said, button);
+  // «TRADUCI» (2026-10-31): solo su un testo, e solo se la pagina sa farlo. Il
+  // modello del nodo scrive una TRADUZIONE accanto all'originale (`POST
+  // /v1/translate`), da verificare; la casella non cambia.
+  if (kind === "textarea" && state.onTranslate) {
+    const translate = el("button", { class: "translate", type: "button",
+                                     text: "Traduci" });
+    translate.addEventListener("click", () => state.onTranslate(field.id));
+    strip.append(translate);
+  }
   box.append(strip);
   paintAuthorship(box, said, field, state);
   return box;

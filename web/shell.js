@@ -124,6 +124,7 @@ const state = {
   onChange: () => paintCompleteness(),
   onStep: (i, n) => { $("tb-step").textContent = n ? `${i + 1}/${n}` : ""; },
   onValidate: (field) => validateField(field),
+  onTranslate: (field) => translateField(field),
   onClear: () => clearScheda(),
   // Lo stesso atto del bottone della barra dei pollici, chiamato dal piede
   // della scheda quando la barra non c'è. Una via sola verso `save`.
@@ -920,6 +921,21 @@ async function validateField(field) {
     state.validated.add(field);
     draw();
   }
+}
+
+/* ── tradurre: una traduzione AI accanto all'originale ──────────────────── */
+
+async function translateField(field) {
+  if (!state.us) {
+    SG().show(false, "Serve il numero dell'unità per tradurre un testo.", "");
+    return;
+  }
+  // la lingua d'arrivo si chiede: quella da cui si parte la sa il dato
+  const lang = (window.prompt("In che lingua? (en, he, de…)", "en") || "").trim();
+  if (!lang) return;
+  await SG().send("/v1/translate",
+                  { us: state.us, field, lang,
+                    scheda: state.def ? state.def.id : "" }, "translate");
 }
 
 function clearScheda() {
