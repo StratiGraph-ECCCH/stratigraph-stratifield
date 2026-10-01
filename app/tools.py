@@ -177,7 +177,8 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
                         authored_by: Optional[Dict[str, str]] = None,
                         model: Optional[str] = None, additive: bool = False,
                         extra_ops: Optional[List[Dict[str, Any]]] = None,
-                        relations: Optional[List[Tuple[str, str, str]]] = None):
+                        relations: Optional[List[Tuple[str, str, str]]] = None,
+                        lang: Optional[str] = None):
     """Valori → operazioni → stanza, e l'esito per campo. Una sola via.
 
     Il D7 dell'atto va IN CODA alla lista, per la ragione che `LocalWriter.update`
@@ -192,7 +193,7 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
     made = make_plan(scheda, values, number=number,
                      section=graph_writer.section(), ts=stamp, create=create,
                      authored_by=authored_by, model=model, additive=additive,
-                     relations=relations)
+                     relations=relations, lang=lang)
     process = _process_node(kind, author, made.unit_id, detail)
     ops = list(made.ops) + list(extra_ops or [])
     fields_of = list(made.op_fields) + [""] * len(extra_ops or [])
@@ -356,7 +357,7 @@ def make_create_su(graph_writer) -> ToolDescriptor:
                 graph_writer, scheda, values, number=number, create=True,
                 author=author, kind="create_su",
                 detail=f"US {number} creata a voce sul campo",
-                extra_ops=extra_ops)
+                extra_ops=extra_ops, lang=slots.get("lang"))
         except OperazioniError as wrong:
             return ToolResult(ok=False, message=str(wrong),
                               data={"us": number, "node_id": unit_id})
@@ -498,7 +499,8 @@ def make_update_su(graph_writer) -> ToolDescriptor:
                 kind="update_su",
                 detail=f"US {number}: {len(fields)} campi · {scheda.id} "
                        f"{scheda.version}",
-                authored_by=slots.get("authored_by"), model=slots.get("model"))
+                authored_by=slots.get("authored_by"), model=slots.get("model"),
+                lang=slots.get("lang"))
         except OperazioniError as wrong:
             return ToolResult(ok=False, message=str(wrong),
                               data={"us": number, "node_id": unit_id_for(number)})
@@ -743,7 +745,8 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
                     graph_writer, scheda, {}, number=left, create=False,
                     author=author, kind="relate_su",
                     detail=f"US {left} {said} US {right}, detto sul campo",
-                    relations=[(edge_type, direction, right)])
+                    relations=[(edge_type, direction, right)],
+                    lang=slots.get("lang"))
             except OperazioniError as wrong:
                 return ToolResult(ok=False, message=str(wrong),
                                   data={"missing": [left]})
@@ -770,7 +773,7 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
                     graph_writer, scheda, {box: [right]}, number=left, create=False,
                     author=author, kind="relate_su",
                     detail=f"US {left} {said} US {right}, detto sul campo",
-                    additive=True)
+                    additive=True, lang=slots.get("lang"))
             except OperazioniError as wrong:
                 return ToolResult(ok=False, message=str(wrong),
                                   data={"missing": [left]})

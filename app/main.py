@@ -693,6 +693,9 @@ def _run(transcript: str, slots: Dict[str, Any], scope: "Scope") -> Answer:
     descriptor = registry.route(understood.tool or "")
     merged = {**understood.slots, **{k: v for k, v in slots.items()
                                      if v is not None}}
+    # A SENTENCE is said in the node's command language — the one it is
+    # transcribed and understood in — so what it creates is written in it.
+    merged.setdefault("lang", COMMAND_LANGUAGE)
     result: ToolResult = invoke(descriptor, merged, scope.who, registry=registry)
     return Answer(ok=result.ok, said=understood.transcript or "",
                   intent=understood.intent or None, tool=understood.tool,
@@ -740,6 +743,12 @@ class SchedaIn(BaseModel):
     #: from whether the unit is there: «create it if missing» is how a mistyped
     #: number becomes a new unit, which is the whole reason `update_su` exists.
     create: bool = False
+    #: The language the form was FILLED IN — the one it was drawn in
+    #: (`GET /v1/schede/{id}?lang=`), one of those the definition declares. It
+    #: becomes `data.lang` of the nodes this save creates (la lingua dei dati,
+    #: 2026-09-28). NOT `source_language`, which is the language of the norm.
+    #: Absent (an older page, a queued save) = no language declared.
+    lang: str = ""
 
 
 @v1.post("/scheda/{scheda_id}", response_model=Answer, tags=["scheda"])
@@ -779,6 +788,14 @@ def submit_scheda(scheda_id: str, request: Request,
             detail=(f"«{found.id}» non ha i campi {unknown}: una scheda compila "
                     f"le caselle che lo standard dichiara, non altre."))
 
+    lang = (body.lang or "").strip()
+    if lang and lang not in found.languages:
+        raise HTTPException(
+            status_code=400,
+            detail=(f"«{found.id}» dichiara {found.languages} e non «{lang}»: "
+                    f"una scheda si compila in una lingua che la definizione "
+                    f"dichiara"))
+
     scope = _scope(request)
     author, registry = scope.who, scope.registry
     # Il campo-identità non è un valore da scrivere: è il numero, e viaggia in
@@ -787,7 +804,10 @@ def submit_scheda(scheda_id: str, request: Request,
     slots: Dict[str, Any] = {"us": body.us.strip(), "fields": values,
                              "scheda": found.id, "version": found.version,
                              "create": bool(body.create),
-                             "authored_by": dict(body.authored_by)}
+                             "authored_by": dict(body.authored_by),
+                             # declared even when empty: the form said which
+                             # language it speaks, or that it does not know
+                             "lang": lang}
     if body.model:
         slots["model"] = body.model
     prima = (_refusals(scope), _queued(scope))
@@ -799,7 +819,7 @@ def submit_scheda(scheda_id: str, request: Request,
         slots["fields"] = {}
     result: ToolResult = invoke(registry.get("update_su"), slots, author,
                                 registry=registry) if values else invoke(
-        registry.get("create_su"), {"us": slots["us"]}, author,
+        registry.get("create_su"), {"us": slots["us"], "lang": lang}, author,
         registry=registry)
     return Answer(ok=result.ok,
                   tool="update_su" if values else "create_su",

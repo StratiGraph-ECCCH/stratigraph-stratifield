@@ -757,6 +757,10 @@ export function payloadFor(def, state) {
     // QUALE versione della definizione ha disegnato questo modulo: il nodo la
     // cerca esatta, e l'unità la registra (audit B5b)
     version: def.version || "",
+    // la lingua in cui SI COMPILA (quella in cui il modulo è disegnato): il
+    // nodo la scrive come `data.lang` delle unità che questo salvataggio crea.
+    // Non `source_language`, che è la lingua della norma.
+    lang: def.lang || "",
   };
 }
 

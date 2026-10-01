@@ -166,6 +166,13 @@ class Plan:
     #: le unità (o i reperti) creati minimi perché un rapporto li nominava
     stubs: List[Dict[str, Any]] = dc_field(default_factory=list)
     notes: List[str] = dc_field(default_factory=list)
+    #: la lingua in cui si compila (`lang` di `plan`), scritta come `data.lang`
+    #: sui nodi che questo piano CREA — mai su quelli che già c'erano
+    lang: str = ""
+    #: i nodi già esistenti che dichiarano una lingua diversa da quella in cui
+    #: si sta compilando adesso: non si corregge niente, si conta (la lingua
+    #: dei dati, 2026-09-28 — il caso resta da decidere)
+    lang_differs: List[str] = dc_field(default_factory=list)
 
     def counts(self) -> Dict[str, int]:
         out: Dict[str, int] = {}
@@ -212,6 +219,25 @@ class _Context:
     def edges_touching(self, node_id: str) -> List[Dict[str, Any]]:
         return [e for e in self.edges
                 if node_id in (e.get("source"), e.get("target"))]
+
+
+#: dove un nodo dichiara la lingua dei suoi testi (s3Dgraphy: il campo del nodo
+#: narrativo, DP-63, esteso a ogni nodo dalla lingua dei dati, 2026-09-28)
+LANG = "lang"
+
+
+def _born_in(node: Optional[Dict[str, Any]], existing: Optional[Dict[str, Any]],
+             lang: str) -> None:
+    """`data.lang` su un nodo che il piano CREA. Un `add_node` su un nodo che
+    c'era già (lo stub che diventa scheda) gliela dà solo se non ne aveva una:
+    la lingua si decide alla nascita, come il tipo."""
+    if not isinstance(node, dict):
+        return
+    if existing is not None and str(((existing.get("data") or {}).get(LANG)) or "").strip():
+        return
+    data = dict(node.get("data") or {})
+    data.setdefault(LANG, lang)
+    node["data"] = data
 
 
 def _mark(node: Dict[str, Any]) -> Dict[str, Any]:
@@ -479,8 +505,18 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
          section: Optional[Dict[str, Any]], ts: str, create: bool = False,
          authored_by: Optional[Dict[str, str]] = None,
          model: Optional[str] = None, additive: bool = False,
-         relations: Optional[List[Tuple[str, str, str]]] = None) -> Plan:
+         relations: Optional[List[Tuple[str, str, str]]] = None,
+         lang: Optional[str] = None) -> Plan:
     """Valori + identità + ricetta → la lista di operazioni, in ordine.
+
+    `lang` = la lingua IN CUI SI COMPILA (quella del modulo, o la lingua dei
+    comandi del nodo per la voce): diventa `data.lang` di ogni nodo che questo
+    piano crea — l'unità, le proprietà coniate, gli stub — e di nessun altro.
+    Le modifiche successive non la toccano: un nodo che c'era e dichiara
+    un'altra lingua non si corregge, si conta in `lang_differs`. Non è
+    `source_language` della scheda, che è la lingua della NORMA (una scheda
+    ICCD compilata in inglese resta `source_language: it`). Assente = nessuna
+    lingua dichiarata, e nessuna si indovina.
 
     `relations` = `[(edge_type, direzione, altra unità)]`: i rapporti detti a
     voce che la scheda NON ha come casella ma il datamodel dichiara fra unità
@@ -525,7 +561,7 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
     # ── 1 · l'unità ─────────────────────────────────────────────────────────
     existing = _find_unit(ctx, number)
     unit_id = str(existing["id"]) if existing else unit_id_for(number)
-    out = Plan(unit_id=unit_id, number=number)
+    out = Plan(unit_id=unit_id, number=number, lang=str(lang or "").strip())
     current = {"field": ""}
     #: le rimozioni si RACCOLGONO e si mandano in fondo (decisione 9)
     removals: List[Tuple[str, str, Dict[str, Any]]] = []
@@ -535,6 +571,9 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
 
     def op(kind: str, **fields: Any) -> Dict[str, Any]:
         from s3dgraphy import api
+        if kind == "add_node" and out.lang:
+            _born_in(fields.get("node"), ctx.nodes.get(str(fields.get("id"))),
+                     out.lang)
         made = api.make_op(kind, ts=ts, **fields)
         out.ops.append(made)
         out.op_fields.append(current["field"])
@@ -587,6 +626,14 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
                 f"la scheda dice {wanted_type} ma {unit_id} è registrata come "
                 f"{out.node_type}: il tipo si decide alla creazione e "
                 f"un'operazione non lo cambia")
+
+    # la lingua di un'unità che c'era non si corregge: se è un'altra, si conta
+    declared = str(((existing or {}).get("data") or {}).get(LANG) or "").strip()
+    if out.lang and declared and declared.lower() != out.lang.lower():
+        out.lang_differs.append(unit_id)
+        out.notes.append(
+            f"{unit_id} è scritta in «{declared}» e la si sta compilando in "
+            f"«{out.lang}»: la sua lingua non cambia")
 
     # quale definizione e quale versione l'ha compilata (audit B5b)
     op("update_field", node_id=unit_id, field=f"data.{MARK}", value=scheda.ref)
