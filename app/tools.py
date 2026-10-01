@@ -1442,6 +1442,60 @@ def make_translate_text(graph_writer, translator=None) -> ToolDescriptor:
         service="s3dgraphy", handler=handler)
 
 
+# ── 1sexies · verify_node — «Verifica», la firma nella stanza ───────────────
+
+def make_verify_node(graph_writer) -> ToolDescriptor:
+    """Una persona firma ciò che aspettava lei: s3Dgraphy `api.verify`, nella
+    stanza (E.D., 1 ott 2026, decisione 15 del referto dev27).
+
+    `data.validated_by` / `validated_at` sul nodo (contenuto AI, revisione
+    chiesta, una traduzione AI), e l'`AuthorNode` se la stanza non l'aveva.
+    Il modo d'accesso lo timbra il relay dal token, non questo tool. Un testo
+    da riallineare non si chiude con una firma: lo dice, «si riallinea in
+    EMStudio». Una CASELLA composta da un modello resta di `validate_field`."""
+
+    def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from . import verifica as V
+
+        node_id = str(slots.get("node_id") or "").strip()
+        if not node_id:
+            return ToolResult(ok=False, message="Mi serve il nodo da verificare.")
+        stamp = _now()
+        try:
+            made = V.plan_verify(graph_writer.section(), node_id,
+                                 orcid=author or "", ts=stamp)
+        except V.VerificaError as wrong:
+            realign = "riallinea" in str(wrong)
+            return ToolResult(ok=False, message=str(wrong),
+                              data={"node_id": node_id,
+                                    **({"realign": V.REALIGN_ELSEWHERE} if realign else {})})
+        try:
+            outcomes = graph_writer.send(list(made.ops), author=author)
+        except Exception as exc:                                 # noqa: BLE001
+            return ToolResult(ok=False, message=str(exc))
+        data = {"node_id": node_id, "validated_by": made.by, "validated_at": made.at,
+                "reasons": made.reasons, "minted": made.minted,
+                "queued": any(o.get("queued") for o in outcomes)}
+        #: «idempotent» is the empty validated_auth on a field that was empty:
+        #: nothing to change, not a refusal (a relay writes it from the token)
+        refused = [o for o in outcomes if not o.get("applied")
+                   and o.get("reason") not in ("queued", "idempotent")]
+        if refused:
+            data["refused"] = refused
+            return ToolResult(ok=False, message=(
+                f"La stanza non ha preso la firma: {refused[0].get('reason')}."), data=data)
+        return ToolResult(ok=True, message=f"Verificato: {node_id}, firmato da te.",
+                          data=data)
+
+    return ToolDescriptor(
+        name="verify_node",
+        intents=["verifica"],
+        input_schema=[Slot("node_id", "string", True, "il nodo che aspetta una persona")],
+        description="Firma, nella stanza, un nodo che aspetta una persona (AI, "
+                    "revisione chiesta): s3Dgraphy api.verify.",
+        service="s3dgraphy", handler=handler)
+
+
 # ── the five, registered ─────────────────────────────────────────────────────
 
 def build_registry(graph_writer, asset_store, *, translator=None) -> ToolRegistry:
@@ -1455,6 +1509,7 @@ def build_registry(graph_writer, asset_store, *, translator=None) -> ToolRegistr
     registry.register(make_relate_su(graph_writer))
     registry.register(make_validate_field(graph_writer))
     registry.register(make_translate_text(graph_writer, translator))
+    registry.register(make_verify_node(graph_writer))
     registry.register(make_which_project(graph_writer))
     registry.register(make_attach_photo(graph_writer, asset_store))
     registry.register(make_ingest_photos(graph_writer, asset_store))

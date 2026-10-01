@@ -972,6 +972,35 @@ def translate(request: Request, body: TranslateIn = Body(...)) -> Answer:
                   **_told(result, scope, prima))
 
 
+class VerifyIn(BaseModel):
+    """«Verifica» su un nodo che aspetta una persona — un nodo AI, una
+    revisione chiesta, una traduzione AI. Chi firma è l'identità della stanza;
+    come era entrata lo timbra il relay."""
+
+    node_id: str = ""
+
+
+@v1.post("/verify", response_model=Answer, tags=["scheda"])
+def verify(request: Request, body: VerifyIn = Body(...)) -> Answer:
+    """A person signs what waited for them: s3Dgraphy `api.verify`, in the room."""
+    scope = _scope(request)
+    prima = (_refusals(scope), _queued(scope))
+    result: ToolResult = invoke(scope.registry.get("verify_node"),
+                                {"node_id": body.node_id}, scope.who,
+                                registry=scope.registry)
+    return Answer(ok=result.ok, tool="verify_node", data=result.data,
+                  **_told(result, scope, prima))
+
+
+@v1.get("/to-review", tags=["scheda"])
+def to_review_route(request: Request) -> Dict[str, Any]:
+    """What waits for a person in this room, and why (`api.to_review`): the
+    list the page draws «Verifica» from — or «si riallinea in EMStudio»."""
+    from . import verifica as V
+    scope = _scope(request)
+    return {"rows": V.to_review(scope.writer.section())}
+
+
 @v1.post("/listen", response_model=Answer, tags=["assistant"])
 async def listen(request: Request,
                  audio: UploadFile = File(...),

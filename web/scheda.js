@@ -657,6 +657,8 @@ export function render(container, def, state) {
   sheet.append(head);
   const notice = datamodelNotice(def);
   if (notice) sheet.append(notice);
+  const review = reviewBox(state);
+  if (review) sheet.append(review);
 
   sheet.append(completenessLine(def, state.values, mode));
 
@@ -713,6 +715,44 @@ function focusStep(container, state) {
     }
   });
   state.onStep(state.step, boxes.length);
+}
+
+/* ── «VERIFICA» (VLONG dev28, parte G): ciò che aspetta una persona ─────────
+ *
+ * Le righe di `GET /v1/to-review` (s3Dgraphy `api.to_review`) che riguardano
+ * QUESTA unità: l'unità stessa, o una traduzione di un suo testo (`of`). Pura,
+ * per essere provata senza pagina. */
+export function reviewRowsFor(rows, unitId) {
+  if (!unitId) return [];
+  return (rows || []).filter((r) => r && (r.node === unitId || r.of === unitId));
+}
+
+/* Il riquadro: il motivo di ogni riga («AI», «revisione chiesta», «da
+ * riallineare») e il gesto che ammette — «Verifica», che firma con l'identità
+ * della stanza (`POST /v1/verify`), oppure, per un testo da riallineare, la
+ * frase: una firma non lo chiude, e StratiField non sa riallineare. */
+export function reviewBox(state) {
+  const rows = reviewRowsFor(state.review, state.unitId);
+  if (!rows.length) return null;
+  const box = el("section", { class: "to-review", "data-to-review": String(rows.length) },
+    el("h3", { text: tr("review.title", "Da verificare") }));
+  for (const row of rows) {
+    const what = row.node_type === "translation"
+      ? `${row.field || ""} → ${row.lang || ""}` : (row.name || row.node);
+    const line = el("div", { class: "review-row", "data-node": row.node },
+      el("span", { class: "what", text: what }),
+      el("span", { class: "why", text: (row.reasons_text || row.reasons || []).join(" · ") }));
+    if (row.can_verify && state.onVerify) {
+      const go = el("button", { class: "verify", type: "button", "data-action": "verify",
+                                text: tr("review.verify", "Verifica") });
+      go.addEventListener("click", () => state.onVerify(row.node));
+      line.append(go);
+    } else if (row.realign) {
+      line.append(el("span", { class: "realign", text: row.realign }));
+    }
+    box.append(line);
+  }
+  return box;
 }
 
 export function stepTo(container, state, where) {

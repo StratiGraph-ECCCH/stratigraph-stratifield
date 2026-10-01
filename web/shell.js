@@ -125,6 +125,10 @@ const state = {
   onStep: (i, n) => { $("tb-step").textContent = n ? `${i + 1}/${n}` : ""; },
   onValidate: (field) => validateField(field),
   onTranslate: (field) => translateField(field),
+  // «VERIFICA» (dev28): firmare, nella stanza, ciò che aspetta una persona
+  onVerify: (nodeId) => verifyNode(nodeId),
+  review: [],
+  unitId: "",
   onClear: () => clearScheda(),
   // Lo stesso atto del bottone della barra dei pollici, chiamato dal piede
   // della scheda quando la barra non c'è. Una via sola verso `save`.
@@ -467,6 +471,8 @@ async function refill(def, us, lens = false) {
     if (who === "ai") state.authored[key] = "ai";
   }
   for (const key of read.validated || []) state.validated.add(key);
+  state.unitId = read.node_id || "";
+  void loadReview();
   return read.note ? { note: read.note } : {};
 }
 
@@ -906,6 +912,26 @@ function afterSave(body) {
   // devono vedere, e una scheda NUOVA diventa, nell'indirizzo, la sua unità.
   if (state.def && body && body.us) writeHash(state.def.id, body.us, true);
   void loadRoom().then(() => paintUnav());
+  void loadReview();
+}
+
+/* ── verificare: ciò che aspetta una persona (dev28, parte G) ──────────────── */
+
+async function loadReview() {
+  try {
+    const answer = await fetch(`${SG().node}/v1/to-review`,
+                               { headers: { Accept: "application/json" } });
+    if (!answer.ok) return;
+    state.review = (await answer.json()).rows || [];
+  } catch {
+    return;                       // la stanza non risponde: il riquadro non c'è
+  }
+  if (state.def) draw();
+}
+
+async function verifyNode(nodeId) {
+  const ok = await SG().send("/v1/verify", { node_id: nodeId }, "verify");
+  if (ok !== false) await loadReview();
 }
 
 /* ── validare ────────────────────────────────────────────────────────────── */
@@ -936,6 +962,7 @@ async function translateField(field) {
   await SG().send("/v1/translate",
                   { us: state.us, field, lang,
                     scheda: state.def ? state.def.id : "" }, "translate");
+  void loadReview();             // la traduzione AI aspetta una persona: si vede
 }
 
 function clearScheda() {

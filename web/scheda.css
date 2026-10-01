@@ -713,3 +713,12 @@
   box-shadow: none;
   opacity: 0.72;
 }
+
+/* «Da verificare» (dev28): ciò che aspetta una persona, col suo motivo */
+.to-review { border: 1px dashed var(--sg-accent); border-radius: 6px;
+             padding: 6px 10px; margin: 6px 0 10px; }
+.to-review h3 { font-size: 0.95em; margin: 2px 0 6px; }
+.to-review .review-row { display: flex; gap: 10px; align-items: baseline; padding: 2px 0; }
+.to-review .what { font-weight: 600; }
+.to-review .why { opacity: 0.75; }
+.to-review .realign { font-style: italic; opacity: 0.8; }

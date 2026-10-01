@@ -76,7 +76,7 @@ def test_the_unit_number_comes_out_of_the_sentence_when_it_is_in_it():
         "costruisci il modello 3D di questa US dalle foto", registry).slots
 
 
-def test_the_registry_now_holds_eleven_tools():
+def test_the_registry_now_holds_twelve_tools():
     """The membership AND the count, so a tool that appears without anybody
     deciding to add it shows up here.
 
@@ -100,12 +100,16 @@ def test_the_registry_now_holds_eleven_tools():
       node's model writes a TranslationNode `method: ai` BESIDE the original,
       waiting in `api.to_review` for a person. A translation is not a
       correction of the text, so it could not be `update_su`.
+    * 2026-11-01 — `verify_node` («Verifica», VLONG dev28 part G, decision 15):
+      a person signs, in the room, a NODE that waited for them (`api.verify`).
+      Not `validate_field`, which confirms a BOX a model composed: one signs a
+      node, the other a value inside one.
     """
     registry = build_registry(FakeNode(), InMemoryAssetStore())
     assert {d.name for d in registry.list()} == {
         "create_su", "update_su", "relate_su", "validate_field",
         "which_project", "attach_photo_to_su", "ingest_photos", "query_kg",
-        "build_model", "open_in_emstudio", "translate_text"}
+        "build_model", "open_in_emstudio", "translate_text", "verify_node"}
 
 
 # ── 2 · what the node is asked ───────────────────────────────────────────────
