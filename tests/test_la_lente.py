@@ -135,7 +135,7 @@ def test_la_lente_della_ICCD_2_0_0_su_una_US_1_0_2_dice_formation_mode_non_la_tr
     _written_with_1_0_2(c)
     read = c.get("/v1/scheda/iccd-us-2021/unita?us=3014&lente=1").json()
     lens = read["lens"]
-    assert read["read_with"]["version"] == "2.0.0"
+    assert read["read_with"]["version"] == "2.0.1"  # ICCD US 2.0.1 (1 ott): la guardia di AP21i
     assert lens["written_with"] == {"template": "iccd-us-2021", "version": "1.0.2"}
     assert "formazione_natura" in lens["holes"]
     assert {"property": "formation_mode", "value": "artificiale",
