@@ -162,21 +162,21 @@
     ],
     "digest": "sha256:4802d763044f3eb47e08a118f94a0f194b4489d0dd129e1002482837a66bd0fb",
     "datamodel": {
-      "nodes": "1.6.23",
-      "node_registry": "1.6.23",
+      "nodes": "1.6.24",
+      "node_registry": "1.6.24",
       "connections": "1.6.35",
-      "visual_rules": "1.6.30",
+      "visual_rules": "1.6.31",
       "qualia": "1.6.6",
       "translations": "1.6",
-      "digest": "sha256:027b2eead5a2b9986f83b81ff75c81aa2c27272e5539b83cb733595c956795cb",
+      "digest": "sha256:e1eb0244c437596fbe5af359923d1cc67754fe4a4ac47088ca89bfc33cd011ca",
       "files": {
         "nodes": {
-          "digest": "sha256:294c150032938487250e2b4ed98242a9f83cc23c2ca00853777ff47f0bd3f5cf",
-          "version": "1.6.23"
+          "digest": "sha256:24b088e92ebedf1c9ac14291205204fc5de466b05cdc061a1fe1d6dc9385256f",
+          "version": "1.6.24"
         },
         "node_registry": {
-          "digest": "sha256:107ed2c2324c1979d8966fcd603ce5681a04a7c1a6c2ebc0b6672b081c285d6b",
-          "version": "1.6.23"
+          "digest": "sha256:f9d24fd3b8debdf74a66c9fb293aff28aca5b6376027e6323560683f8609102b",
+          "version": "1.6.24"
         },
         "connections": {
           "digest": "sha256:fc7e8b27646e9cb0d0591a35873f8da9d153079beb947cd740356927aa1d7556",
@@ -187,10 +187,10 @@
           "version": "1.6.6"
         }
       },
-      "em_ttl": "1.6.13",
-      "s3dgraphy": "1.6.0.dev29",
+      "em_ttl": "1.6.14",
+      "s3dgraphy": "1.6.0.dev30",
       "taken_from": {
-        "git_commit": "069fb1a196b5b52d66168107e7cb94ebe0402101",
+        "git_commit": "da71c14e6325ea343eeae13af308bd054dccd21e",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
