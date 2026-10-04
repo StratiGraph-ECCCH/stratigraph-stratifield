@@ -688,10 +688,60 @@ export function render(container, def, state) {
     sheet.append(foot);
   }
 
+  // R2 (4 ottobre 2026) · gli allegati dell'unità e DOVE sono: il risolutore
+  // unico di s3Dgraphy, i segni dell'elenco comune; «Carica nella stanza» per
+  // un file che è sul disco del nodo e che lo store non ha ancora
+  if (state.us) {
+    const box = el("section", { class: "allegati", "data-us": state.us });
+    sheet.append(box);
+    paintAttachments(box, def, state);
+  }
+
   container.append(sheet);
 
   if (mode === "phone") focusStep(container, state);
   return { shown };
+}
+
+async function askNode(path, init = {}) {
+  const seam = SG();
+  return seam.request ? seam.request(path, init)
+    : fetch(`${seam.node || ""}${path}`, { ...init,
+        headers: { ...(init.headers || {}), ...(seam.token ? { Authorization: "Bearer " + seam.token } : {}) } });
+}
+
+export async function paintAttachments(box, def, state) {
+  box.replaceChildren(el("h3", { text: tr("att.title", "Attachments") }));
+  let read;
+  try {
+    const lang = (document.documentElement.lang || "it").slice(0, 2);
+    const answer = await askNode(`/v1/scheda/${encodeURIComponent(def.id)}/allegati?us=`
+      + `${encodeURIComponent(state.us)}&lang=${encodeURIComponent(lang)}`);
+    if (!answer.ok) { box.append(el("p", { class: "hint", text: `${answer.status}` })); return; }
+    read = await answer.json();
+  } catch { box.append(el("p", { class: "hint", text: tr("att.silent", "The node does not answer") })); return; }
+  if (!read.attachments.length) {
+    box.append(el("p", { class: "hint", text: tr("att.none", "No attachment for this unit") }));
+    return;
+  }
+  for (const a of read.attachments) {
+    const row = el("div", { class: "att", "data-state": a.state });
+    row.append(el("span", { class: `state-badge st-${a.tone}`, title: a.meaning,
+                            text: `${a.glyph} ${a.label}` }),
+               el("span", { class: "att-name", text: a.name, title: a.path || a.note || "" }));
+    if (a.can_upload && read.in_room) {
+      const up = el("button", { type: "button", class: "ghost",
+                                text: tr("att.upload", "Upload to the room") });
+      up.addEventListener("click", async () => {
+        up.disabled = true;
+        await askNode("/v1/allegati/carica", { method: "POST",
+          headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: a.path }) });
+        paintAttachments(box, def, state);
+      });
+      row.append(up);
+    }
+    box.append(row);
+  }
 }
 
 /* ── un campo per volta, sul telefono ─────────────────────────────────────── */

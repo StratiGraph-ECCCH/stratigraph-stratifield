@@ -926,6 +926,63 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
     return out
 
 
+@v1.get("/scheda/{scheda_id}/allegati", tags=["scheda"])
+def scheda_allegati(scheda_id: str, request: Request, us: str = "",
+                    lang: str = "it") -> Dict[str, Any]:
+    """R2 (4 ottobre 2026): gli allegati dell'unità e dove sono, detti dal
+    risolutore UNICO di s3Dgraphy con i segni dell'elenco comune."""
+    from . import allegati
+    from .assets import ASSET_STORE
+    from .operazioni import _Context, _find_unit
+    from .tools import unit_id_for
+
+    scope = _scope(request)
+    number = (us or "").strip()
+    if not number:
+        raise HTTPException(status_code=400, detail="quale unità? manca `us`")
+    try:
+        section = scope.writer.section()
+    except RoomRefused as chiusa:
+        raise _refused(chiusa) from None
+    except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
+        raise HTTPException(status_code=502,
+                            detail=f"Non riesco a leggere il grafo: {chiusa}") from None
+    unit = _find_unit(_Context(section), number)
+    unit_id = str(unit["id"]) if unit else unit_id_for(number)
+    rows = allegati.state_of(allegati.attachments_of(section, unit_id),
+                             store_has=allegati.store_probe(ASSET_STORE), lang=lang)
+    return {"us": number, "node_id": unit_id, "attachments": rows,
+            "in_room": bool(getattr(scope.writer, "room_id", None))}
+
+
+class UploadIn(BaseModel):
+    path: str
+
+
+@v1.post("/allegati/carica", tags=["scheda"])
+def carica_allegato(request: Request, body: UploadIn = Body(...)) -> Dict[str, Any]:
+    """«Carica nella stanza»: i byte di un allegato che è sul disco di questo
+    nodo vanno nello store condiviso. Solo un percorso che il risolutore ha
+    trovato dentro le cartelle dichiarate (`EM_PROJECT_ROOT`,
+    `STRATIFIELD_FILE_ROOTS`): non si legge un file qualsiasi del disco."""
+    import mimetypes
+    from . import allegati
+    from .assets import ASSET_STORE
+
+    _scope(request)
+    path = os.path.abspath(body.path)
+    where = allegati.roots()
+    allowed = [os.path.abspath(r) for r in ([where["project_root"]] if where["project_root"] else [])
+               + where["base_dirs"]]
+    if not any(path == r or path.startswith(r + os.sep) for r in allowed):
+        raise HTTPException(status_code=403,
+                            detail="questo percorso non è in una cartella dichiarata del nodo")
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail=f"non c'è: {path}")
+    stored = allegati.upload(ASSET_STORE, path, mimetypes.guess_type(path)[0] or "application/octet-stream")
+    return {"ok": True, **{k: stored.get(k) for k in ("ref", "size", "created", "spooled")}}
+
+
 class ValidateIn(BaseModel):
     us: str = ""
     fields: List[str] = Field(default_factory=list)
