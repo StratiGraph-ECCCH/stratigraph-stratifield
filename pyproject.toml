@@ -28,7 +28,7 @@ dependencies = [
     # `app/scheda.py::measuring_qualia`). With dev22 the measures come out in the
     # card's language, not in the English fallback — measured, report
     # 2026-10-27-NIGHT-il-giro-di-chiusura.
-    "s3dgraphy>=1.6.0.dev37",
+    "s3dgraphy>=1.6.0.dev38",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
     # The room's WIRE. `uvicorn[standard]` already pulls this in, and relying on
