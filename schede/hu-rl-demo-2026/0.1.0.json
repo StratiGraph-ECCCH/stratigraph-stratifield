@@ -28,11 +28,11 @@
     "datamodel": {
       "nodes": "1.6.26",
       "node_registry": "1.6.26",
-      "connections": "1.6.35",
-      "visual_rules": "1.6.31",
+      "connections": "1.6.37",
+      "visual_rules": "1.6.33",
       "qualia": "1.6.7",
-      "translations": "1.6",
-      "digest": "sha256:0a3a7fbfeea2351958301942e43d0d861c3bc7903cd7c3004dab159df68c6026",
+      "translations": "1.8",
+      "digest": "sha256:ac5ab0ff636a6907f93af5f89c8fbea6e9aca3196772507d68680f4147d705a5",
       "files": {
         "nodes": {
           "digest": "sha256:6002f34c8a5485eae0068271badcbe18d8d6f8eecf5baba263ee348b5a7772ea",
@@ -43,8 +43,8 @@
           "version": "1.6.26"
         },
         "connections": {
-          "digest": "sha256:fc7e8b27646e9cb0d0591a35873f8da9d153079beb947cd740356927aa1d7556",
-          "version": "1.6.35"
+          "digest": "sha256:52730324fd266e3c7c3325dec38bf5e7f1ebbbcc7f63e74f1dc9760b124b88d9",
+          "version": "1.6.37"
         },
         "qualia": {
           "digest": "sha256:0f02e26795aa0635d0ee9d6c088110fcef1d6739f7af2500c1c98f80d9c509a9",
@@ -52,9 +52,9 @@
         }
       },
       "em_ttl": "1.6.15",
-      "s3dgraphy": "1.6.0.dev40",
+      "s3dgraphy": "1.6.0.dev41",
       "taken_from": {
-        "git_commit": "230491887d6c8643c9941399d2bdacc586fee546",
+        "git_commit": "94f97a22826817545bd169daa4286903861bcab3",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
