@@ -99,35 +99,35 @@
     ],
     "digest": "sha256:87a606c82bd85484220c98dabbb813990d10ad669d597fa6331cbccbf973a0e1",
     "datamodel": {
-      "nodes": "1.6.26",
+      "nodes": "1.6.28",
       "node_registry": "1.6.26",
-      "connections": "1.6.37",
-      "visual_rules": "1.6.33",
-      "qualia": "1.6.8",
-      "translations": "1.9",
-      "digest": "sha256:b8359379c74c9a0376aa41beadfa551f885c2b0e41f47fb065b903cd60f3ced5",
+      "connections": "1.6.39",
+      "visual_rules": "1.6.34",
+      "qualia": "1.6.9",
+      "translations": "1.11",
+      "digest": "sha256:ecc4ba3f60e12211735fbfbd2fe0bf0cf672d1c97f55341e9bbb56962ae83e98",
       "files": {
         "nodes": {
-          "digest": "sha256:6002f34c8a5485eae0068271badcbe18d8d6f8eecf5baba263ee348b5a7772ea",
-          "version": "1.6.26"
+          "digest": "sha256:009049a3d00b9a84bde1284fe576f36a6b8b650af1cb32012135e32479e30812",
+          "version": "1.6.28"
         },
         "node_registry": {
           "digest": "sha256:f8d33c7643d3909254412a33a3622560cec44d8c158e0de7826d5f3466267a93",
           "version": "1.6.26"
         },
         "connections": {
-          "digest": "sha256:52730324fd266e3c7c3325dec38bf5e7f1ebbbcc7f63e74f1dc9760b124b88d9",
-          "version": "1.6.37"
+          "digest": "sha256:f55ac71522a300e3e6ea3ccc0816fa9cca6aa1be527d1e14de19a91808fe7db2",
+          "version": "1.6.39"
         },
         "qualia": {
-          "digest": "sha256:4c40e55e0f39406c11a7f021658f52c09f3f40e1ae4c8607e2f30db0cb5b04bb",
-          "version": "1.6.8"
+          "digest": "sha256:1f83bb41e0e610f572c25f24dfe4fae2730ec15c973c6e1864794c147bb03d81",
+          "version": "1.6.9"
         }
       },
-      "em_ttl": "1.6.15",
-      "s3dgraphy": "1.6.0.dev42",
+      "em_ttl": "1.6.16",
+      "s3dgraphy": "1.6.0.dev43",
       "taken_from": {
-        "git_commit": "3b6fd4a6ad9dab9d3d1c2f03bd73953fb9c786f4",
+        "git_commit": "2db56cfbba0dcce0ca833e75fe4a0cee95656433",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
