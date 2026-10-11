@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.28",
-            "connections": "1.6.39",
+            "nodes": "1.6.29",
+            "connections": "1.6.40",
             "qualia": "1.6.9",
             "em_ttl": "1.6.16",
-            "digest": "sha256:ecc4ba3f60e12211735fbfbd2fe0bf0cf672d1c97f55341e9bbb56962ae83e98"
+            "digest": "sha256:bb8c072dc4d7797024e2307557b1f93ee3d2f7d00b80e9cbb2a14ae938aeb5aa"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.28",
-            "connections": "1.6.39",
+            "nodes": "1.6.29",
+            "connections": "1.6.40",
             "qualia": "1.6.9",
             "em_ttl": "1.6.16",
-            "digest": "sha256:ecc4ba3f60e12211735fbfbd2fe0bf0cf672d1c97f55341e9bbb56962ae83e98"
+            "digest": "sha256:bb8c072dc4d7797024e2307557b1f93ee3d2f7d00b80e9cbb2a14ae938aeb5aa"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.28",
-            "connections": "1.6.39",
+            "nodes": "1.6.29",
+            "connections": "1.6.40",
             "qualia": "1.6.9",
             "em_ttl": "1.6.16",
-            "digest": "sha256:ecc4ba3f60e12211735fbfbd2fe0bf0cf672d1c97f55341e9bbb56962ae83e98"
+            "digest": "sha256:bb8c072dc4d7797024e2307557b1f93ee3d2f7d00b80e9cbb2a14ae938aeb5aa"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.28",
-            "connections": "1.6.39",
+            "nodes": "1.6.29",
+            "connections": "1.6.40",
             "qualia": "1.6.9",
             "em_ttl": "1.6.16",
-            "digest": "sha256:ecc4ba3f60e12211735fbfbd2fe0bf0cf672d1c97f55341e9bbb56962ae83e98"
+            "digest": "sha256:bb8c072dc4d7797024e2307557b1f93ee3d2f7d00b80e9cbb2a14ae938aeb5aa"
           }
         }
       },
