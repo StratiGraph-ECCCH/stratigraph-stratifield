@@ -110,6 +110,15 @@ export function paintPanel(host, health, stato) {
       await refresh(host, health);
     });
     host.append(coda, manda);
+  } else if (stato && stato.last_delivery && stato.last_delivery.count) {
+    // LA CODA È PARTITA DA SOLA al ritorno della stanza: si dice, invece di
+    // lasciare che un contatore sparito sembri una coda persa
+    const partita = document.createElement("p");
+    partita.className = "hint";
+    partita.id = "room-delivered";
+    partita.textContent = t("room.delivered", { n: stato.last_delivery.count,
+                                                at: stato.last_delivery.hhmm });
+    host.append(partita);
   }
   const rimaste = leftBehind(health, t);
   if (rimaste) {

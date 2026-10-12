@@ -188,7 +188,14 @@ class Scrivani:
             else:
                 entry[0].renew(bearer)
                 entry[2] = time.monotonic()
-            return entry[0], entry[1]
+        # SEDUTO E SORVEGLIATO, come lo scrivano del nodo: quando la stanza
+        # torna, la coda di questa persona parte da sola (prova 8 del tavolo,
+        # 12 ottobre — senza, aspettava «consegna ora»). A ogni uso, perché
+        # `sweep` o un'uscita chiudono la sessione e spengono il sorvegliante.
+        keep = getattr(entry[0], "keep_seated", None)
+        if keep is not None:
+            keep()
+        return entry[0], entry[1]
 
     def mine(self, who: str) -> List[Any]:
         with self._lock:

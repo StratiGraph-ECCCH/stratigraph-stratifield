@@ -738,6 +738,9 @@ class RoomWriter:
         #: WHY the last write did not go through, if it did not. `describe()`
         #: reads it: "degraded" without a reason is a status light with no label.
         self.last_refusal: Optional[str] = None
+        #: l'ultima consegna della coda — quante, quando, da quale via — perché
+        #: una coda che parte da sola si deve poter leggere (`_delivered`)
+        self.last_delivery: Optional[Dict[str, Any]] = None
         #: HOW MANY OPERATIONS ONE REST REQUEST MAY CARRY — the room's door
         #: declares it (`OPS_BATCH_MAX`, 1000 by default, `stratigraph-server/
         #: app/main.py`) and says the number in its 413. Started at the
@@ -1021,6 +1024,57 @@ class RoomWriter:
         riga è il difetto di ieri chiuso: da ieri c'era un posto a sedere e sotto
         non c'era niente.
         """
+        # UN RIENTRO ALLA VOLTA: il sorvegliante (`keep_seated`) e una richiesta
+        # che trovano il posto vuoto insieme aprirebbero due posti e
+        # attraverserebbero il ponte in due, leggendo l'uno gli ack dell'altro
+        with self._seat_lock():
+            self._seated_locked(write=write)
+
+    def _seat_lock(self) -> Any:
+        # pigro, come `_here`: i test costruiscono scrivani senza `__init__`
+        lock = self.__dict__.get("_seat_lock_")
+        if lock is None:
+            lock = self.__dict__.setdefault("_seat_lock_", threading.RLock())
+        return lock
+
+    def keep_seated(self) -> None:
+        """Resta seduto, e al rientro CONSEGNA.
+
+        Il sorvegliante della sessione rientra con `_seated`, che attraversa
+        dispensa e ponte nell'ordine della regola: la coda parte quando la
+        stanza torna, senza aspettare «consegna ora» né la prossima scheda.
+        Misurato il 12 ottobre (prova 8): rete ricucita, 10 s, niente; poi
+        `POST /room/deliver` → «Consegnate 12».
+        """
+        self.session.keep_seated(reopen=self._reseat)
+
+    def _reseat(self) -> None:
+        """Il rientro del sorvegliante. Una porta chiusa gli si dice come
+        `SessionRefused`, così smette di bussare: è una regola, non la rete."""
+        try:
+            self._seated(write=False)
+        except AccessRefused as refusal:
+            raise SessionRefused(str(refusal)) from None
+
+    def _delivered(self, before: int, via: str) -> None:
+        """Ciò che una consegna ha tolto dalla coda, tenuto per chi chiede; e
+        il rifiuto di prima spento quando la coda è vuota. Misurato il 12
+        ottobre: dopo «Consegnate 12» `GET /room` diceva ancora
+        «SessionClosed: la stanza non risponde: riprovo fra 1s»."""
+        if self.bridge is None:
+            return
+        left = len(self.bridge)
+        if before > left:
+            self.last_delivery = {"count": before - left, "left": left,
+                                  "via": via, "at": _now(),
+                                  "hhmm": time.strftime("%H:%M")}
+            log.info("consegnate %d dalla coda (%s), ne restano %d",
+                     before - left, via, left)
+        if before and not left:
+            self.last_refusal = None
+            self.degraded = False
+
+    def _seated_locked(self, *, write: bool = True) -> None:
         if self.session.seated:
             if write:
                 self._may_write()
@@ -1061,10 +1115,12 @@ class RoomWriter:
             log.info("il ponte aspetta: %d byte devono ancora salire",
                      len(self.spool))
             return
+        before = len(self.bridge) if self.bridge is not None else 0
         try:
             self._crossed = self._cross_the_bridge()
         except Exception as exc:          # noqa: BLE001
             log.warning("il ponte non si è attraversato: %s", exc)
+        self._delivered(before, "socket")
 
     def _to_the_bridge(self, ops: List[Dict[str, Any]], *, why: str) -> None:
         """Mettere in coda non deve poter far fallire una consegna.
@@ -1486,15 +1542,17 @@ class RoomWriter:
         refusals = getattr(self, "access_refusals", 0)
         via = "socket"
         try:
-            was = self.session.seated
-            self._seated()
-            if was and not self._byte_in_attesa():
-                self._crossed = self._cross_the_bridge()
+            with self._seat_lock():
+                was = self.session.seated
+                self._seated()
+                if was and not self._byte_in_attesa():
+                    self._crossed = self._cross_the_bridge()
         except AccessRefused:
             raise
         except Exception:                 # noqa: BLE001 — il socket non c'è
             via = "rest"
             self.last_rest = self.deliver_by_rest()
+        self._delivered(before, via)
         left = len(self.bridge)
         stopped = self.bridge.last_refusal
         if getattr(self, "access_refusals", 0) > refusals:

@@ -116,7 +116,10 @@ async def _lifespan(_app: FastAPI):
         # …e si RESTA seduti: il sorvegliante riprende il posto quando cade,
         # che è quello che succede a ogni riavvio del relay e a ogni buco di
         # rete. Senza, «seduto» durerebbe fino al primo singhiozzo.
-        seat = getattr(getattr(WRITER, "session", None), "keep_seated", None)
+        # Dal 12 ottobre col rientro dello SCRIVANO (`RoomWriter.keep_seated`),
+        # che attraversa la coda: il socket da solo non la consegnava.
+        seat = (getattr(WRITER, "keep_seated", None)
+                or getattr(getattr(WRITER, "session", None), "keep_seated", None))
         if seat is not None:
             seat()
     yield
@@ -697,12 +700,16 @@ def _queued(scope: "Scope") -> int:
     return int(here()) if here else 0
 
 
-def _told(result: ToolResult, scope: "Scope", prima: tuple) -> Dict[str, Any]:
+def _told(result: ToolResult, scope: "Scope", prima: tuple,
+          in_coda: str = "") -> Dict[str, Any]:
     """`refused`, `queued` e la frase giusta, dopo un atto.
 
     Se la stanza ha rifiutato la CONSEGNA di qualcosa che il nodo ha tenuto,
     il tool dice «ho creato» — ed è vero per il container locale — ma la
     persona deve leggere l'altra metà.
+
+    `in_coda` è la frase di CHI CHIAMA per l'atto rimasto in coda, se ne ha
+    una sua: la scheda dice quale unità aspetta (12 ottobre).
     """
     refused = _refusals(scope) > prima[0]
     queued = _queued(scope) > prima[1]
@@ -715,8 +722,8 @@ def _told(result: ToolResult, scope: "Scope", prima: tuple) -> Dict[str, Any]:
         # …e la stanza che semplicemente NON RISPONDE si dice anche lei: «ho
         # creato la US 310» era vero per il container locale e taceva che nella
         # stanza non c'era ancora (misurato in campo il 28 settembre)
-        message = (f"{message} La stanza non risponde: è in coda su questo "
-                   f"nodo, e parte al ritorno.")
+        message = (f"{message} " + (in_coda or "La stanza non risponde: è in "
+                                    "coda su questo nodo, e parte al ritorno."))
     return {"refused": refused, "queued": queued, "message": message}
 
 
@@ -860,7 +867,20 @@ def submit_scheda(scheda_id: str, request: Request,
     return Answer(ok=result.ok,
                   tool="update_su" if values else "create_su",
                   slots={"us": slots["us"], "fields": sorted(values)},
-                  data=result.data, **_told(result, scope, prima))
+                  data=result.data,
+                  **_told(result, scope, prima,
+                          in_coda=(f"La scheda {_della(found, slots['us'])} è "
+                                   f"sul nodo: la consegno appena la stanza "
+                                   f"risponde.")))
+
+
+def _della(found: Any, number: str) -> str:
+    """«della US 11», «della Contexto 14», «dell'unità Befund 3»: il prefisso
+    è quello della definizione (`tools.unit_prefix`)."""
+    from .tools import unit_prefix
+
+    prefix = unit_prefix(found)
+    return f"della {prefix} {number}" if prefix else f"dell'unità {number}"
 
 
 @v1.get("/scheda/{scheda_id}/unita", tags=["scheda"])
@@ -1321,6 +1341,13 @@ def _room_view(scope: Scope, *, enter: bool) -> Dict[str, Any]:
     stato["pending"] = len(bridge) if bridge is not None else 0
     stato["pending_refused"] = getattr(bridge, "last_refusal", None) if bridge else None
     stato["last_refusal"] = writer.last_refusal
+    #: …e l'ultima volta che è PARTITA: una coda che si consegna da sola al
+    #: ritorno della stanza si legge qui, non si indovina dal contatore a zero
+    consegna = getattr(writer, "last_delivery", None)
+    stato["last_delivery"] = (
+        {**consegna, "message": f"ultima consegna: {consegna['count']} "
+                                f"operazioni, alle {consegna['hhmm']}"}
+        if consegna else None)
     return stato
 
 

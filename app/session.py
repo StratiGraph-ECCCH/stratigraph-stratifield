@@ -246,7 +246,7 @@ class RoomSession:
         self._reader.start()
         return host
 
-    def keep_seated(self) -> None:
+    def keep_seated(self, reopen: Optional[Callable[[], Any]] = None) -> None:
         """Riprendi il posto da solo, quando cade.
 
         **Senza questo, «seduto» dura fino al primo singhiozzo.** Misurato
@@ -257,10 +257,18 @@ class RoomSession:
 
         Il sorvegliante non forza niente: rispetta il backoff, e si ferma
         quando qualcuno chiude la sessione per davvero.
+
+        `reopen` è COME si rientra, se chi possiede la sessione ha qualcosa da
+        fare al rientro: lo scrivano passa il suo `_seated`, che attraversa la
+        dispensa e il ponte. Senza, il sorvegliante riapriva il socket e la
+        coda restava lì finché qualcuno non chiedeva «consegna ora» (prova 8
+        del tavolo, 12 ottobre).
         """
+        self._wanted = True
+        if reopen is not None:
+            self._reopen = reopen
         if self._keeper is not None and self._keeper.is_alive():
             return
-        self._wanted = True
         self._keeper = threading.Thread(target=self._stay, name="room-seat",
                                         daemon=True)
         self._keeper.start()
@@ -269,7 +277,7 @@ class RoomSession:
         while self._wanted:
             if not self.seated:
                 try:
-                    self.open()
+                    (getattr(self, "_reopen", None) or self.open)()
                 except SessionRefused:
                     # una porta chiusa non si riapre insistendo: è una regola,
                     # non un singhiozzo di rete
