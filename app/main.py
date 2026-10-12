@@ -589,6 +589,28 @@ def get_scheda(scheda_id: str, lang: str = "it") -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(problem)) from problem
 
 
+@public.get("/v1/schede/{scheda_id}/numero", tags=["scheda"])
+def unit_number_of(scheda_id: str, detto: str = "") -> Dict[str, Any]:
+    """Il numero di un'unità da come la si è scritta, con la regola della
+    definizione (`tools.unit_number`) — la stessa che scheda e voce usano.
+
+    Esiste perché il widget non abbia una seconda copia della regola: «US1»,
+    «us 1» e «1» sono la 1, e ciò che non è un numero è un 400 con la frase.
+    """
+    from . import scheda as schede
+    from .tools import NotAUnitNumber, unit_number
+
+    found = schede.find(scheda_id)
+    if found is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"questo nodo non serve una scheda «{scheda_id}»")
+    try:
+        return {"number": unit_number(detto, found)}
+    except NotAUnitNumber as wrong:
+        raise HTTPException(status_code=400, detail=str(wrong)) from None
+
+
 @public.get("/v1/vocabolario/{scheme_id}", tags=["scheda"])
 def get_vocabulary(scheme_id: str, lang: str = "it") -> Dict[str, Any]:
     """The CONCEPTS of one scheme, labelled in ONE language — what a `term` box

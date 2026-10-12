@@ -34,6 +34,7 @@ defend three years later, when it matters.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import authorship, exif
@@ -64,6 +65,70 @@ def unit_id_for(number: str) -> str:
     taken tonight, and changing it re-mints ids.
     """
     return f"US{str(number).strip()}"
+
+
+#: Il prefisso con cui QUESTO servizio conia l'id di un'unità (`unit_id_for`):
+#: un client che manda l'id invece del numero («US1») sta dicendo l'unità 1.
+_MINTED_PREFIX = "US"
+#: Che cosa è un numero d'unità: comincia con una cifra, senza spazi —
+#: «3018», «12a», «1001.2», «3014-bis». «3 · da B …» non lo è.
+_UNIT_NUMBER = re.compile(r"\d+(?:[./-]?[0-9A-Za-z]+)*")
+
+
+class NotAUnitNumber(ValueError):
+    """Un riferimento a un'unità che non si riduce a un numero. La frase è il
+    messaggio: chi la raccoglie la dice, non conia un'unità nuova."""
+
+
+def unit_prefix(scheda: Any) -> str:
+    """Il prefisso con cui la definizione scrive il numero: il testo del
+    pattern della chiave umana PRIMA del campo dell'unità («US {us} — …» →
+    «US»). Vuoto quando il pattern non comincia con l'unità (`{identifier}`)."""
+    if scheda is None:
+        return _MINTED_PREFIX
+    pattern = str(((scheda.raw.get("identity") or {}).get("human_key") or {})
+                  .get("pattern") or "")
+    slot = f"{{{scheda.unit_field}}}" if scheda.unit_field else ""
+    if not slot or slot not in pattern:
+        return ""
+    before = pattern[:pattern.index(slot)]
+    return "" if "{" in before else before.strip()
+
+
+def unit_number(said: Any, scheda: Any = None) -> str:
+    """Il NUMERO di un'unità da come la si è scritta — in UN posto.
+
+    «US1», «us 1», «US 1» e «1» sono la stessa unità: il prefisso della
+    definizione (`unit_prefix`) e quello dell'id che questo servizio conia si
+    tolgono, maiuscole o no, con o senza spazio. Lo usano la scheda
+    (`operazioni._resolve_item`), la voce (`relate_su`) e il widget del
+    browser, che lo chiede al servizio (`GET /v1/schede/{id}/numero`).
+
+    **Perché qui.** Fino al 12 ottobre lo toglieva solo il widget
+    (`bareNumber`); il servizio no, e «US1» mandato da un client o detto a
+    voce diventava l'id `USUS1` — un'unità fantasma «segnata da compilare»,
+    con l'arco che puntava lei invece della US 1 (prova 4 del tavolo).
+
+    Un valore che non si riduce a un numero è RIFIUTATO (`NotAUnitNumber`),
+    non trasformato in un'unità nuova. Una definizione il cui pattern non ha
+    un prefisso (iDAI.field: `{identifier}`) ha identificativi liberi, non
+    numeri: lì si toglie solo l'id coniato davanti a un numero, e il resto
+    passa com'è.
+    """
+    text = str(said if said is not None else "").strip()
+    if not text:
+        raise NotAUnitNumber("un riferimento a un'unità senza numero")
+    prefix = unit_prefix(scheda)
+    for known in dict.fromkeys(p for p in (prefix, _MINTED_PREFIX) if p):
+        if text.lower().startswith(known.lower()):
+            rest = text[len(known):].strip()
+            if _UNIT_NUMBER.fullmatch(rest):
+                return rest
+    if _UNIT_NUMBER.fullmatch(text) or not prefix:
+        return text
+    raise NotAUnitNumber(
+        f"«{text}» non è il numero di un'unità: scrivi il numero, "
+        f"«3» o «{prefix} 3». Non la segno come un'unità nuova.")
 
 
 def number_from_unit_id(node_id: str, name: str = "") -> str:
@@ -729,6 +794,12 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
             return ToolResult(
                 ok=False,
                 message="Mi servono due unità: «la 12 copre la 18».")
+        # lo stesso numero della scheda: «la US 12 copre la us18» è la 12 e la 18
+        try:
+            left = unit_number(left, reference_scheda())
+            right = unit_number(right, reference_scheda())
+        except NotAUnitNumber as wrong:
+            return ToolResult(ok=False, message=str(wrong))
         if left == right:
             return ToolResult(
                 ok=False,
@@ -785,6 +856,8 @@ def make_relate_su(graph_writer) -> ToolDescriptor:
             except OperazioniError as wrong:
                 return ToolResult(ok=False, message=str(wrong),
                                   data={"missing": [left]})
+            if made.refused:
+                return ToolResult(ok=False, message="; ".join(made.refused.values()))
         edge = next((o for o in made.ops if o["op"] == "add_edge"), None)
         message = f"Registrato: US {left} {said} US {right}."
         if made.stubs:

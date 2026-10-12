@@ -326,17 +326,21 @@ console.log(JSON.stringify([
 
 @needs_node
 def test_the_unit_prefix_comes_from_the_definitions_pattern():
-    """«US 3018», «Contexto 14»: dal pattern della chiave umana, non da qui."""
+    """«US 3018», «Contexto 14»: dal pattern della chiave umana, non da qui.
+
+    Il prefisso serve a SCRIVERE il numero; toglierlo da ciò che si digita lo fa
+    il servizio dal 12 ottobre (`tools.unit_number`, `test_il_numero_una_volta`):
+    qui c'era `bareNumber`, la seconda copia di una regola che il servizio non
+    aveva."""
     said = _run("""
 const w = await import("./web/widgets.js");
 const iccd = {human_key_pattern: "US {us} — {area} ({localita})", unit_field: "us"};
 const es = {human_key_pattern: "Contexto {contexto} · {yacimiento}", unit_field: "contexto"};
 const hu = {human_key_pattern: "{lelohely} · {retegszam}", unit_field: "retegszam"};
 console.log(JSON.stringify([w.unitPrefix(iccd), w.unitPrefix(es), w.unitPrefix(hu),
-  w.bareNumber("US 3018", iccd), w.bareNumber("us3018", iccd), w.bareNumber("3018", iccd),
-  w.bareNumber("Contexto 14", es)]));
+  typeof w.bareNumber]));
 """)
-    assert said == ["US ", "Contexto ", "", "3018", "3018", "3018", "14"]
+    assert said == ["US ", "Contexto ", "", "undefined"]
 
 
 @needs_node

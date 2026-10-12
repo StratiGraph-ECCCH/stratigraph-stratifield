@@ -20,7 +20,7 @@ import { mount as mountPhotos } from "./photos.js";
 import { mount as mountRoom, postureOf, roomOf } from "./room.js";
 import { mount as mountIndex } from "./indice.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
-import { bareNumber, loadRoom, orderedUnits, unitPrefix } from "./widgets.js";
+import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 
 const $ = (id) => document.getElementById(id);
@@ -711,11 +711,12 @@ async function leaveUnit() {
 }
 
 /** Il numero o la definizione di un'unità della stanza → l'unità, o null. */
-function unitFor(asked) {
+async function unitFor(asked) {
   const said = String(asked || "").trim();
   if (!said || !state.def) return null;
   const units = orderedUnits();
-  const number = bareNumber(said, state.def);
+  // il numero lo dice il servizio (`numberOf`): la regola è una sola
+  const number = (await numberOf(said, state.def)).number || said;
   const exact = units.find((u) => u.number === number);
   if (exact) return exact;
   const q = said.toLowerCase();
@@ -727,10 +728,10 @@ function unitFor(asked) {
 
 async function goUnit(asked) {
   if (!state.def) return false;
-  const found = unitFor(asked);
+  const found = await unitFor(asked);
   if (!found) {
     const t = SG().t || ((k) => k);
-    SG().show(false, `${t("nav.no_unit")} ${bareNumber(asked, state.def)}.`, "",
+    SG().show(false, `${t("nav.no_unit")} ${String(asked || "").trim()}.`, "",
               SG().locale);
     return false;
   }

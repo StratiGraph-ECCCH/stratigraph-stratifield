@@ -1052,9 +1052,15 @@ def _resolve_item(out: Plan, ctx: _Context, op, scheda: Scheda, fid: str,
                   kind: str, item: str, values: Dict[str, Any]) -> str:
     """L'altra unità di un rapporto, per chiave umana nel contesto; o uno stub."""
     from .contract import stable_id
-    from .tools import unit_id_for
+    from .tools import NotAUnitNumber, unit_id_for, unit_number
 
     if kind == "stratigraphic_unit":
+        # «US1», «us 1» e «1» sono la stessa unità; ciò che non è un numero si
+        # rifiuta con la frase invece di diventare lo stub `USUS1`
+        try:
+            item = unit_number(item, scheda)
+        except NotAUnitNumber as wrong:
+            raise OperazioniError(str(wrong)) from None
         found = _find_unit(ctx, item)
         if found is not None:
             return str(found["id"])

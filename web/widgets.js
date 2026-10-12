@@ -100,14 +100,24 @@ export function unitPrefix(def) {
   return /\{/.test(before) ? "" : before;
 }
 
-/** «US 3018», «us3018», «3018» → «3018». Il prefisso è quello della definizione. */
-export function bareNumber(text, def) {
-  let said = String(text || "").trim();
-  const prefix = unitPrefix(def).trim();
-  if (prefix && said.toLowerCase().startsWith(prefix.toLowerCase())) {
-    said = said.slice(prefix.length).trim();
-  }
-  return said;
+/** «US 3018», «us3018», «3018» → «3018», detto dal SERVIZIO
+ *  (`GET /v1/schede/{id}/numero` → `tools.unit_number`). Fino al 12 ottobre qui
+ *  c'era una copia della regola, e il servizio non l'aveva: «US1» da un client
+ *  o dalla voce diventava l'unità fantasma `USUS1`. La regola adesso è una, ed
+ *  è là. Torna `{number}`, o `{refused}` con la frase per ciò che non è un
+ *  numero. Senza risposta dal nodo il testo resta com'è: lo normalizza il
+ *  servizio al salvataggio, e qui non si indovina. */
+export async function numberOf(text, def) {
+  const said = String(text || "").trim();
+  if (!said || !def || !def.id) return { number: said };
+  const seam = SG();
+  try {
+    const answer = await fetch(`${seam.node || ""}/v1/schede/${encodeURIComponent(def.id)}`
+                               + `/numero?detto=${encodeURIComponent(said)}`);
+    const body = await answer.json();
+    return answer.ok ? { number: String(body.number || said) }
+                     : { refused: String(body.detail || said) };
+  } catch { return { number: said }; }
 }
 
 const byNumber = (a, b) => {
@@ -343,11 +353,25 @@ function drawUnits(ctx) {
   const input = el("input", { type: "text", "data-w": "add", list: units ? listId : null,
                               inputmode: units ? "numeric" : null, autocomplete: "off",
                               placeholder: tr("w.add_unit"), "aria-label": tr("w.add_unit") });
-  const go = () => {
-    const n = units ? bareNumber(input.value, def) : String(input.value || "").trim();
-    if (!n || list.includes(n) || n === self) { input.value = ""; return; }
-    put([...list, n]);
-    ctx.draw();
+  let busy = false;
+  const go = async () => {
+    if (busy) return;            // Invio e `change` arrivano insieme: un'aggiunta
+    busy = true;
+    try {
+      let n = String(input.value || "").trim();
+      if (units && n) {
+        const said = await numberOf(n, def);
+        if (said.refused) {
+          // il testo resta nella casella, da correggere: non diventa un'unità
+          if (SG().show) SG().show(false, said.refused, "", SG().locale);
+          return;
+        }
+        n = said.number;
+      }
+      if (!n || list.includes(n) || n === self) { input.value = ""; return; }
+      put([...list, n]);
+      ctx.draw();
+    } finally { busy = false; }
   };
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") { event.preventDefault(); go(); }
