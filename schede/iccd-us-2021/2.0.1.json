@@ -188,9 +188,9 @@
         }
       },
       "em_ttl": "1.6.16",
-      "s3dgraphy": "1.6.0.dev54",
+      "s3dgraphy": "1.6.0.dev55",
       "taken_from": {
-        "git_commit": "491b634332f4f0ad86e935e8ce14f5929a02597f",
+        "git_commit": "a8f510634acdae34e1281d38495db1593ac58fc0",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
