@@ -335,7 +335,7 @@ def test_la_dispensa_NON_e_per_stanza_e_cè_una_ragione(client, realm, nodo,
     """I byte in attesa restano dove sono, e non è una dimenticanza.
 
     Un'operazione appartiene a una stanza; **dei byte no**. La dispensa consegna
-    allo store condiviso, che è configurato sul NODO (`MINIO_*`) e non sulla
+    allo store condiviso, che è configurato sul NODO (`EM_ASSET_S3_*`) e non sulla
     stanza: gli stessi byte, con lo stesso digest, servono a chiunque li citi.
     Dividerla per stanza vorrebbe dire caricare due volte la stessa foto.
 

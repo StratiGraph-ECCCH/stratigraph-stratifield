@@ -8,21 +8,21 @@ un'operazione: un'operazione ICCD misurata sul relay pesa **173 byte**, e una
 foto di cantiere — misurata stanotte su una vera, del Ninfeo di Segni, Canon
 6D — pesa **13 623 291 byte**. Quattro ordini di grandezza.
 
-E lo store del nodo **non è sul nodo**: è MinIO, dietro la rete. Misurato
-stanotte staccando `em-dev-minio` dalla rete di Docker mentre il servizio era
-in piedi:
+E lo store del nodo **non è sul nodo**: è l'object store S3 condiviso, dietro
+la rete. Misurato stanotte staccando dalla rete di Docker il container
+dell'object store mentre il servizio era in piedi:
 
     create_su            ok=True        54 ms   Ho creato la US 701.
     attach_photo_to_su   ok=False   306 153 ms  «attach_photo_to_su» non è
                                                 riuscito: HTTPConnectionPool(
-                                                host='minio', port=9000)
+                                                host=…, port=9000)
 
 **Cinque minuti e sei secondi** con il telefono in mano, e poi la foto non
 esiste da nessuna parte: né nello store, né in coda, né sul disco. L'unità
 `US701`, scritta un istante prima, esiste. La fotografia che la documentava no.
 
 Peggio, e già scritto nel referto del 27: staccato dalla rete il servizio
-**non parte proprio** — `MinioAssetStore._ensure_bucket` alza un `RuntimeError`
+**non parte proprio** — `S3AssetStore._ensure_bucket` alza un `RuntimeError`
 al momento della costruzione. Su un nodo di cantiere che si accende in una
 galleria, quella riga dice che l'assistente non si apre.
 
@@ -168,7 +168,7 @@ class Spool:
         #: LA FILA, che è quella del ponte. Vedi la docstring del modulo.
         self.queue = Bridge(str(self.root / "waiting.jsonl"))
         #: LO STORE CONDIVISO, PIGRO. Costruito alla prima consegna e non
-        #: all'avvio: `MinioAssetStore.__init__` fa un giro di rete
+        #: all'avvio: `S3AssetStore.__init__` fa un giro di rete
         #: (`_ensure_bucket`) e alzarlo all'import è la riga per cui un nodo in
         #: galleria non si accende. Un nodo deve poter aprire, registrare e
         #: fotografare senza rete; consegnare è un'altra cosa e vuole la rete
@@ -331,25 +331,25 @@ def spool_from_env(environ: Optional[Dict[str, str]] = None
     root = (env.get("EM_ASSET_SPOOL") or "").strip()
     if not root:
         return None
-    from .assets import _minio_settings
+    from .assets import _s3_settings
 
     def costruisci() -> AssetStore:
         from .assets import DirectoryAssetStore as _Dir
-        from .assets import MinioAssetStore
-        minio = _minio_settings(dict(env))
-        if minio:
-            return MinioAssetStore(endpoint=minio["endpoint"],
-                                   access_key=minio["access_key"],
-                                   secret_key=minio["secret_key"],
-                                   bucket=minio["bucket"],
-                                   secure=minio["secure"])
+        from .assets import S3AssetStore
+        s3 = _s3_settings(dict(env))
+        if s3:
+            return S3AssetStore(endpoint=s3["endpoint"],
+                                access_key=s3["access_key"],
+                                secret_key=s3["secret_key"],
+                                bucket=s3["bucket"],
+                                secure=s3["secure"])
         shared = (env.get("EM_ASSET_DIR") or "").strip()
         if shared:
             return _Dir(shared)
         raise RuntimeError(
             "c'è una dispensa (EM_ASSET_SPOOL) ma nessuno store condiviso dove "
             "consegnarla: le foto resterebbero su questo nodo per sempre. "
-            "Configura MinIO (MINIO_ENDPOINT/…) oppure EM_ASSET_DIR.")
+            "Configura lo store S3 (EM_ASSET_S3_ENDPOINT/…) oppure EM_ASSET_DIR.")
 
     keep = (env.get("EM_ASSET_SPOOL_KEEPS") or "").strip().lower() in (
         "1", "true", "yes", "on")
@@ -360,17 +360,16 @@ def shared_name(environ: Optional[Dict[str, str]] = None) -> str:
     """Come si chiama lo store condiviso, LETTO DALLA CONFIGURAZIONE.
 
     Senza costruirlo, e la differenza è tutto il punto: costruire un
-    `MinioAssetStore` è un giro di rete (`_ensure_bucket`), e `/health` deve
+    `S3AssetStore` è un giro di rete (`_ensure_bucket`), e `/health` deve
     poter rispondere anche a un nodo in galleria. Un `/health` che si blocca
     perché il bucket non risponde è la spia che si spegne quando serve.
     """
     env = environ if environ is not None else os.environ
-    from .assets import _MINIO_KEYS
-    trovati = {campo: next((env[nome].strip() for nome in nomi
-                            if (env.get(nome) or "").strip()), "")
-               for campo, nomi in _MINIO_KEYS.items()}
+    from .assets import _S3_KEYS
+    trovati = {campo: (env.get(nome) or "").strip()
+               for campo, nome in _S3_KEYS.items()}
     if trovati["endpoint"]:
-        return (f"minio ({trovati['endpoint']}, bucket "
+        return (f"s3 ({trovati['endpoint']}, bucket "
                 f"{trovati['bucket'] or '?'}) — non contattato all'avvio")
     directory = (env.get("EM_ASSET_DIR") or "").strip()
     if directory:

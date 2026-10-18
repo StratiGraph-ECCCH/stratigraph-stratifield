@@ -5,8 +5,8 @@
 
 Il ponte del 27 settembre accoda **operazioni**: 173 byte l'una, misurate sul
 relay. Una foto di cantiere ne pesa tredici milioni, e lo store del nodo non è
-sul nodo — è MinIO, dietro la rete. Misurato staccando `em-dev-minio` mentre il
-servizio era in piedi:
+sul nodo — è l'object store S3 condiviso, dietro la rete. Misurato staccando il
+container dell'object store mentre il servizio era in piedi:
 
     create_su            ok=True        54 ms
     attach_photo_to_su   ok=False   306 153 ms  «attach_photo_to_su» non è
@@ -50,7 +50,7 @@ FOTO = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01" + bytes(4096) + b"\xff\xd9"
 
 
 class StoreMuto(InMemoryAssetStore):
-    """Lo store condiviso che non risponde — MinIO dietro una rete che non c'è.
+    """Lo store condiviso che non risponde — il bucket dietro una rete che non c'è.
 
     Non un mock del client: un `AssetStore` che alza, che è quello che il
     chiamante vede quando la rete manca. Si accende e si spegne, perché il caso
@@ -64,18 +64,18 @@ class StoreMuto(InMemoryAssetStore):
 
     def put(self, data, media_type):
         if self.giu:
-            raise ConnectionError("minio non risponde")
+            raise ConnectionError("lo store S3 non risponde")
         self.messi.append(content_id(data))
         return super().put(data, media_type)
 
     def head(self, ref):
         if self.giu:
-            raise ConnectionError("minio non risponde")
+            raise ConnectionError("lo store S3 non risponde")
         return super().head(ref)
 
     def get(self, ref):
         if self.giu:
-            raise ConnectionError("minio non risponde")
+            raise ConnectionError("lo store S3 non risponde")
         return super().get(ref)
 
 
@@ -379,14 +379,14 @@ def test_E_SENZA_IL_CONTROLLO_mezza_foto_entra_con_un_ref_valido(tmp_path):
 
 def test_il_nodo_si_accende_in_galleria(tmp_path, monkeypatch):
     """Il difetto scritto nel referto del 27: staccato dalla rete il servizio
-    **non parte proprio**, perché `MinioAssetStore.__init__` fa un giro di
+    **non parte proprio**, perché `S3AssetStore.__init__` fa un giro di
     rete. Con la dispensa lo store condiviso si costruisce alla prima consegna,
     e un nodo che si accende in galleria registra e fotografa."""
     monkeypatch.setenv("EM_ASSET_SPOOL", str(tmp_path / "dispensa"))
-    monkeypatch.setenv("MINIO_ENDPOINT", "http://127.0.0.1:9")
-    monkeypatch.setenv("MINIO_ACCESS_KEY", "x")
-    monkeypatch.setenv("MINIO_SECRET_KEY", "y")
-    monkeypatch.setenv("MINIO_BUCKET", "em-assets")
+    monkeypatch.setenv("EM_ASSET_S3_ENDPOINT", "http://127.0.0.1:9")
+    monkeypatch.setenv("EM_ASSET_S3_ACCESS_KEY", "x")
+    monkeypatch.setenv("EM_ASSET_S3_SECRET_KEY", "y")
+    monkeypatch.setenv("EM_ASSET_S3_BUCKET", "em-assets")
 
     dispensa = spool_from_env()                     # non alza
     assert dispensa is not None
@@ -400,15 +400,15 @@ def test_il_servizio_INTERO_si_accende_in_galleria(tmp_path):
 
     Il test qui sopra era verde per la ragione sbagliata, e l'ha scoperto la
     sonda dal vivo del 30 settembre: `app/assets.py` costruiva `ASSET_STORE`
-    **all'import**, quindi importare il modulo con MinIO staccato faceva
+    **all'import**, quindi importare il modulo con lo store S3 staccato faceva
     esplodere tutto — dispensa o no.
 
-        RuntimeError: the object store at http://minio:9000 did not answer …
+        RuntimeError: the object store at http://…:9000 did not answer …
         the field node will not start without the store it is configured to
         write to
 
     In un test già importato non si vede: il modulo era stato caricato prima,
-    senza MinIO in configurazione. Serve un interprete che parta da zero, ed è
+    senza store S3 in configurazione. Serve un interprete che parta da zero, ed è
     quello che questo test fa.
     """
     import subprocess
@@ -416,9 +416,9 @@ def test_il_servizio_INTERO_si_accende_in_galleria(tmp_path):
     ambiente.update({
         "EM_ASSET_SPOOL": str(tmp_path / "dispensa"),
         "EM_CHATBOT_CONTAINER": str(tmp_path / "scavo.em.json"),
-        "MINIO_ENDPOINT": "http://127.0.0.1:9", "MINIO_ACCESS_KEY": "x",
-        "MINIO_SECRET_KEY": "y", "MINIO_BUCKET": "em-assets",
-        "MINIO_SECURE": "false",
+        "EM_ASSET_S3_ENDPOINT": "http://127.0.0.1:9", "EM_ASSET_S3_ACCESS_KEY": "x",
+        "EM_ASSET_S3_SECRET_KEY": "y", "EM_ASSET_S3_BUCKET": "em-assets",
+        "EM_ASSET_S3_SECURE": "false",
     })
     for nome in ("EM_SERVER_URL", "EM_CHATBOT_ROOM", "EM_CHATBOT_TOKEN",
                  "EM_CHATBOT_HANDOFF", "OIDC_ISSUER", "OIDC_AUDIENCE"):
@@ -440,9 +440,9 @@ def test_E_SENZA_LA_PIGRIZIA_il_servizio_NON_si_accende(tmp_path):
     costruisce, e il processo muore con la frase misurata dal vivo."""
     import subprocess
     ambiente = dict(os.environ)
-    ambiente.update({"MINIO_ENDPOINT": "http://127.0.0.1:9",
-                     "MINIO_ACCESS_KEY": "x", "MINIO_SECRET_KEY": "y",
-                     "MINIO_BUCKET": "em-assets", "MINIO_SECURE": "false"})
+    ambiente.update({"EM_ASSET_S3_ENDPOINT": "http://127.0.0.1:9",
+                     "EM_ASSET_S3_ACCESS_KEY": "x", "EM_ASSET_S3_SECRET_KEY": "y",
+                     "EM_ASSET_S3_BUCKET": "em-assets", "EM_ASSET_S3_SECURE": "false"})
     radice = str(pathlib.Path(__file__).resolve().parent.parent)
     ambiente["PYTHONPATH"] = radice
     esito = subprocess.run(
@@ -464,8 +464,8 @@ def test_una_dispensa_senza_dove_consegnare_si_rifiuta(tmp_path, monkeypatch):
     """Byte che restano su un nodo per sempre sono la stessa perdita di ieri
     con un nome più gentile: si dice al primo tentativo, non al primo backup."""
     monkeypatch.setenv("EM_ASSET_SPOOL", str(tmp_path / "dispensa"))
-    for nome in ("MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY",
-                 "MINIO_BUCKET", "EM_ASSET_DIR"):
+    for nome in ("EM_ASSET_S3_ENDPOINT", "EM_ASSET_S3_ACCESS_KEY",
+                 "EM_ASSET_S3_SECRET_KEY", "EM_ASSET_S3_BUCKET", "EM_ASSET_DIR"):
         monkeypatch.delenv(nome, raising=False)
     dispensa = spool_from_env()
     dispensa.put(FOTO, "image/jpeg")

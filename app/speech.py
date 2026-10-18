@@ -10,7 +10,7 @@ So what lives here is the seam and two implementations of it:
 * **passthrough** — the transcript was produced elsewhere. This is not a test
   stub: it is the ATRIUM case, which is a first-class deployment, and it is why
   the whole assistant runs with no audio stack installed at all;
-* **Whisper** — the node's own engine, **config-gated exactly like the MinIO
+* **Whisper** — the node's own engine, **config-gated exactly like the S3
   store**: it exists when it is configured, it is never chosen silently, and a
   half-configuration refuses with a sentence instead of pretending.
 

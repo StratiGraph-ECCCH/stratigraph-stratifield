@@ -33,7 +33,7 @@ ARG S3DGRAPHY_EXTRAS=""
 WORKDIR /srv/stratigraph-chatbot
 
 COPY pyproject.toml README.md ./
-# PyJWT and minio are not behind a build arg, for StratiGraph Server's reason: an image
+# PyJWT and boto3 are not behind a build arg, for StratiGraph Server's reason: an image
 # that cannot verify a token comes up open, and this one WRITES to a shared
 # graph; an image that cannot reach the store keeps photos in a process.
 RUN set -eu; \
@@ -41,7 +41,7 @@ RUN set -eu; \
     spec="s3dgraphy${S3DGRAPHY_EXTRAS:+[${S3DGRAPHY_EXTRAS}]}==${S3DGRAPHY_VERSION}"; \
     pip install --upgrade pip && \
     pip install "$spec" "fastapi>=0.110" "uvicorn[standard]>=0.27" \
-                "PyJWT[crypto]>=2.8" "minio>=7.2" "python-multipart>=0.0.9"
+                "PyJWT[crypto]>=2.8" "boto3>=1.34" "python-multipart>=0.0.9"
 
 COPY app ./app
 COPY web ./web

@@ -167,7 +167,7 @@ WRITER = writer_from_env(spool=LARDER, local=LOCAL)
 STT = stt_from_env()
 
 #: LO STORE CHE I TOOL VEDONO. Se questo nodo ha una dispensa è quella, e non
-#: MinIO: `Spool` implementa lo stesso `AssetStore`, quindi nessun tool sa la
+#: il bucket S3: `Spool` implementa lo stesso `AssetStore`, quindi nessun tool sa la
 #: differenza — cambia solo QUANDO si parla con la rete. Un nodo di scrivania
 #: senza dispensa continua a scrivere diritto nel bucket, che è la cosa giusta
 #: quando la rete è sotto il tavolo.
