@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.31",
-            "connections": "1.6.41",
+            "nodes": "1.6.32",
+            "connections": "1.6.42",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.17",
-            "digest": "sha256:d9cd01c057242eb8ee842bd0620acd99a795ff1baa9c15de826758831c1902f4"
+            "em_ttl": "1.6.18",
+            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.31",
-            "connections": "1.6.41",
+            "nodes": "1.6.32",
+            "connections": "1.6.42",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.17",
-            "digest": "sha256:d9cd01c057242eb8ee842bd0620acd99a795ff1baa9c15de826758831c1902f4"
+            "em_ttl": "1.6.18",
+            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.31",
-            "connections": "1.6.41",
+            "nodes": "1.6.32",
+            "connections": "1.6.42",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.17",
-            "digest": "sha256:d9cd01c057242eb8ee842bd0620acd99a795ff1baa9c15de826758831c1902f4"
+            "em_ttl": "1.6.18",
+            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.31",
-            "connections": "1.6.41",
+            "nodes": "1.6.32",
+            "connections": "1.6.42",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.17",
-            "digest": "sha256:d9cd01c057242eb8ee842bd0620acd99a795ff1baa9c15de826758831c1902f4"
+            "em_ttl": "1.6.18",
+            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
           }
         }
       },
