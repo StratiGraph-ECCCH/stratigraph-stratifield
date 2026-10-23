@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.32",
-            "connections": "1.6.42",
+            "nodes": "1.6.36",
+            "connections": "1.6.46",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.18",
-            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
+            "em_ttl": "1.6.21",
+            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.32",
-            "connections": "1.6.42",
+            "nodes": "1.6.36",
+            "connections": "1.6.46",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.18",
-            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
+            "em_ttl": "1.6.21",
+            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.32",
-            "connections": "1.6.42",
+            "nodes": "1.6.36",
+            "connections": "1.6.46",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.18",
-            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
+            "em_ttl": "1.6.21",
+            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.32",
-            "connections": "1.6.42",
+            "nodes": "1.6.36",
+            "connections": "1.6.46",
             "qualia": "1.6.9",
-            "em_ttl": "1.6.18",
-            "digest": "sha256:6f15dcc599fa570def2814c27062b3c225da1cf988ddf64d2fb1cbee01f70f09"
+            "em_ttl": "1.6.21",
+            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
           }
         }
       },
