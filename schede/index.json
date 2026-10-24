@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.36",
-            "connections": "1.6.46",
+            "nodes": "1.6.37",
+            "connections": "1.6.47",
             "qualia": "1.6.9",
             "em_ttl": "1.6.21",
-            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
+            "digest": "sha256:7d06be1f2afe375d5c28f815e96287bfb729d1458f676aacabc1ddb25f3603ea"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.36",
-            "connections": "1.6.46",
+            "nodes": "1.6.37",
+            "connections": "1.6.47",
             "qualia": "1.6.9",
             "em_ttl": "1.6.21",
-            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
+            "digest": "sha256:7d06be1f2afe375d5c28f815e96287bfb729d1458f676aacabc1ddb25f3603ea"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.36",
-            "connections": "1.6.46",
+            "nodes": "1.6.37",
+            "connections": "1.6.47",
             "qualia": "1.6.9",
             "em_ttl": "1.6.21",
-            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
+            "digest": "sha256:7d06be1f2afe375d5c28f815e96287bfb729d1458f676aacabc1ddb25f3603ea"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.36",
-            "connections": "1.6.46",
+            "nodes": "1.6.37",
+            "connections": "1.6.47",
             "qualia": "1.6.9",
             "em_ttl": "1.6.21",
-            "digest": "sha256:aa45250933cd3a2a6278c5cd610b0b63aa1597c829ad8e441f11dbd25e8cf585"
+            "digest": "sha256:7d06be1f2afe375d5c28f815e96287bfb729d1458f676aacabc1ddb25f3603ea"
           }
         }
       },
