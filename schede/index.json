@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.37",
+            "nodes": "1.6.38",
             "connections": "1.6.49",
             "qualia": "1.6.9",
             "em_ttl": "1.6.22",
-            "digest": "sha256:af62e75ecb78b29660f1fdf5293dc9ee3ecf526e97233519d5dd472d44fd51e8"
+            "digest": "sha256:b4ad8fadc72cce37e4400773febe63de7652cdc4ca1491849504b8b9ee8fb96e"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.37",
+            "nodes": "1.6.38",
             "connections": "1.6.49",
             "qualia": "1.6.9",
             "em_ttl": "1.6.22",
-            "digest": "sha256:af62e75ecb78b29660f1fdf5293dc9ee3ecf526e97233519d5dd472d44fd51e8"
+            "digest": "sha256:b4ad8fadc72cce37e4400773febe63de7652cdc4ca1491849504b8b9ee8fb96e"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.37",
+            "nodes": "1.6.38",
             "connections": "1.6.49",
             "qualia": "1.6.9",
             "em_ttl": "1.6.22",
-            "digest": "sha256:af62e75ecb78b29660f1fdf5293dc9ee3ecf526e97233519d5dd472d44fd51e8"
+            "digest": "sha256:b4ad8fadc72cce37e4400773febe63de7652cdc4ca1491849504b8b9ee8fb96e"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.37",
+            "nodes": "1.6.38",
             "connections": "1.6.49",
             "qualia": "1.6.9",
             "em_ttl": "1.6.22",
-            "digest": "sha256:af62e75ecb78b29660f1fdf5293dc9ee3ecf526e97233519d5dd472d44fd51e8"
+            "digest": "sha256:b4ad8fadc72cce37e4400773febe63de7652cdc4ca1491849504b8b9ee8fb96e"
           }
         }
       },
