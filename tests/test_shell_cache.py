@@ -75,7 +75,7 @@ def test_the_generated_list_holds_the_shell_that_exists_today():
     assert "./" in served
     assert "./brand/stratigraph-theme.css" in served
     # le otto woff2 della marca: precacheate perché SONO lì
-    assert sum(1 for f in served if f.endswith(".woff2")) == 8
+    assert sum(1 for f in served if f.endswith(".woff2")) == 10   # + Sora, Comfortaa
 
 
 def test_the_worker_never_precaches_itself():

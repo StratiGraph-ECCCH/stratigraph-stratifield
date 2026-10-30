@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F1EBE3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#2E2D2C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F1E9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1E1C18" media="(prefers-color-scheme: dark)">
 <title>StratiGraph · field assistant</title>
 <link rel="icon" href="./brand/logo/favicon-deep-charcoal.svg" type="image/svg+xml">
 <!--
@@ -23,7 +23,9 @@
   thing that is down. Every colour below is a role token from that file; there
   is not one hex in this page.
 -->
+<script src="./brand/skin.js"></script>
 <link rel="stylesheet" href="./brand/stratigraph-theme.css">
+<link rel="stylesheet" href="./brand/skins.css">
 <link rel="stylesheet" href="./shell.css">
 <link rel="stylesheet" href="./scheda.css">
 <link rel="stylesheet" href="./foglio.css">
@@ -77,6 +79,7 @@
            on a device that changes hands the language changes with it, and it
            has to cost one touch. Each option is written IN its own language, so
            somebody who cannot read the current one can still find their own. -->
+      <select class="lang" id="skin"></select>
       <select class="lang" id="lang" aria-label="Language"></select>
     </span>
 

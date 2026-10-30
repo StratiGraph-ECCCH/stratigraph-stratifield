@@ -41,7 +41,8 @@ def _hexes(text: str) -> set:
 def test_the_vendored_brand_is_there():
     assert THEME.is_file(), "run ./sync-brand.sh"
     fonts = sorted(p.name for p in (WEB / "brand" / "fonts").glob("*.woff2"))
-    assert len(fonts) == 8, fonts
+    # 8 guidebook faces + Sora and Comfortaa for the EM skins (30 Oct 2026)
+    assert len(fonts) == 10, fonts
     for family in ("erode", "ibm-plex-sans", "ibm-plex-mono"):
         assert any(f.startswith(family) for f in fonts), family
     assert (WEB / "brand" / "logo" / "favicon-deep-charcoal.svg").is_file()
@@ -74,13 +75,14 @@ def test_the_page_reaches_for_roles_and_not_for_hexes():
     variable, and the ink on a filled control is white."""
     page = PAGE.read_text(encoding="utf-8")
     found = _hexes(page) | {h.upper() for h in re.findall(r"#[0-9A-Fa-f]{3}\b", page)}
-    assert found <= {"#F1EBE3", "#2E2D2C"}, found
+    # the default skin's grounds (brand/skins.css, «em», since 30 Oct 2026)
+    assert found <= {"#F5F1E9", "#1E1C18"}, found
     # …and the extracted stylesheet keeps the one exception it always had.
     styles = (WEB / "shell.css").read_text(encoding="utf-8")
     in_css = _hexes(styles) | {h.upper() for h in
                                re.findall(r"#[0-9A-Fa-f]{3}\b", styles)}
     assert in_css <= {"#FFFFFF"}, in_css
-    for hexed in ("#F1EBE3", "#2E2D2C"):
+    for hexed in ("#F5F1E9", "#1E1C18"):
         assert f'content="{hexed}"' in page, f"{hexed} outside a theme-color"
     # …and the app DOES reach for the roles. Counted across the stylesheets now
     # that the CSS is not in the page, and the bar is raised rather than kept:
@@ -147,7 +149,8 @@ def test_the_service_worker_precaches_the_brand():
     # RELATIVE since 2026-08-30: under `/chat/` behind the node's proxy,
     # `/brand/...` is not this app's — see `test_pwa_under_a_prefix.py`.
     assert "./brand/stratigraph-theme.css" in listed
-    assert sum(1 for f in listed if f.startswith("./brand/fonts/")) == 8
+    assert "./brand/skins.css" in listed and "./brand/skin.js" in listed
+    assert sum(1 for f in listed if f.startswith("./brand/fonts/") and f.endswith(".woff2")) == 10
 
     # The RULE, not the number: a shell whose contents changed under a cache
     # name that did not is a device still serving the old one. The name is now
