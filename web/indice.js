@@ -147,14 +147,19 @@ function line(u, t, onPick, listing, lang) {
   // CON QUALE STANDARD È STATA COMPILATA (SF-08): lo dichiara l'unità stessa
   // (`data.scheda`, audit B5b) quando è passata da una scheda; dettata o
   // importata non lo dice, e la riga lo scrive invece di lasciarlo scoprire.
+  //  Solo quando c'è: ripetere «si sceglie alla prima apertura» su trenta righe
+  //  dettate era rumore (visto sullo schermo, 31 ottobre); lo dice il
+  //  suggerimento della riga.
   const declared = u.scheda && u.scheda.template;
-  const con = document.createElement("span");
-  con.className = "indice-cosa indice-std";
-  con.textContent = declared
-    ? t("index.with", { std: standardName((listing || []).find((x) => x.id === declared)
-                                          || { id: declared }, lang) })
-    : t("index.noStandard");
-  riga.append(con);
+  if (declared) {
+    const con = document.createElement("span");
+    con.className = "indice-cosa indice-std";
+    con.textContent = t("index.with", {
+      std: standardName((listing || []).find((x) => x.id === declared) || { id: declared }, lang) });
+    riga.append(con);
+  } else {
+    riga.title = t("index.noStandard");
+  }
   if (u.description) {
     const cosa = document.createElement("span");
     cosa.className = "indice-cosa";
