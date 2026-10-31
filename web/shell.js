@@ -208,16 +208,21 @@ function paintModes() {
  *
  * E c'è una ragione oltre allo spazio: quei controlli stanno in cima, cioè dove
  * una mano sola NON arriva. Nella colonna che si apre dal basso ci arriva. */
-const MOVABLE = ["modes", "theme", "lang"];
+const MOVABLE = ["modes", "theme", "skin", "lang"];
 
+/* DAL 31 OTTOBRE (D5) i controlli di aspetto stanno nel foglio «Tu e
+ * l'aspetto», dietro le iniziali, su TUTTE le soglie: la barra in alto dice
+ * stanza, stato e chi firma. Si spostano lì, non si copiano — uno stato per
+ * controllo, come sempre. Senza il foglio (una pagina vecchia) tornano dove
+ * erano. */
 function placeControls(mode) {
-  const home = mode === "phone" ? $("nav-controls-host") : null;
-  $("nav-controls").hidden = mode !== "phone";
+  const home = $("me-controls")
+    || (mode === "phone" ? $("nav-controls-host") : $("topbar-controls"));
+  if ($("nav-controls")) $("nav-controls").hidden = true;
   for (const id of MOVABLE) {
     const node = $(id);
     if (!node) continue;
-    const wanted = home || $("topbar-controls");
-    if (node.parentElement !== wanted) wanted.append(node);
+    if (node.parentElement !== home) home.append(node);
   }
 }
 
@@ -231,6 +236,16 @@ function paintThumbbar() {
   $("thumbbar").hidden = !plan.bar;
   for (const id of ["tb-prev", "tb-step", "tb-next", "tb-save"]) {
     $(id).hidden = !plan.steps;
+  }
+  // LE QUATTRO VOCI, fuori dalla scheda (D2). Dentro la scheda la barra torna
+  // ai passi: ☰ resta in entrambe, ed è la porta che non si mura.
+  const tabs = plan.bar && !plan.steps;
+  $("thumbbar").dataset.tabs = String(tabs);
+  for (const [id, panel] of [["tb-voice", "voice"], ["tb-units", "index"], ["tb-photo", null]]) {
+    const tab = $(id);
+    if (!tab) continue;
+    tab.hidden = !tabs;
+    if (panel) tab.setAttribute("aria-current", String(state.panel === panel));
   }
   paintWayBack();
   paintUnav();
@@ -982,6 +997,16 @@ function clearScheda() {
 /* ── il telefono: un campo per volta, coi pollici ────────────────────────── */
 
 function wireThumbbar() {
+  //  Le voci fanno quello che fanno i loro gemelli nella colonna, e niente di
+  //  più: una sola strada per ciascun gesto.
+  $("tb-voice")?.addEventListener("click", () => $("nav-voice").click());
+  $("tb-units")?.addEventListener("click", () => { void showIndex(); });
+  //  FOTO scatta: in trincea il gesto è quello. La foto aspetta poi nella
+  //  dettatura, dove si collega a una US (photos.js).
+  $("tb-photo")?.addEventListener("click", () => {
+    $("nav-voice").click();
+    $("shoot").click();
+  });
   $("tb-nav").addEventListener("click", () => {
     const nav = $("sidenav");
     nav.dataset.open = nav.dataset.open === "true" ? "false" : "true";
@@ -1021,6 +1046,8 @@ function wireShell() {
   });
 
   $("nav-units").addEventListener("click", () => { void showIndex(); });
+  // la voce «Detta» della barra si accende con il suo gemello
+  $("nav-voice").addEventListener("click", () => paintThumbbar());
   $("nav-units").textContent = SG().t ? SG().t("nav.units") : "Units";
 
   // ‹ › DA TASTIERA: Alt+← / Alt+→, quando il fuoco non è in un campo di testo

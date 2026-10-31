@@ -90,6 +90,12 @@
       <span class="room" id="room-name"></span>
     </span>
     <span class="state" id="state">…</span>
+    <!-- CHI FIRMA, in due lettere (SF-05, D5 — 31 ottobre 2026). Toccandole si
+         apre il foglio «Tu e l'aspetto»: nome, ORCID, skin, tema, lingua, soglia,
+         Esci. Prima erano otto controlli nella barra e una fascia ripetuta in
+         ogni vista; adesso la barra dice stanza, stato e chi firma, e basta. -->
+    <button class="avatar" id="me" type="button" hidden aria-haspopup="dialog"
+            aria-controls="me-sheet" aria-expanded="false"></button>
   </header>
 
   <nav class="sidenav" id="sidenav" aria-label="Navigation" data-t-aria="aria.nav">
@@ -209,7 +215,14 @@
        distruttive: apri la colonna, indietro, avanti, salva. L'azione che
        svuota la scheda sta in CIMA alla scheda, dove il pollice non arriva. -->
   <div class="thumbbar" id="thumbbar" hidden>
-    <button type="button" id="tb-nav" aria-label="Open the navigation" data-t-aria="aria.openNav">☰</button>
+    <!-- LE QUATTRO VOCI DEL TELEFONO (SF-03, D2 — 31 ottobre 2026): Detta,
+         Le US, Foto, e la Stanza, che è la colonna. Fuori dalla scheda la barra
+         è questa; dentro la scheda tornano i passi e Salva. La colonna si apre
+         sempre dalla barra, come prima: è la quarta voce. -->
+    <button type="button" class="tab" id="tb-voice" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-t="tab.dictate">Dictate</span></button>
+    <button type="button" class="tab" id="tb-units" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg><span data-t="tab.units">Units</span></button>
+    <button type="button" class="tab" id="tb-photo" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-t="tab.photo">Photo</span></button>
+    <button type="button" id="tb-nav" aria-label="Open the navigation" data-t-aria="aria.openNav"><span class="tb-icon">☰</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="tb-label" data-t="tab.room">Room</span></button>
     <!-- IL RITORNO, quando il modo a schermo non è quello che questa finestra
          proporrebbe. Qui e non nella colonna: sul telefono i chip del modo
          STANNO nella colonna, e una via d'uscita che si apre solo da ☰ è la
@@ -220,6 +233,21 @@
     <span class="step" id="tb-step"></span>
     <button type="button" id="tb-next" aria-label="Next field" data-t-aria="aria.nextField">▶</button>
     <button type="button" class="save" id="tb-save" data-t="act.save">Save</button>
+  </div>
+</div>
+
+<!-- IL FOGLIO «TU E L'ASPETTO», dietro le iniziali (D5). I controlli di
+     aspetto ci arrivano SPOSTATI da `placeControls`, non copiati: uno stato
+     per controllo. -->
+<div class="mesheet" id="me-sheet" hidden>
+  <div class="mesheet-card" role="dialog" aria-modal="false" aria-labelledby="me-name">
+    <div class="me-who">
+      <b id="me-name"></b>
+      <span class="me-orcid" id="me-orcid"></span>
+    </div>
+    <h3 class="me-h" data-t="me.look">Look</h3>
+    <div class="me-controls" id="me-controls"></div>
+    <button type="button" class="me-out" id="me-signout" data-t="me.signout">Sign out of this device</button>
   </div>
 </div>
 
@@ -294,8 +322,8 @@ const STRINGS = {
     "node.room": "node · room",
     "node.local": "node · local",
     "node.offline": "offline",
-    "check.ok": "{where} · checked {time}",
-    "check.retry": "node unreachable · retrying in {s} s",
+    "check.ok": "{where} · {time}",
+    "check.retry": "no node · retry in {s} s",
     "check.queue": " · {n} queued",
     "check.title": "Tap to check again now",
     "shift.waiting": "The node does not answer: your signature resumes as soon as it is back. You do not need to sign in again.",
@@ -425,6 +453,12 @@ const STRINGS = {
     "exc.name": "Name",
     "photos.all": "All",
     "nav.units": "Units (US)",
+    "tab.units": "Units",
+    "tab.photo": "Photo",
+    "tab.room": "Room",
+    "me.look": "Look",
+    "me.signout": "Sign out of this device",
+    "me.title": "You and the look",
     "nav.prev_unit": "Previous unit",
     "nav.next_unit": "Next unit",
     "nav.jump": "Go to unit…",
@@ -530,8 +564,14 @@ const STRINGS = {
     "node.room": "nodo · stanza",
     "node.local": "nodo · locale",
     "node.offline": "offline",
-    "check.ok": "{where} · controllato alle {time}",
+    "check.ok": "{where} · {time}",
     "check.retry": "nodo assente · riprovo fra {s} s",
+    "tab.units": "Le US",
+    "tab.photo": "Foto",
+    "tab.room": "Stanza",
+    "me.look": "Aspetto",
+    "me.signout": "Esci da questo dispositivo",
+    "me.title": "Tu e l'aspetto",
     "check.queue": " · {n} in coda",
     "check.title": "Tocca per ricontrollare adesso",
     "shift.waiting": "Il nodo non risponde: la tua firma riprende appena torna. Non serve firmare di nuovo.",
@@ -2292,6 +2332,29 @@ async function request(path, init, where) {
 const $ = (id) => document.getElementById(id);
 const state = $("state"), answerBox = $("answer"), saidBox = $("said");
 
+/** Two letters for the person who signs: first and last word of the name, or
+ *  the last four digits of the ORCID when there is no name. */
+function initialsOf(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "·";
+  if (/^\d{4}-/.test(words[0])) return words[0].replace(/\W/g, "").slice(-2);
+  const first = words[0][0] || "";
+  const last = words.length > 1 ? words[words.length - 1][0] : (words[0][1] || "");
+  return (first + last).toUpperCase();
+}
+
+/* IL FOGLIO «TU E L'ASPETTO»: si apre dalle iniziali, si chiude toccando fuori
+ * o con Esc. Dentro: chi firma, i controlli di aspetto, Esci. */
+function openMe(open) {
+  const sheet = $("me-sheet");
+  sheet.hidden = !open;
+  $("me").setAttribute("aria-expanded", String(open));
+}
+$("me").addEventListener("click", () => openMe($("me-sheet").hidden));
+$("me-sheet").addEventListener("click", (e) => { if (e.target.id === "me-sheet") openMe(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") openMe(false); });
+$("me-signout").addEventListener("click", () => { openMe(false); $("signout").click(); });
+
 /** Show an answer, and read it out loud — the person hearing it has their hands
  *  in the soil.
  *
@@ -2657,9 +2720,14 @@ function render() {
   }
   $("gate").hidden = signed;
   $("signature").hidden = !signed;
+  $("me").hidden = !signed;
   if (signed) {
     $("who-name").textContent = WHO?.name || "—";
     $("who-subject").textContent = WHO?.subject ? "· " + WHO.subject : "";
+    $("me").textContent = initialsOf(WHO?.name || WHO?.subject || "");
+    $("me").setAttribute("aria-label", t("me.title") + " — " + (WHO?.name || ""));
+    $("me-name").textContent = WHO?.name || "—";
+    $("me-orcid").textContent = WHO?.subject || "";
   } else {
     $("signin").hidden = !canSign();
     $("gate-why").textContent = canSign()
