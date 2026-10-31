@@ -226,13 +226,45 @@ def _normalise(text: str) -> str:
     return re.sub(r"[^\w\s]", " ", (text or "").lower()).strip()
 
 
+#: COME LO SENTE UN TELEFONO (31 ottobre 2026, iPhone vero). Il riconoscimento
+#: vocale del browser scrive «crea l'unità di grafica numero uno» per «crea
+#: l'unità stratigrafica numero 1», e il nodo rispondeva «non ho capito» a una
+#: frase che una persona capisce al volo. Prima di cercare gli intenti la frase
+#: si riporta alla sua forma canonica — «unità stratigrafica» e le sue storpiature
+#: diventano «us», i numeri detti in lettere dopo «us»/«numero» diventano cifre.
+#: Non si INDOVINA niente: una frase che resta senza intento resta senza intento,
+#: e il numero si prende solo dove la frase lo dice.
+_NUMBER_WORDS = {
+    "zero": 0, "uno": 1, "una": 1, "due": 2, "tre": 3, "quattro": 4, "cinque": 5,
+    "sei": 6, "sette": 7, "otto": 8, "nove": 9, "dieci": 10, "undici": 11,
+    "dodici": 12, "tredici": 13, "quattordici": 14, "quindici": 15,
+    "sedici": 16, "diciassette": 17, "diciotto": 18, "diciannove": 19, "venti": 20,
+}
+_SU_SPOKEN = re.compile(
+    r"\bunit[aà]\s+(?:(?:di|della)\s+)?(?:strati\s*)?(?:grafica|stratigrafica|stratigrafiche|strategica)\b"
+    r"|\bu\s+s\b", re.I)
+
+
+def canonical(transcript: str) -> str:
+    """La frase com'è stata detta, riportata alla forma che gli intenti usano."""
+    text = (transcript or "").lower().replace("’", "'")
+    text = re.sub(r"\bl'", "l ", text)
+    text = _SU_SPOKEN.sub("us", re.sub(r"[.]", " ", text))
+    def figure(match):
+        word = match.group(2)
+        return f"{match.group(1)} {_NUMBER_WORDS[word]}"
+    text = re.sub(r"\b(us|numero)\s+(" + "|".join(_NUMBER_WORDS) + r")\b", figure, text)
+    text = re.sub(r"\bus\s+numero\s+(\d)", r"us \1", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def rules_parse(transcript: str, registry: ToolRegistry) -> Optional[Intent]:
     """Match the transcript against the intents the registry declares.
 
     Longest declared intent first, so "crea una nuova scheda" wins over "scheda"
     — a shorter phrase contained in a longer one must not steal it.
     """
-    said = _normalise(transcript)
+    said = _normalise(canonical(transcript))
     if not said:
         return None
 
@@ -274,7 +306,7 @@ def rules_parse(transcript: str, registry: ToolRegistry) -> Optional[Intent]:
                 value = spoken_value(scheda, spoken["field"], value)
             slots["fields"] = {spoken["field"]: value}
     if "us" in declared and "us" not in slots:
-        number = extract_us(transcript)
+        number = extract_us(transcript) or extract_us(canonical(transcript))
         if number:
             slots["us"] = number
     return Intent(intent=phrase, tool=descriptor.name, slots=slots,

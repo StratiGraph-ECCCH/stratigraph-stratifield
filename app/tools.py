@@ -454,7 +454,10 @@ def make_create_su(graph_writer) -> ToolDescriptor:
     return ToolDescriptor(
         name="create_su",
         intents=["crea una nuova scheda", "nuova scheda", "nuova unità",
-                 "nuova us", "crea una us"],
+                 "nuova us", "crea una us",
+                 # come si dice davvero (31 ottobre, iPhone): «crea l'unità
+                 # stratigrafica 220» → `intent.canonical` → «crea l us 220»
+                 "crea l us", "crea la us", "crea us"],
         input_schema=[
             Slot("us", "string", True, "il numero dell'unità"),
             # Optional, all of them: a unit dictated in three words is still a
