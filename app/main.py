@@ -732,6 +732,23 @@ def _told(result: ToolResult, scope: "Scope", prima: tuple,
     return {"refused": refused, "queued": queued, "message": message}
 
 
+#: Gli strumenti di cui dare una frase d'esempio, in quest'ordine: i gesti di
+#: tutti i giorni in trincea. Gli altri si trovano, ma non si elencano.
+_EXAMPLE_TOOLS = ("create_su", "attach_photo_to_su", "query_kg", "which_project")
+
+
+def _not_understood(registry) -> str:
+    """«Non ho capito», e tre o quattro frasi che invece si capiscono."""
+    examples = []
+    for name in _EXAMPLE_TOOLS:
+        found = registry.route(name)
+        intents = list(getattr(found, "intents", None) or [])
+        if found is not None and getattr(found, "handler", None) and intents:
+            examples.append(f"«{intents[0]}»")
+    tail = (" Prova a dire, per esempio: " + ", ".join(examples) + ".") if examples else ""
+    return "Non ho capito." + tail
+
+
 def _run(transcript: str, slots: Dict[str, Any], scope: "Scope") -> Answer:
     """La frase, capita e portata allo strumento — con lo scrivano di CHI la
     dice, nel posto dove la dice (`_scope`)."""
@@ -745,6 +762,12 @@ def _run(transcript: str, slots: Dict[str, Any], scope: "Scope") -> Answer:
     # transcribed and understood in — so what it creates is written in it.
     merged.setdefault("lang", COMMAND_LANGUAGE)
     result: ToolResult = invoke(descriptor, merged, scope.who, registry=registry)
+    if descriptor is None and not result.ok:
+        # A CHI È IN TRINCEA SI DICONO FRASI, non nomi di strumenti (31
+        # ottobre, dal telefono vero: «So fare: attach_photo_to_su,
+        # build_model, …»). Il contratto resta quello che è, per le macchine;
+        # qui, per una persona, gli esempi sono le frasi che il nodo capisce.
+        result = ToolResult(False, _not_understood(registry), result.delta, result.data)
     return Answer(ok=result.ok, said=understood.transcript or "",
                   intent=understood.intent or None, tool=understood.tool,
                   slots={k: v for k, v in merged.items()

@@ -98,7 +98,11 @@
             aria-controls="me-sheet" aria-expanded="false"></button>
   </header>
 
+  <!-- IL VELO dietro il cassetto, solo sul telefono: toccarlo chiude
+       (31 ottobre, iPhone vero: il cassetto non si chiudeva più). -->
+  <div class="navscrim" id="nav-scrim" hidden></div>
   <nav class="sidenav" id="sidenav" aria-label="Navigation" data-t-aria="aria.nav">
+    <div class="navgrab"><button type="button" id="nav-close" data-t="nav.close">Close</button></div>
     <h3 data-t="nav.room">Room</h3>
     <button class="navitem" type="button" id="nav-voice" aria-current="true" data-t="tab.dictate">Dictate</button>
     <!-- L'ELENCO DELLE UNITÀ, raggiungibile anche da chi non è arrivato da un
@@ -458,6 +462,7 @@ const STRINGS = {
     "photos.all": "All",
     "nav.units": "Units (US)",
     "tab.units": "Units",
+    "nav.close": "Close",
     "tab.photo": "Photo",
     "tab.room": "Room",
     "me.look": "Look",
@@ -575,6 +580,7 @@ const STRINGS = {
     "step.of": "campo {i} di {n}",
     "pill.local": "locale",
     "tab.units": "Le US",
+    "nav.close": "Chiudi",
     "tab.photo": "Foto",
     "tab.room": "Stanza",
     "me.look": "Aspetto",

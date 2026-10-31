@@ -887,3 +887,32 @@
   -webkit-user-select: none; user-select: none;
   -webkit-touch-callout: none; touch-action: manipulation;
 }
+
+/* IL CASSETTO SUL TELEFONO (31 ottobre, iPhone vero): si apre SOPRA la barra,
+ * non sotto — così «Stanza» lo richiude — ha un velo che chiude e un «Chiudi»
+ * in cima. Detta e Le US non ci stanno più: sono in barra. */
+.navgrab { display: none; }
+#surface[data-sg-mode="phone"] .sidenav {
+  bottom: calc(68px + env(safe-area-inset-bottom));
+  max-height: calc(80dvh - 68px);
+  overflow-y: auto;
+  padding-bottom: var(--sg-space-3);
+}
+#surface[data-sg-mode="phone"] .navgrab {
+  display: flex; justify-content: flex-end;
+  position: sticky; top: 0; z-index: 1;
+  padding: var(--sg-space-2) var(--sg-space-3) 0;
+  background: inherit;
+}
+#surface[data-sg-mode="phone"] #nav-close {
+  width: auto; margin: 0; padding: 8px 14px; box-shadow: none;
+  font-size: var(--sg-text-sm);
+}
+#surface[data-sg-mode="phone"] .sidenav h3[data-t="nav.room"],
+#surface[data-sg-mode="phone"] #nav-voice,
+#surface[data-sg-mode="phone"] #nav-units { display: none; }
+.navscrim {
+  position: fixed; inset: 0 0 calc(68px + env(safe-area-inset-bottom)) 0;
+  z-index: 28;
+  background: color-mix(in srgb, var(--sg-text) 25%, transparent);
+}

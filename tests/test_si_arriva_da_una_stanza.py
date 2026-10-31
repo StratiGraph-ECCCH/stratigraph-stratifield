@@ -346,4 +346,4 @@ def test_LA_STANZA_DEL_LINK_SOPRAVVIVE_ALLA_FIRMA():
     assert land.index("await window.SGReady") < land.index("readArrival(window.location.search)")
     assert 'piano.do === "offer" && SG().signed' in land and "pointRoom(corpo" in land
     # …e sul telefono la colonna non copre il messaggio (SF-03)
-    assert 'if (state.mode !== "phone") $("sidenav").dataset.open = "true";' in land
+    assert 'if (state.mode !== "phone") setNavOpen(true);' in land

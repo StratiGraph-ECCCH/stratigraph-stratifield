@@ -278,12 +278,22 @@ function paintWayBack() {
   bottone.dataset.mode = verso;
 }
 
+/* IL CASSETTO, aperto o chiuso, in UN posto (31 ottobre, iPhone vero: si
+ * apriva da «Stanza» e non si chiudeva più — copriva la barra che lo apre). Sul
+ * telefono ha un velo dietro, che chiude, e un «Chiudi» in cima; scegliere una
+ * voce lo chiude da sé. */
+function setNavOpen(open) {
+  $("sidenav").dataset.open = open ? "true" : "false";
+  const velo = $("nav-scrim");
+  if (velo) velo.hidden = !(open && state.mode === "phone");
+}
+
 function setMode(mode) {
   state.mode = mode;
   $("surface").dataset.sgMode = mode;
   placeControls(mode);
   paintThumbbar();
-  $("sidenav").dataset.open = "false";
+  setNavOpen(false);
   $("nav-onepage").hidden = mode !== "desktop";
   paintModes();
   if (state.def) draw();
@@ -1012,8 +1022,13 @@ function wireThumbbar() {
     $("shoot").click();
   });
   $("tb-nav").addEventListener("click", () => {
-    const nav = $("sidenav");
-    nav.dataset.open = nav.dataset.open === "true" ? "false" : "true";
+    setNavOpen($("sidenav").dataset.open !== "true");
+  });
+  $("nav-scrim")?.addEventListener("click", () => setNavOpen(false));
+  $("nav-close")?.addEventListener("click", () => setNavOpen(false));
+  //  una voce scelta chiude il cassetto sul telefono: il gesto è fatto
+  $("sidenav").addEventListener("click", (event) => {
+    if (state.mode === "phone" && event.target.closest(".navitem")) setNavOpen(false);
   });
   $("tb-prev").addEventListener("click",
     () => stepTo($("scheda-host"), state, "prev"));
@@ -1189,7 +1204,7 @@ async function land() {
     // La colonna, aperta sul pannello che punta il nodo, con la stanza già
     // scritta: il gesto resta uno, e resta di chi lo fa. SUL TELEFONO NO: la
     // colonna è un foglio che copre il messaggio (SF-03), e il messaggio basta.
-    if (state.mode !== "phone") $("sidenav").dataset.open = "true";
+    if (state.mode !== "phone") setNavOpen(true);
     const campo = $("room-target");
     if (campo) campo.value = piano.server
       ? `${piano.server.replace(/\/+$/, "")}/open?room=${encodeURIComponent(piano.room)}`
