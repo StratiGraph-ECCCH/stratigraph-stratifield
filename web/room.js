@@ -128,6 +128,37 @@ export function paintPanel(host, health, stato) {
     host.append(coda);
   }
 
+  const esito = document.createElement("p");
+  esito.className = "hint";
+  esito.id = "room-says";
+
+  // LE TUE STANZE, DA TOCCARE (31 ottobre, iPhone vero: «Dove scrivo» chiedeva
+  // il nome di una stanza a memoria). L'elenco è quello del server, già
+  // filtrato dall'ACL; il ruolo accanto è quello che la stanza ti dà.
+  const titolo = document.createElement("p");
+  titolo.className = "room-mine-title";
+  titolo.textContent = t("room.mine");
+  const elenco = document.createElement("div");
+  elenco.id = "room-list";
+  elenco.className = "room-list";
+  const leggo = document.createElement("p");
+  leggo.className = "hint";
+  leggo.textContent = t("room.reading");
+  elenco.append(leggo);
+  host.append(titolo, elenco);
+  void fillRooms(elenco, stato, t, async (stanza) => {
+    esito.textContent = t("room.pointing");
+    esito.textContent = await point(
+      { room: stanza.room, server: stanza.server }, t);
+    await refresh(host, health);
+  });
+
+  // IL RESTO DIETRO «ALTRO…»: il nome scritto a mano o un link di consegna, e
+  // il container del nodo. Gesti rari, che non devono stare davanti.
+  const altro = document.createElement("details");
+  altro.className = "room-other";
+  const apri = document.createElement("summary");
+  apri.textContent = t("room.other");
   const campo = document.createElement("input");
   campo.type = "text";
   campo.id = "room-target";
@@ -140,11 +171,8 @@ export function paintPanel(host, health, stato) {
   const torna = document.createElement("button");
   torna.type = "button";
   torna.id = "room-back";
+  torna.className = "room-back";
   torna.textContent = t("room.back");
-
-  const esito = document.createElement("p");
-  esito.className = "hint";
-  esito.id = "room-says";
 
   const punta = async () => {
     const detto = campo.value.trim();
@@ -165,8 +193,61 @@ export function paintPanel(host, health, stato) {
 
   const riga = document.createElement("div");
   riga.className = "row";
-  riga.append(vai, torna);
-  host.append(campo, riga, esito);
+  riga.append(campo, vai);
+  altro.append(apri, riga, torna);
+  host.append(esito, altro);
+}
+
+/** Il nome di un ruolo per persone; quello del server se non lo si conosce. */
+function roleName(role, t) {
+  if (!role) return "";
+  const detto = t("rolename." + role);
+  return detto === "rolename." + role ? role : detto;
+}
+
+/** Chiede al nodo le stanze di chi è firmato e le disegna come voci. */
+export async function fillRooms(host, stato, t, onPick) {
+  const seam = SG();
+  let letto;
+  try {
+    const risposta = await seam.request("/v1/rooms", {});
+    letto = await risposta.json().catch(() => ({}));
+    if (!risposta.ok) {
+      host.replaceChildren(Object.assign(document.createElement("p"), {
+        className: "hint",
+        textContent: t("room.cannotList", { why: letto.detail || risposta.status }),
+      }));
+      return;
+    }
+  } catch {
+    host.replaceChildren(Object.assign(document.createElement("p"), {
+      className: "hint", textContent: t("room.unreachable") }));
+    return;
+  }
+  const stanze = letto.rooms || [];
+  if (!stanze.length) {
+    host.replaceChildren(Object.assign(document.createElement("p"), {
+      className: "hint", textContent: t("room.none") }));
+    return;
+  }
+  const qui = stato && stato.room;
+  host.replaceChildren(...stanze.map((r) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "navitem room-item";
+    b.dataset.room = r.room;
+    const nome = document.createElement("span");
+    nome.className = "room-item-name";
+    nome.textContent = r.title || r.room;
+    const ruolo = document.createElement("span");
+    ruolo.className = "count";
+    ruolo.textContent = r.room === qui
+      ? t("room.current") : roleName(r.role, t);
+    b.append(nome, ruolo);
+    if (r.room === qui) b.setAttribute("aria-current", "true");
+    b.addEventListener("click", () => onPick({ room: r.room, server: letto.server }));
+    return b;
+  }));
 }
 
 /** Prova la porta per chi è firmato; se si apre, il posto si ricorda QUI. */

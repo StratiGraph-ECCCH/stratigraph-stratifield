@@ -188,14 +188,16 @@ export function mount({ t, openScheda, schede, current = () => null }) {
   const titolo = $("index-title");
   if (!host) return async () => {};
 
-  /** Il secondo tocco: con quale standard si riapre questa unità. */
+  /** Il secondo tocco: con quale standard si riapre questa unità — o, senza
+   *  unità, con quale si compila una US NUOVA («+ Nuova US»). */
   function askStandard(u) {
     const lista = schede();
     asking = true;
     host.replaceChildren();
     const detto = document.createElement("p");
     detto.className = "hint";
-    detto.textContent = t("index.which", { unit: u.name || u.id });
+    detto.textContent = u ? t("index.which", { unit: u.name || u.id })
+                           : t("index.newWhich");
     host.append(detto);
     for (const item of lista) {
       const b = document.createElement("button");
@@ -211,7 +213,8 @@ export function mount({ t, openScheda, schede, current = () => null }) {
       //  `update_su` rifiuta un numero che non corrisponde a nessun nodo — che
       //  è la sua virtù. Il numero lo dice il nodo (`number_from_unit_id`),
       //  non questa pagina.
-      b.addEventListener("click", () => openScheda(item.id, { us: u.number }));
+      b.addEventListener("click",
+        () => openScheda(item.id, u ? { us: u.number } : null));
       host.append(b);
     }
     if (!lista.length) {
@@ -226,6 +229,23 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     indietro.textContent = t("index.back");
     indietro.addEventListener("click", () => void repaint());
     host.append(indietro);
+  }
+
+  /** «+ Nuova US»: compilare una scheda nuova parte DA QUI, dall'elenco delle
+   *  unità, e non da una voce «Schede» che sul telefono nessuno capiva
+   *  (31 ottobre). Un nodo che serve un solo standard non chiede. */
+  function newButton() {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.id = "index-new";
+    b.className = "indice-nuova";
+    b.textContent = t("index.new");
+    b.addEventListener("click", () => {
+      const lista = schede();
+      if (lista.length === 1) { openScheda(lista[0].id, null); return; }
+      askStandard(null);
+    });
+    return b;
   }
 
   async function repaint() {
@@ -254,7 +274,11 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     // LE STESSE UNITÀ del completamento e di ‹ ›: una lettura, condivisa.
     room.units = unita;
     room.read = true;
-    if (!unita.length) { nota.textContent = t("index.empty"); return; }
+    if (!unita.length) {
+      host.replaceChildren(newButton());
+      nota.textContent = t("index.empty");
+      return;
+    }
     paintList(unita);
   }
 
@@ -324,7 +348,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     };
     cerca.addEventListener("input", () => { filters.q = cerca.value; riempi(); });
     const focused = document.activeElement && document.activeElement.id === "index-search";
-    host.replaceChildren(bar, elenco);
+    host.replaceChildren(newButton(), bar, elenco);
     riempi();
     if (focused) cerca.focus();
   }

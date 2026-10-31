@@ -62,6 +62,7 @@ from .tools import build_registry
 from .scrivani import NotTrusted, Scrivani
 from .writer import AccessRefused, LocalWriter, RoomRefused, RoomWriter
 from .writer import describe as writer_describe
+from .writer import rooms_listed
 from .writer import writer_from_env
 
 try:
@@ -1396,6 +1397,44 @@ def room_state(request: Request) -> Dict[str, Any]:
     pubblica.
     """
     return _room_view(_scope(request), enter=True)
+
+
+@v1.get("/rooms", tags=["room"])
+def my_rooms(request: Request) -> Dict[str, Any]:
+    """Le stanze in cui CHI CHIAMA ha un ruolo, sul server dove scrive — per
+    sceglierne una con un tocco invece di scriverne il nome (31 ottobre, iPhone:
+    «Dove scrivo» chiedeva un nome a memoria).
+
+    È l'elenco del server (`GET /v1/rooms`, già filtrato dall'ACL), chiesto con
+    la firma di chi chiama e solo a un server che il nodo ha nominato. Il nodo
+    non aggiunge e non toglie niente: riduce ogni stanza a nome, titolo e ruolo.
+    """
+    who = _author(request)
+    bearer = _bearer(request)
+    server = ((request.headers.get(HEADER_SERVER) or "").strip()
+              or _node_server()).rstrip("/")
+    if not who or not bearer:
+        raise HTTPException(status_code=403,
+                            detail="Per vedere le tue stanze serve la firma.")
+    if not server:
+        return {"server": "", "rooms": []}
+    try:
+        dial = SCRIVANI.where(server, "-").dial
+    except NotTrusted as lontano:
+        raise HTTPException(status_code=403, detail=str(lontano)) from None
+    status, listed = rooms_listed(dial, bearer)
+    if status in (401, 403):
+        raise HTTPException(status_code=403,
+                            detail=f"Il server ha risposto {status}.")
+    if status != 200:
+        raise HTTPException(status_code=502,
+                            detail=f"Il server non ha risposto ({status or 'rete'}).")
+    rooms = [{"room": r.get("room_id"), "title": r.get("title") or r.get("room_id"),
+              "role": r.get("your_role")}
+             for r in (listed if isinstance(listed, list) else [])
+             if r.get("room_id") and not r.get("archived_at")]
+    rooms.sort(key=lambda r: (r["title"] or "").lower())
+    return {"server": server, "rooms": rooms}
 
 
 @v1.post("/room", tags=["room"])

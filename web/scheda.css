@@ -910,7 +910,12 @@
 }
 #surface[data-sg-mode="phone"] .sidenav h3[data-t="nav.room"],
 #surface[data-sg-mode="phone"] #nav-voice,
-#surface[data-sg-mode="phone"] #nav-units { display: none; }
+#surface[data-sg-mode="phone"] #nav-units,
+/* LE SCHEDE NEL CASSETTO voleva dire «compila una US nuova con questo
+ * standard», e non lo capiva nessuno: sul telefono si parte da «+ Nuova US»
+ * in «Le US» (31 ottobre). Sulle soglie larghe la colonna resta. */
+#surface[data-sg-mode="phone"] #nav-sheets-title,
+#surface[data-sg-mode="phone"] #nav-schede { display: none; }
 .navscrim {
   position: fixed; inset: 0 0 calc(68px + env(safe-area-inset-bottom)) 0;
   z-index: 28;
@@ -924,3 +929,19 @@
   visibility: hidden;
   transition: transform .18s ease-out, visibility 0s linear .18s;
 }
+
+/* «+ Nuova US», in cima all'elenco delle unità. */
+.indice-nuova {
+  display: block; width: 100%; margin: 0 0 10px;
+  padding: 12px 14px; font-weight: 600; text-align: start;
+  border-radius: var(--sg-radius, 8px);
+}
+/* «Dove scrivo»: le tue stanze come voci, il resto dietro «Altro…». */
+.room-mine-title { margin: 10px 0 4px; font-weight: 600; }
+.room-list .room-item { display: flex; justify-content: space-between; gap: 8px; }
+.room-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-other { margin-top: 10px; }
+.room-other summary { cursor: pointer; padding: 6px 0; color: var(--sg-text-muted, inherit); }
+.room-other .row { display: flex; gap: 6px; margin: 6px 0; }
+.room-other input { flex: 1; min-width: 0; }
+.room-back { font-size: var(--sg-text-sm); }

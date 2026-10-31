@@ -1826,3 +1826,22 @@ def describe(writer: Any) -> str:
     if isinstance(writer, LocalWriter):
         return f"local container ({writer.path})"
     return type(writer).__name__
+
+
+def rooms_listed(dial: str, bearer: str, timeout: float = 8.0):
+    """Le stanze in cui chi porta questo token ha un ruolo (`GET /v1/rooms` del
+    server, già filtrato dall'ACL). Una LETTURA, non una via al grafo: sta qui
+    perché questo modulo è quello che parla con la stanza (test_one_write_path).
+    Torna `(status, elenco)`; status 0 = nessuna risposta."""
+    import urllib.error
+
+    asked = urllib.request.Request(f"{dial.rstrip('/')}/v1/rooms",
+                                   headers={"Authorization": f"Bearer {bearer}",
+                                            "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(asked, timeout=timeout) as answer:
+            return answer.status, json.loads(answer.read() or b"[]")
+    except urllib.error.HTTPError as no:
+        return no.code, []
+    except (urllib.error.URLError, OSError):
+        return 0, []

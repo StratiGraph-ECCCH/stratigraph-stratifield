@@ -108,7 +108,7 @@
     <!-- L'ELENCO DELLE UNITÀ, raggiungibile anche da chi non è arrivato da un
          link: è dove si torna da una scheda, con i filtri com'erano. -->
     <button class="navitem" type="button" id="nav-units">Units (US)</button>
-    <h3 data-t="nav.sheets">Sheets</h3>
+    <h3 id="nav-sheets-title" data-t="nav.sheets">Sheets</h3>
     <div id="nav-schede"></div>
     <!-- DOVE FINISCE QUELLO CHE DICI. Nella colonna e non sotto il bottone
          grande: puntare il nodo a una stanza è un gesto raro — si fa una volta
@@ -395,7 +395,20 @@ const STRINGS = {
     "room.left.many": "{n} operations still queued for {rooms} rooms this node has left.",
     "room.placeholder": "room, or a handoff link",
     "room.point": "Write here",
-    "room.back": "Local container",
+    "room.back": "Only on this node, no room",
+    "room.mine": "Your rooms",
+    "room.reading": "Reading your rooms…",
+    "room.none": "You have no role in any room on this server yet: ask whoever runs the excavation for an invitation.",
+    "room.cannotList": "Your rooms could not be read: {why}",
+    "room.current": "you write here",
+    "room.other": "Another room, or a link…",
+    "rolename.owner": "owner",
+    "rolename.admin": "administrator",
+    "rolename.editor": "editor",
+    "rolename.reader": "reader",
+    "rolename.viewer": "reader",
+    "index.new": "+ New US",
+    "index.newWhich": "Which standard do you record the new US with?",
     "room.pointing": "Asking…",
     "room.pointed": "Pointed.",
     "room.went.back": "Back to the local container.",
@@ -649,7 +662,20 @@ const STRINGS = {
     "room.left.many": "{n} operazioni ancora in coda per {rooms} stanze che il nodo ha lasciato.",
     "room.placeholder": "stanza, o un link di consegna",
     "room.point": "Scrivi qui",
-    "room.back": "Container locale",
+    "room.back": "Solo su questo nodo, senza stanza",
+    "room.mine": "Le tue stanze",
+    "room.reading": "Leggo le tue stanze…",
+    "room.none": "Non hai ancora un ruolo in nessuna stanza di questo server: chiedi un invito a chi dirige lo scavo.",
+    "room.cannotList": "Non riesco a leggere le tue stanze: {why}",
+    "room.current": "scrivi qui",
+    "room.other": "Un'altra stanza, o un link…",
+    "rolename.owner": "proprietario",
+    "rolename.admin": "amministratore",
+    "rolename.editor": "editor",
+    "rolename.reader": "lettore",
+    "rolename.viewer": "lettore",
+    "index.new": "+ Nuova US",
+    "index.newWhich": "Con quale standard compili la nuova US?",
     "room.pointing": "Chiedo…",
     "room.pointed": "Puntato.",
     "room.went.back": "Torno al container locale.",
