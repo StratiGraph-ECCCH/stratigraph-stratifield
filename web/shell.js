@@ -122,7 +122,11 @@ const state = {
   // l'indirizzo impara il numero di una scheda nuova.
   onSaved: (sent, body) => afterSave(body),
   onChange: () => paintCompleteness(),
-  onStep: (i, n) => { $("tb-step").textContent = n ? `${i + 1}/${n}` : ""; },
+  // «1/25» non diceva cosa conta (SF-10): sono i campi, uno per volta
+  onStep: (i, n) => {
+    $("tb-step").textContent = n
+      ? tr("step.of", `field ${i + 1} of ${n}`, { i: i + 1, n }) : "";
+  },
   onValidate: (field) => validateField(field),
   onTranslate: (field) => translateField(field),
   // «VERIFICA» (dev28): firmare, nella stanza, ciò che aspetta una persona

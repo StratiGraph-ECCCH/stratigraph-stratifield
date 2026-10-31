@@ -872,3 +872,11 @@
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sg-space-2);
 }
 #surface[data-sg-mode="phone"] #work > .row button { width: auto; min-width: 0; }
+
+/* LA SCHEDA SUL TELEFONO (SF-09): il titolo lungo del modello si mangiava
+ * mezzo schermo. Restano lo standard e, in cima e lontano dal pollice,
+ * «Svuota»; il titolo intero è alla scrivania. */
+#surface[data-sg-mode="phone"] .sheet > header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sg-space-2);
+}
+#surface[data-sg-mode="phone"] .sheet > header h2 { display: none; }
