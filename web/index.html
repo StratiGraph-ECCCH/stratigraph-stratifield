@@ -324,6 +324,8 @@ const STRINGS = {
     "node.offline": "offline",
     "check.ok": "{where} · {time}",
     "check.retry": "no node · retry in {s} s",
+    "pill.room": "online",
+    "pill.local": "local",
     "check.queue": " · {n} queued",
     "check.title": "Tap to check again now",
     "shift.waiting": "The node does not answer: your signature resumes as soon as it is back. You do not need to sign in again.",
@@ -566,6 +568,8 @@ const STRINGS = {
     "node.offline": "offline",
     "check.ok": "{where} · {time}",
     "check.retry": "nodo assente · riprovo fra {s} s",
+    "pill.room": "in rete",
+    "pill.local": "locale",
     "tab.units": "Le US",
     "tab.photo": "Foto",
     "tab.room": "Stanza",
@@ -2966,7 +2970,10 @@ async function ping() {
     // ottobre il nodo non ha un posto solo, e la sua configurazione può dire
     // «locale» mentre questa persona scrive in una stanza.
     const inRoom = Boolean(ACCESS && ACCESS.room) || health.writes_to.startsWith("room");
-    state.textContent = checkSays(t(inRoom ? "node.room" : "node.local"));
+    // LA PASTIGLIA DICE POCO (SF-04): la stanza è già scritta accanto, qui
+    // restano «in rete» o «locale» e l'ora; la frase lunga va nel suggerimento.
+    state.textContent = checkSays(t(inRoom ? "pill.room" : "pill.local"));
+    state.title = t(inRoom ? "node.room" : "node.local") + " · " + t("check.title");
     // Which speech road, from what the node SAYS it has — asked every time, so a
     // node that gains (or loses) a model is followed rather than remembered.
     chooseSpeechRoad(health);
