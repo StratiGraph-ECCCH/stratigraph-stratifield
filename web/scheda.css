@@ -916,3 +916,11 @@
   z-index: 28;
   background: color-mix(in srgb, var(--sg-text) 25%, transparent);
 }
+/* CHIUSO VUOL DIRE VIA DEL TUTTO: alzato sopra la barra, il cassetto chiuso
+ * (spostato di quanto è alto) lasciava la sua cima — e «Chiudi» — sopra la
+ * barra, a rubarle i tocchi. Misurato con un tocco simulato il 31 ottobre. */
+#surface[data-sg-mode="phone"] .sidenav:not([data-open="true"]) {
+  transform: translateY(calc(100% + 80px + env(safe-area-inset-bottom)));
+  visibility: hidden;
+  transition: transform .18s ease-out, visibility 0s linear .18s;
+}
