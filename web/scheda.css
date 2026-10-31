@@ -937,7 +937,9 @@
   border-radius: var(--sg-radius, 8px);
 }
 /* «Dove scrivo»: le tue stanze come voci, il resto dietro «Altro…». */
-.room-mine-title { margin: 10px 0 4px; font-weight: 600; }
+.room-mine-title { margin: 10px var(--sg-space-3) 4px; font-weight: 600; }
+#nav-room > .hint, #nav-room > .room-other { margin-inline: var(--sg-space-3); }
+#index-list .navitem .count { margin-inline-start: .6em; color: var(--sg-muted); }
 .room-list .room-item { display: flex; justify-content: space-between; gap: 8px; }
 .room-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .room-other { margin-top: 10px; }

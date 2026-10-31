@@ -231,7 +231,10 @@ export async function fillRooms(host, stato, t, onPick) {
     return;
   }
   const qui = stato && stato.room;
-  host.replaceChildren(...stanze.map((r) => {
+  // QUELLA DOVE SCRIVI PER PRIMA: è la riga che si cerca con l'occhio
+  const ordinate = stanze.filter((r) => r.room === qui)
+    .concat(stanze.filter((r) => r.room !== qui));
+  host.replaceChildren(...ordinate.map((r) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "navitem room-item";
