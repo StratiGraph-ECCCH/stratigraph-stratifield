@@ -332,3 +332,18 @@ def test_UNO_E_MOLTI_SONO_DUE_FRASI():
         # numero delle occorrenze non è più due e non è la cosa da contare
         from tests.test_field_signature import LOCALES
         assert LOCALES["en"].get(chiave) and LOCALES["it"].get(chiave), chiave
+
+
+def test_LA_STANZA_DEL_LINK_SOPRAVVIVE_ALLA_FIRMA():
+    """SF-01 della scrivania (31 ottobre): firmando, il link della stanza si
+    perdeva e si atterrava sulla dettatura nel container locale. Adesso l'arrivo
+    si legge DOPO la firma, e chi è firmato viene puntato da solo sulla stanza
+    del link — il posto è suo dal 25 ottobre, non del nodo."""
+    import pathlib
+    shell = (pathlib.Path(__file__).resolve().parent.parent / "web" / "shell.js").read_text()
+    land = shell[shell.index("async function land()"):]
+    land = land[:land.index("\nwireShell();")]
+    assert land.index("await window.SGReady") < land.index("readArrival(window.location.search)")
+    assert 'piano.do === "offer" && SG().signed' in land and "pointRoom(corpo" in land
+    # …e sul telefono la colonna non copre il messaggio (SF-03)
+    assert 'if (state.mode !== "phone") $("sidenav").dataset.open = "true";' in land

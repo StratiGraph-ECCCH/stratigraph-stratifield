@@ -294,6 +294,12 @@ const STRINGS = {
     "node.room": "node · room",
     "node.local": "node · local",
     "node.offline": "offline",
+    "check.ok": "{where} · checked {time}",
+    "check.retry": "node unreachable · retrying in {s} s",
+    "check.queue": " · {n} queued",
+    "check.title": "Tap to check again now",
+    "shift.waiting": "The node does not answer: your signature resumes as soon as it is back. You do not need to sign in again.",
+    "arrival.pointed": "You are writing in the room «{room}».",
     "queue.mine": "{n} queued, I will send them when the node is back.",
     "queue.theirs.one": "1 note by {who}, waiting for them to return.",
     "queue.theirs.many": "{n} notes by {who}, waiting for them to return.",
@@ -521,6 +527,12 @@ const STRINGS = {
     "node.room": "nodo · stanza",
     "node.local": "nodo · locale",
     "node.offline": "offline",
+    "check.ok": "{where} · controllato alle {time}",
+    "check.retry": "nodo assente · riprovo fra {s} s",
+    "check.queue": " · {n} in coda",
+    "check.title": "Tocca per ricontrollare adesso",
+    "shift.waiting": "Il nodo non risponde: la tua firma riprende appena torna. Non serve firmare di nuovo.",
+    "arrival.pointed": "Scrivi nella stanza «{room}».",
     "queue.mine": "{n} in coda, li mando appena torna il nodo.",
     "queue.theirs.one": "1 nota di {who} in attesa che rientri.",
     "queue.theirs.many": "{n} note di {who} in attesa che rientri.",
@@ -1989,8 +2001,16 @@ const NODE = HERE.replace(/\/+$/, "");
 // file for the long version of every comment here; it is not vendored because
 // this page has no build step and no imports on purpose.
 //
-// The token is kept in memory only — never in localStorage. A field device is
-// lent, dropped and borrowed; a token on its disk outlives the person holding it.
+// The ACCESS token is kept in memory only — never in localStorage. A field
+// device is lent, dropped and borrowed; a token on its disk outlives the person
+// holding it.
+//
+// LA FIRMA DURA IL TURNO (E.D., 31 ottobre 2026, decisione D1 della scrivania
+// StratiField). Il telefono in trincea spegne lo schermo, il browser chiude la
+// scheda in background, e ogni volta si ricominciava dalla firma. Da adesso sul
+// dispositivo resta il PERMESSO DI RINNOVARE la firma (il refresh token), mai la
+// password e mai il token d'accesso, e solo fino a fine giornata: alle 23:59, o
+// prima con «Esci», sparisce. Vedi `SHIFT_KEY` più sotto.
 let TOKEN = "";
 //: who that token says is speaking: {subject, name}. `subject` is the ORCID —
 //: a public identifier, the very one that lands in the graph, which is why it
@@ -2060,6 +2080,7 @@ function subjectOf(claims) {
 function adopt(token, refresh) {
   TOKEN = token || "";
   REFRESH = TOKEN ? (refresh || "") : "";
+  keepShift();
   const claims = TOKEN ? claimsOf(TOKEN) : {};
   WHO = TOKEN
     ? { subject: subjectOf(claims),
@@ -2080,6 +2101,74 @@ function adopt(token, refresh) {
 // When: a fifth of its life before the end, and never less than 5 s nor more
 // than a minute ahead. A 60 s test token renews at 48 s; a 900 s one at 840 s.
 let REFRESH = "";
+
+//: IL TURNO SUL DISPOSITIVO: {refresh, id, until, subject, name}. `until` è la
+//: fine della giornata in cui si è firmato; dopo, il turno non riprende più.
+const SHIFT_KEY = "sg.shift.v1";
+function endOfDay() {
+  const d = new Date();
+  d.setHours(23, 59, 0, 0);
+  return d.getTime();
+}
+function readShift() {
+  try {
+    const shift = JSON.parse(localStorage.getItem(SHIFT_KEY) || "null");
+    if (!shift || !shift.refresh || !(Number(shift.until) > Date.now())) {
+      localStorage.removeItem(SHIFT_KEY);
+      return null;
+    }
+    return shift;
+  } catch { return null; }
+}
+/** Scrive il turno quando c'è una firma con il suo rinnovo; lo toglie quando la
+ *  firma se ne va (Esci, scadenza). La scadenza resta quella del primo giorno:
+ *  rinnovare non allunga il turno oltre mezzanotte. */
+function keepShift() {
+  try {
+    if (TOKEN && REFRESH) {
+      const before = readShift();
+      const sub = WHO ? WHO.subject : subjectOf(claimsOf(TOKEN));
+      const until = before && before.subject === sub ? before.until : endOfDay();
+      localStorage.setItem(SHIFT_KEY, JSON.stringify({
+        refresh: REFRESH, id: ID_TOKEN || "", until, subject: sub }));
+    } else if (!TOKEN && !RESUMING) {
+      localStorage.removeItem(SHIFT_KEY);
+    }
+  } catch { /* nessuno spazio sul dispositivo: la firma vive in memoria, come prima */ }
+}
+//: vero mentre si sta riprendendo un turno: in quel momento TOKEN è vuoto e il
+//: turno salvato non va cancellato
+let RESUMING = false;
+/** Riprende la firma dal turno salvato. `true` se c'è un token; `false` se il
+ *  turno non c'è o è stato rifiutato; `null` se il realm non risponde (il turno
+ *  resta, e il controllo riprova). */
+async function resumeShift() {
+  const shift = readShift();
+  if (!shift || !AUTHCFG || !AUTHCFG.token_endpoint) return false;
+  RESUMING = true;
+  try {
+    const answer = await fetch(AUTHCFG.token_endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "refresh_token",
+                                  client_id: AUTHCFG.client_id,
+                                  refresh_token: shift.refresh }).toString(),
+    });
+    const payload = await answer.json().catch(() => null);
+    if (!answer.ok || !payload || !payload.access_token) {
+      try { localStorage.removeItem(SHIFT_KEY); } catch {}
+      return false;
+    }
+    ID_TOKEN = payload.id_token || shift.id || "";
+    RESUMING = false;
+    adopt(payload.access_token, payload.refresh_token || shift.refresh);
+    return Boolean(TOKEN);
+  } catch {
+    return null;
+  } finally {
+    RESUMING = false;
+  }
+}
 //: the ID token of the same exchange — in memory, and used for ONE thing: the
 //: `id_token_hint` of the realm logout. Without it Keycloak asks «do you want
 //: to log out?» on a page of its own (measured on 25 October), which on a
@@ -2383,6 +2472,17 @@ const canSign = () =>
 // verifier is DELETED the moment the code is exchanged. One left behind is a
 // spare key on the doormat.
 const PKCE_KEY = "sg.pkce" + location.pathname;
+//: …e IL POSTO DA CUI SI ERA ARRIVATI (`?server=…&room=…`, `arrivo.js`). La
+//: firma passa da Keycloak e torna con `?code=…`: senza questa riga la stanza
+//: del link si perdeva e si atterrava sulla dettatura, nel container locale
+//: (SF-01 della scrivania, misurato il 31 ottobre). Non è una credenziale.
+const ARRIVAL_KEY = "sg.arrival" + location.pathname;
+function arrivalQuery() {
+  const query = new URLSearchParams(location.search);
+  const kept = new URLSearchParams();
+  for (const key of ["server", "room"]) if (query.get(key)) kept.set(key, query.get(key));
+  return kept.toString();
+}
 
 function base64url(bytes) {
   let text = "";
@@ -2408,6 +2508,11 @@ async function signIn() {
   const verifier = randomToken();
   const state = randomToken();
   sessionStorage.setItem(PKCE_KEY, JSON.stringify({ verifier, state }));
+  try {
+    const arrival = arrivalQuery();
+    if (arrival) sessionStorage.setItem(ARRIVAL_KEY, arrival);
+    else sessionStorage.removeItem(ARRIVAL_KEY);
+  } catch { /* senza spazio: si torna senza stanza, come prima */ }
   const url = new URL(AUTHCFG.authorization_endpoint);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", AUTHCFG.client_id);
@@ -2428,7 +2533,12 @@ const returningFromIdp = () => {
  *  authorization code in the address bar is a code in the browser history and
  *  in every screenshot somebody takes of the screen. */
 function cleanUrl() {
-  history.replaceState({}, "", location.pathname);
+  let arrival = "";
+  try {
+    arrival = sessionStorage.getItem(ARRIVAL_KEY) || "";
+    sessionStorage.removeItem(ARRIVAL_KEY);
+  } catch { /* nessuna stanza da riportare */ }
+  history.replaceState({}, "", location.pathname + (arrival ? "?" + arrival : ""));
 }
 
 /** Back from Keycloak: `?code=…` → a token in memory. */
@@ -2493,6 +2603,7 @@ async function signInReturn() {
  *  the page comes back unsigned because it comes back fresh. */
 function signOut() {
   TOKEN = ""; WHO = null; REFRESH = ""; clearTimeout(RENEW_TIMER);
+  try { localStorage.removeItem(SHIFT_KEY); } catch {}
   if (AUTHCFG && AUTHCFG.end_session_endpoint && AUTHCFG.client_id) {
     const url = new URL(AUTHCFG.end_session_endpoint);
     url.searchParams.set("client_id", AUTHCFG.client_id);
@@ -2596,9 +2707,9 @@ window.SG = {
     if (pick(access) === pick(ACCESS)) { ACCESS = access || null; return; }
     ACCESS = access || null;
     render();
-    // …e l'intestazione e la colonna SUBITO, non al battito dopo: misurato,
+    // …e l'intestazione e la colonna SUBITO, non al controllo dopo: misurato,
     // dopo «Scrivi qui» dicevano «container locale» per fino a 8 s
-    void ping();
+    void ping().catch(() => {});
   },
 };
 
@@ -2781,7 +2892,7 @@ async function ping() {
     // ottobre il nodo non ha un posto solo, e la sua configurazione può dire
     // «locale» mentre questa persona scrive in una stanza.
     const inRoom = Boolean(ACCESS && ACCESS.room) || health.writes_to.startsWith("room");
-    state.textContent = t(inRoom ? "node.room" : "node.local");
+    state.textContent = checkSays(t(inRoom ? "node.room" : "node.local"));
     // Which speech road, from what the node SAYS it has — asked every time, so a
     // node that gains (or loses) a model is followed rather than remembered.
     chooseSpeechRoad(health);
@@ -2798,8 +2909,84 @@ async function ping() {
     state.textContent = t("node.offline");
     // Un nodo che non risponde non tiene nessuna sessione per nessuno.
     window.SGPosture?.(null);
+    throw new Error("node");
   }
 }
+
+/* ── IL CONTROLLO (31 ottobre 2026, «La connessione» nella scrivania) ──────
+ *
+ * Al posto del battito ogni 8 secondi. Un telefono in trincea non resta
+ * collegato: fa richieste brevi, ciascuna completa da sola, e quando torna in
+ * primo piano RICONTROLLA tutto, in quest'ordine:
+ *
+ *   1 · il nodo c'è?            (`/health`, che ridisegna stanza e postura)
+ *   2 · la firma vale?          (la rinnova se scade a breve, o la riprende
+ *                                dal turno se la scheda era stata chiusa)
+ *   3 · svuota la coda          (prima i byte, poi le parole; rifare è innocuo)
+ *   4 · cosa è cambiato?        (l'elenco delle US, se è lui davanti)
+ *   5 · lo dice                 (nell'intestazione, con l'ora)
+ *
+ * QUANDO: all'avvio, al risveglio dello schermo, al ritorno della rete, a mano
+ * (toccando lo stato), e ogni 20 s solo finché la pagina è visibile. Se il
+ * nodo non risponde riprova a 5 s, 30 s, 2 min. A schermo spento, niente.
+ */
+const CHECK_EVERY = 20000;
+const CHECK_BACKOFF = [5000, 30000, 120000];
+let CHECK_TIMER = 0;
+let CHECK_FAILS = 0;
+let CHECK_AT = 0;
+let CHECKING = null;
+
+function hhmm(when) {
+  return new Date(when).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
+}
+/** La riga dello stato: dove si scrive, quando si è controllato, cosa aspetta. */
+function checkSays(where) {
+  const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
+  return t("check.ok", { where, time: hhmm(CHECK_AT || Date.now()) })
+    + (waiting ? t("check.queue", { n: waiting }) : "");
+}
+function scheduleCheck(wait) {
+  clearTimeout(CHECK_TIMER);
+  if (document.visibilityState === "hidden") return;
+  CHECK_TIMER = setTimeout(() => { void check(); }, wait);
+}
+async function check() {
+  if (CHECKING) return CHECKING;
+  CHECKING = (async () => {
+    try {
+      // 2 prima di 1 quando la firma manca: senza firma `/health` risponde lo
+      // stesso, ma la stanza di chi firma (`ACCESS`) non si saprebbe
+      if (!TOKEN && readShift()) {
+        const back = await resumeShift();
+        if (back === null) throw new Error("realm");
+      } else if (TOKEN) {
+        await freshToken();
+      }
+      CHECK_AT = Date.now();
+      await ping();                       // 1 · e dentro anche 3, `flush()`
+      if (window.SGShell?.state?.panel === "index") window.SGShell.repaintIndex?.();
+      CHECK_FAILS = 0;
+      scheduleCheck(CHECK_EVERY);
+    } catch {
+      const wait = CHECK_BACKOFF[Math.min(CHECK_FAILS, CHECK_BACKOFF.length - 1)];
+      CHECK_FAILS += 1;
+      state.className = "state off";
+      state.textContent = t("check.retry", { s: Math.round(wait / 1000) })
+        + (readQueue().length ? t("check.queue", { n: readQueue().length }) : "");
+      scheduleCheck(wait);
+    }
+  })();
+  try { return await CHECKING; } finally { CHECKING = null; }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") void check();
+  else clearTimeout(CHECK_TIMER);
+});
+state.setAttribute("role", "button");
+state.tabIndex = 0;
+state.addEventListener("click", () => { void check(); });
+state.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") void check(); });
 $("signin").addEventListener("click", signIn);
 $("signout").addEventListener("click", signOut);
 
@@ -2824,16 +3011,26 @@ async function boot() {
     await signInReturn();
   } else if (serviceDoorOpen(AUTHCFG)) {
     adopt(SERVICE_TOKEN);               // the bench door, declared above
+  } else if (readShift()) {
+    // il turno di oggi: si riprende senza chiedere niente. Se il realm non
+    // risponde il turno resta, e il controllo riprova finché torna.
+    if (await resumeShift() === null) show(false, t("shift.waiting"), "", LOCALE);
   }
   paintStrings();
-  ping();
-  setInterval(ping, 8000);
-  addEventListener("online", flush);
+  state.title = t("check.title");
+  void check();
+  addEventListener("online", () => { void check(); });
+  SG_READY();
   // The voices arrive after the engine has loaded them, and `getVoices()` is
   // empty until then — so nothing is cached and this only exists to repaint
   // once they are there, in case a first answer arrived silently.
   try { speechSynthesis.addEventListener("voiceschanged", () => {}); } catch {}
 }
+//: LA PAGINA È PRONTA: firma ripresa o no, stringhe dipinte. `shell.js`
+//: aspetta questo prima di leggere l'arrivo, perché l'indirizzo con la stanza
+//: torna da Keycloak solo dopo `signInReturn` (SF-01).
+let SG_READY = () => {};
+window.SGReady = new Promise((resolve) => { SG_READY = resolve; });
 boot();
 
 // ── speak ───────────────────────────────────────────────────────────────────

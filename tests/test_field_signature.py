@@ -101,9 +101,12 @@ def test_only_the_verifier_and_the_state_survive_the_redirect():
     are not credentials, they are use-and-throw, and `sessionStorage` dies with
     the tab."""
     saved = re.findall(r"sessionStorage\.setItem\(([^,]+),", CODE)
-    assert saved == ["PKCE_KEY"], saved
+    # …and, since 31 October, the PLACE the link named (`?server=…&room=…`):
+    # not a credential, and without it the room was lost on the way back (SF-01)
+    assert saved == ["PKCE_KEY", "ARRIVAL_KEY"], saved
     assert re.search(r"sessionStorage\.removeItem\(PKCE_KEY\)", CODE), \
         "a verifier that outlives its exchange is a spare key on the doormat"
+    assert re.search(r"sessionStorage\.removeItem\(ARRIVAL_KEY\)", CODE)
 
 
 def test_the_token_is_adopted_in_exactly_one_place():
@@ -117,7 +120,8 @@ def test_the_token_is_adopted_in_exactly_one_place():
 # ── the code does not stay in the address bar ────────────────────────────────
 
 def test_the_url_is_cleaned_after_the_exchange():
-    assert "history.replaceState({}, \"\", location.pathname)" in CODE
+    # the code goes; the room of the link, if there was one, comes back (SF-01)
+    assert 'history.replaceState({}, "", location.pathname + (arrival ? "?" + arrival : ""))' in CODE
     body = CODE[CODE.index("async function signInReturn"):]
     body = body[:body.index("\nfunction signOut")]
     assert "cleanUrl();" in body, "the code must come off the URL on EVERY path"
@@ -475,3 +479,42 @@ def test_health_says_which_s3dgraphy_is_running(client):
 
     assert client.get("/health").json()["s3dgraphy"] == s3dgraphy.__version__
     assert client.get("/v1/health").json()["s3dgraphy"] == s3dgraphy.__version__
+
+
+# ── la firma dura il turno (E.D., 31 ottobre 2026, decisione D1) ─────────────
+
+def test_the_shift_keeps_the_RIGHT_TO_RENEW_and_never_the_token():
+    """On the device stays the refresh token — the right to renew — never the
+    access token and never a password, and only until the end of the day."""
+    body = CODE[CODE.index("function keepShift"):]
+    body = body[:body.index("\n}\n")]
+    assert "localStorage.setItem(SHIFT_KEY" in body
+    assert "refresh: REFRESH" in body and "TOKEN," not in body.replace("TOKEN &&", "")
+    assert "endOfDay()" in body
+    # a day, and not one second more: renewing does not push midnight away
+    assert "before.until" in body
+    assert "d.setHours(23, 59, 0, 0)" in CODE
+
+
+def test_the_shift_ends_with_esci_and_with_a_refused_renewal():
+    sign_out = CODE[CODE.index("function signOut"):]
+    sign_out = sign_out[:sign_out.index("\n}\n")]
+    assert "localStorage.removeItem(SHIFT_KEY)" in sign_out
+    resume = CODE[CODE.index("async function resumeShift"):]
+    resume = resume[:resume.index("\n}\n")]
+    # refused by the realm → gone; realm unreachable → kept (null), retried
+    assert "localStorage.removeItem(SHIFT_KEY)" in resume and "return null" in resume
+
+
+def test_the_check_replaces_the_eight_second_beat():
+    """A phone in a trench is not kept connected: it checks when it comes back
+    to the foreground, and never on a clock while the screen is off."""
+    assert "setInterval(ping" not in CODE
+    assert 'document.addEventListener("visibilitychange"' in CODE
+    assert "CHECK_BACKOFF = [5000, 30000, 120000]" in CODE
+    check = CODE[CODE.index("async function check()"):]
+    check = check[:check.index("\n}\n")]
+    # the order of the check: signature, node (which flushes), what changed
+    assert check.index("resumeShift") < check.index("await ping()") < check.index("repaintIndex")
+    schedule = CODE[CODE.index("function scheduleCheck"):]
+    assert 'visibilityState === "hidden"' in schedule[:300]

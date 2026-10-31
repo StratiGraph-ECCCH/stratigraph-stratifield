@@ -17,7 +17,7 @@ import {
 } from "./scheda.js";
 import { drawSheet, hasSheet, optionsFor, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
-import { mount as mountRoom, postureOf, roomOf } from "./room.js";
+import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./room.js";
 import { mount as mountIndex } from "./indice.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
@@ -1108,6 +1108,10 @@ function wireShell() {
  * l'ha, in silenzio, per aver aperto un link.
  */
 async function land() {
+  // LA FIRMA PRIMA DELL'ARRIVO (SF-01, 31 ottobre): l'indirizzo con la stanza
+  // torna da Keycloak solo dopo che `index.html` ha scambiato il codice, e
+  // decidere prima voleva dire leggere `?code=…` e atterrare nel posto sbagliato.
+  if (window.SGReady) await window.SGReady;
   const arrivo = readArrival(window.location.search);
   if (arrivo.refused.length) {
     // RIFIUTATO A VOCE, come fa `FORBIDDEN` in `app/handoff.py`: accettarne uno
@@ -1125,10 +1129,29 @@ async function land() {
   const piano = arrivalPlan(arrivo, (mio && mio.room) || roomOf(salute));
   if (piano.do === "nothing") return;
 
+  if (piano.do === "offer" && SG().signed) {
+    // DAL 25 OTTOBRE IL POSTO È DI CHI FIRMA (`app/scrivani.py`), non del nodo:
+    // puntare la stanza del link non la toglie a nessun altro. Chi ha aperto il
+    // link di una stanza ci vuole scrivere, quindi si punta da solo — e se la
+    // stanza dice di no (nessun ruolo, server non fidato) si dice e si resta.
+    const corpo = piano.server
+      ? { link: `${piano.server.replace(/\/+$/, "")}/open?room=${encodeURIComponent(piano.room)}` }
+      : { room: piano.room, server: (salute && salute.server_hint) || "" };
+    const detto = await pointRoom(corpo, SG().t);
+    const mioOra = SG().where ? SG().where() : null;
+    if (mioOra && mioOra.room === piano.room) {
+      SG().show(true, SG().t("arrival.pointed", { room: piano.room }));
+      await showIndex(false);
+      return;
+    }
+    SG().show(false, detto);
+  }
+
   if (piano.do === "offer") {
     // La colonna, aperta sul pannello che punta il nodo, con la stanza già
-    // scritta: il gesto resta uno, e resta di chi lo fa.
-    $("sidenav").dataset.open = "true";
+    // scritta: il gesto resta uno, e resta di chi lo fa. SUL TELEFONO NO: la
+    // colonna è un foglio che copre il messaggio (SF-03), e il messaggio basta.
+    if (state.mode !== "phone") $("sidenav").dataset.open = "true";
     const campo = $("room-target");
     if (campo) campo.value = piano.server
       ? `${piano.server.replace(/\/+$/, "")}/open?room=${encodeURIComponent(piano.room)}`
