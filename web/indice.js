@@ -39,6 +39,36 @@ const SG = () => window.SG || {};
  * sbagliato sembra giusto. */
 export const filters = { q: "", area: null, ai: false, inc: false };
 
+/** IL NOME DI UNO STANDARD PER PERSONE (SF-06, D4). Quello che la definizione
+ *  dichiara (`standard.short`, una stringa o un dizionario per lingua); se non
+ *  lo dichiara, autorità · codice, più l'anno quando la versione è un anno.
+ *  L'identificativo (`iccd-us-2021`) resta per le macchine. */
+export function standardName(item, lang) {
+  if (!item) return "";
+  const std = item.standard || {};
+  const short = std.short;
+  if (short && typeof short === "object") {
+    const said = short[lang] || short.en || Object.values(short)[0];
+    if (said) return String(said);
+  } else if (short) {
+    return String(short);
+  }
+  const head = [std.authority, std.code].filter(Boolean).join(" · ");
+  const year = /^\d{4}$/.test(String(std.version || "")) ? ` ${std.version}` : "";
+  return head ? head + year : String(item.id || "");
+}
+
+/** Le unità in ordine di NUMERO, non di testo: «US 2» prima di «US 10». */
+export function byNumber(a, b) {
+  return String(a.number || a.name || a.id || "")
+    .localeCompare(String(b.number || b.name || b.id || ""), undefined, { numeric: true });
+}
+
+//: vero mentre l'elenco chiede «con quale standard?»: il controllo non ridisegna
+//: sotto le dita di chi sta scegliendo
+let asking = false;
+export const isAsking = () => asking;
+
 /** Quanto è piena un'unità, da 0 a 1 — o null se non si sa su quanti campi.
  *
  *  Il totale è quello della definizione con cui l'unità è stata compilata
@@ -76,7 +106,7 @@ export function matches(u, f, listing, fallback) {
 export const SHOWN = 40;
 
 /** La riga di un'unità: cosa è, quanto è piena, e chi l'ha toccata per ultimo. */
-function line(u, t, onPick) {
+function line(u, t, onPick, listing, lang) {
   const riga = document.createElement("button");
   riga.type = "button";
   riga.className = "navitem indice-riga";
@@ -114,6 +144,17 @@ function line(u, t, onPick) {
     ai.title = t("flt.ai");
     nome.after(ai);
   }
+  // CON QUALE STANDARD È STATA COMPILATA (SF-08): lo dichiara l'unità stessa
+  // (`data.scheda`, audit B5b) quando è passata da una scheda; dettata o
+  // importata non lo dice, e la riga lo scrive invece di lasciarlo scoprire.
+  const declared = u.scheda && u.scheda.template;
+  const con = document.createElement("span");
+  con.className = "indice-cosa indice-std";
+  con.textContent = declared
+    ? t("index.with", { std: standardName((listing || []).find((x) => x.id === declared)
+                                          || { id: declared }, lang) })
+    : t("index.noStandard");
+  riga.append(con);
   if (u.description) {
     const cosa = document.createElement("span");
     cosa.className = "indice-cosa";
@@ -145,6 +186,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
   /** Il secondo tocco: con quale standard si riapre questa unità. */
   function askStandard(u) {
     const lista = schede();
+    asking = true;
     host.replaceChildren();
     const detto = document.createElement("p");
     detto.className = "hint";
@@ -154,7 +196,12 @@ export function mount({ t, openScheda, schede, current = () => null }) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "navitem";
-      b.textContent = item.id;
+      b.textContent = standardName(item, SG().locale);
+      b.title = item.id;
+      const quanti = document.createElement("span");
+      quanti.className = "count";
+      quanti.textContent = t("index.fields.many", { n: item.fields });
+      b.append(quanti);
       //  IL NUMERO, non il nome: gli attrezzi vogliono «12» e non «US 12», e
       //  `update_su` rifiuta un numero che non corrisponde a nessun nodo — che
       //  è la sua virtù. Il numero lo dice il nodo (`number_from_unit_id`),
@@ -178,6 +225,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
 
   async function repaint() {
     const seam = SG();
+    asking = false;
     host.replaceChildren();
     if (!seam.signed) { nota.textContent = t("index.signin"); return; }
     let letto;
@@ -197,7 +245,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
       titolo.textContent = letto.room
         ? t("index.head.room", { room: letto.room }) : t("index.head.local");
     }
-    const unita = letto.units || [];
+    const unita = (letto.units || []).slice().sort(byNumber);
     // LE STESSE UNITÀ del completamento e di ‹ ›: una lettura, condivisa.
     room.units = unita;
     room.read = true;
@@ -253,7 +301,8 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     const riempi = () => {
       const visti = unita.filter((u) => matches(u, filters, listing, fallback));
       conta.textContent = t("flt.count", { n: visti.length, t: unita.length });
-      elenco.replaceChildren(...visti.slice(0, SHOWN).map((u) => line(u, t, pick)));
+      elenco.replaceChildren(...visti.slice(0, SHOWN)
+        .map((u) => line(u, t, pick, listing, SG().locale)));
       if (!visti.length) {
         const vuoto = document.createElement("p");
         vuoto.className = "hint";

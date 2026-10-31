@@ -487,6 +487,9 @@ const STRINGS = {
     "schede.none": "This node serves no sheets.",
     "schede.noCache": "No sheet in the cache: the first time needs a connection.",
     "schede.countTitle": "trench fields out of all fields",
+    "schede.count": "{t} in the trench of {n}",
+    "index.with": "recorded with {std}",
+    "index.noStandard": "standard chosen at first opening",
     "scheda.noDefinition": "I do not have the definition of «{id}» and I cannot ask the node for it. I cannot draw a sheet I do not know.",
     "scheda.noReread": "I cannot read US {us} back from the node ({status}): the sheet shows only the number.",
     "scheda.nodeSilent": "The node does not answer: US {us} opens with the number only.",
@@ -710,6 +713,9 @@ const STRINGS = {
     "schede.none": "Questo nodo non serve schede.",
     "schede.noCache": "Nessuna scheda in cache: serve una connessione la prima volta.",
     "schede.countTitle": "campi da trincea su campi totali",
+    "schede.count": "{t} da trincea su {n}",
+    "index.with": "compilata con {std}",
+    "index.noStandard": "lo standard si sceglie alla prima apertura",
     "scheda.noDefinition": "Non ho la definizione di «{id}» e non riesco a chiederla al nodo. Non posso disegnare una scheda che non conosco.",
     "scheda.noReread": "Non riesco a rileggere la US {us} dal nodo ({status}): la scheda mostra solo il numero.",
     "scheda.nodeSilent": "Il nodo non risponde: la US {us} si apre col solo numero.",
@@ -2965,7 +2971,7 @@ async function check() {
       }
       CHECK_AT = Date.now();
       await ping();                       // 1 · e dentro anche 3, `flush()`
-      if (window.SGShell?.state?.panel === "index") window.SGShell.repaintIndex?.();
+      if (window.SGShell?.state?.panel === "index") await window.SGShell.refreshIndex?.();
       CHECK_FAILS = 0;
       scheduleCheck(CHECK_EVERY);
     } catch {

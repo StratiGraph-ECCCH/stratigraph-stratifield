@@ -18,7 +18,7 @@ import {
 import { drawSheet, hasSheet, optionsFor, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
 import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./room.js";
-import { mount as mountIndex } from "./indice.js";
+import { isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
@@ -306,11 +306,15 @@ async function loadSchede() {
     button.type = "button";
     button.className = "navitem";
     button.dataset.scheda = item.id;
-    button.textContent = item.id;
+    // IL NOME PER PERSONE, e i numeri detti in una frase (SF-06): «25/59» non
+    // lo spiegava nessuno. L'identificativo resta nel suggerimento.
+    button.textContent = standardName(item, SG().locale);
+    button.title = item.id;
     const count = document.createElement("span");
-    count.className = "count";
-    count.textContent = `${item.recorded_in.trench}/${item.fields}`;
-    count.title = tr("schede.countTitle", "trench fields out of all fields");
+    count.className = "indice-cosa";
+    count.textContent = tr("schede.count",
+                           `${item.recorded_in.trench} in the trench of ${item.fields}`,
+                           { t: item.recorded_in.trench, n: item.fields });
     button.append(count);
     button.addEventListener("click", () => openScheda(item.id));
     host.append(button);
@@ -1193,4 +1197,7 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                    goUnit: (n) => goUnit(n), stepUnit: (d) => stepUnit(d),
                    showIndex: () => showIndex(),
                    repaintPhotos: () => repaintPhotos(),
-                   repaintIndex: () => repaintIndex() };
+                   repaintIndex: () => repaintIndex(),
+                   // per il CONTROLLO: ridisegna l'elenco, ma non mentre chi lo
+                   // usa sta scegliendo lo standard
+                   refreshIndex: () => (indexAsking() ? null : repaintIndex()) };

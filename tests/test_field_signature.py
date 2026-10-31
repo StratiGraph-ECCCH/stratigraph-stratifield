@@ -515,6 +515,6 @@ def test_the_check_replaces_the_eight_second_beat():
     check = CODE[CODE.index("async function check()"):]
     check = check[:check.index("\n}\n")]
     # the order of the check: signature, node (which flushes), what changed
-    assert check.index("resumeShift") < check.index("await ping()") < check.index("repaintIndex")
+    assert check.index("resumeShift") < check.index("await ping()") < check.index("refreshIndex")
     schedule = CODE[CODE.index("function scheduleCheck"):]
     assert 'visibilityState === "hidden"' in schedule[:300]

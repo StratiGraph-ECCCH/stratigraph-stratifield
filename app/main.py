@@ -554,8 +554,13 @@ def list_schede() -> Dict[str, Any]:
                     "version": s.version,
                     "saveable": s.recipe is not None,
                     "languages": s.languages,
+                    # `short`: IL NOME PER PERSONE, se la definizione lo
+                                    # dichiara (decisione D4 della scrivania
+                                    # StratiField, 31 ottobre): una stringa o
+                                    # un dizionario per lingua. Assente, il
+                                    # client compone autorità · codice.
                     "standard": {k: s.standard.get(k) for k in
-                                 ("authority", "code", "version", "invented")},
+                                 ("authority", "code", "version", "invented", "short")},
                     "fields": len(s.fields),
                     # The three counts, so a client can SEE that a definition
                     # has not been decided yet instead of discovering it as an
