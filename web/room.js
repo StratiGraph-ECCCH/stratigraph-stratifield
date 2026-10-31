@@ -208,6 +208,8 @@ function roleName(role, t) {
 /** Chiede al nodo le stanze di chi è firmato e le disegna come voci. */
 export async function fillRooms(host, stato, t, onPick) {
   const seam = SG();
+  // SENZA FIRMA non si chiede: sarebbe un 401 ogni venti secondi
+  if (!seam.signed) { host.replaceChildren(); return; }
   let letto;
   try {
     const risposta = await seam.request("/v1/rooms", {});
