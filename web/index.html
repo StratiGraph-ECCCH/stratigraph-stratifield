@@ -307,6 +307,7 @@ const STRINGS = {
     "gate.why.missing": "Missing: {what}.",
     "gate.why.unreachable": "I cannot ask the node how to sign in. Without a signature I cannot accept dictation, because nobody could be its author.",
     "action.record": "🎙 Hold and speak",
+    "action.recordTap": "🎙 Tap and speak",
     "action.shoot": "📷 Photo",
     "action.where": "📍 Where am I",
     "action.send": "Send",
@@ -552,6 +553,7 @@ const STRINGS = {
     "gate.why.missing": "Manca: {what}.",
     "gate.why.unreachable": "Non riesco a chiedere al nodo come si firma. Senza firma non posso accettare dettature, perché nessuno potrebbe esserne l'autore.",
     "action.record": "🎙 Tieni premuto e parla",
+    "action.recordTap": "🎙 Tocca e parla",
     "action.shoot": "📷 Scatta",
     "action.where": "📍 Dove sono",
     "action.send": "Manda",
@@ -2430,7 +2432,7 @@ function paintStrings() {
   set("signed-as", t("signed.as"));
   set("signout", t("action.signout"));
   set("signin", t("action.signin"));
-  set("rec", t("action.record"));
+  set("rec", recordLabel());
   set("shoot", t("action.shoot"));
   set("where", t("action.where"));
   set("chat-open", t("chat.open"));
@@ -3162,7 +3164,16 @@ function chooseSpeechRoad(health) {
   if (road === SPEECH_ROAD) return;
   SPEECH_ROAD = road;
   $("rec").disabled = road === "type";
+  $("rec").textContent = recordLabel();
   $("hint").textContent = recognitionHint();
+}
+
+/** IL BOTTONE DICE IL GESTO DELLA SUA STRADA (31 ottobre, iPhone vero): sulla
+ *  strada del browser si TOCCA una volta, su quella del nodo si TIENE premuto.
+ *  «Tieni premuto» su Safari faceva tenere premuto, e iOS selezionava il testo
+ *  del bottone invece di ascoltare. */
+function recordLabel() {
+  return SPEECH_ROAD === "browser" ? t("action.recordTap") : t("action.record");
 }
 
 // ── road 2 · the browser hears ──────────────────────────────────────────────

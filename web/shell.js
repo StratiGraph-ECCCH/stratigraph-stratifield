@@ -1043,7 +1043,11 @@ function wireShell() {
     state.panel = "voice";
     $("scheda").hidden = true;
     $("index").hidden = true;
-    $("work").hidden = false;
+    // LA DETTATURA SOLO A CHI FIRMA (31 ottobre, dal telefono vero): con la
+    // voce «Detta» in barra il pannello si apriva anche senza firma, e una
+    // dettatura finiva in coda come «nota senza firma». Senza firma resta la
+    // porta: decide `render()` nella pagina, che sa chi è firmato.
+    $("work").hidden = !SG().signed;
     paintThumbbar();
     markNav("");
     $("nav-voice").setAttribute("aria-current", "true");
