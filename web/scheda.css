@@ -754,7 +754,10 @@
 
 /* lo stato è una pastiglia, e si tocca per ricontrollare */
 .state {
-  flex: none; white-space: nowrap; cursor: pointer;
+  /* si accorcia con i puntini invece di allargare la pagina (31 ottobre) */
+  flex: 0 1 auto; min-width: 0; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; cursor: pointer;
   padding: 3px 10px; border-radius: 999px;
   background: color-mix(in srgb, var(--sg-ok) 16%, transparent);
   color: var(--sg-text);
@@ -947,3 +950,5 @@
 .room-other .row { display: flex; gap: 6px; margin: 6px 0; }
 .room-other input { flex: 1; min-width: 0; }
 .room-back { font-size: var(--sg-text-sm); }
+.indice-altri { margin-top: 8px; }
+.indice-altri summary { cursor: pointer; padding: 10px 14px; color: var(--sg-muted); }

@@ -391,7 +391,7 @@ def test_UN_SOLO_POSTO_SCRIVE_LA_SCELTA():
     shell = sorgenti.senza_prosa((WEB / "shell.js").read_text(encoding="utf-8"))
     assert "sg.scheda.mode.v1" not in shell, (
         "shell.js nomina di nuovo la chiave: la possiede scheda.js")
-    assert "rememberMode(value, window.innerWidth)" in shell
+    assert "rememberMode(value, viewWidth())" in shell
     #  …e chi disegna il ritorno lo chiede alla funzione pura invece di
     #  ricopiarne la regola: la stessa disciplina di `paintThumbbar`
     assert "wayBack(state.mode, window.innerWidth)" in shell

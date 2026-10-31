@@ -18,7 +18,7 @@ WEB = pathlib.Path(__file__).resolve().parent.parent / "web"
 def _run(expr: str):
     if not shutil.which("node"):
         pytest.skip("node non c'è")
-    code = (f"import {{ standardName, byNumber }} from '{(WEB / 'indice.js').as_uri()}';"
+    code = (f"import {{ standardName, byNumber, splitByUse }} from '{(WEB / 'indice.js').as_uri()}';"
             f"console.log(JSON.stringify({expr}));")
     out = subprocess.run(["node", "--input-type=module", "-e", code],
                          capture_output=True, text=True, timeout=30)
@@ -56,3 +56,20 @@ def test_la_riga_dice_con_quale_standard_e_il_controllo_non_disturba_la_scelta()
     assert "asking = true;" in indice and "asking = false;" in indice
     shell = (WEB / "shell.js").read_text(encoding="utf-8")
     assert "refreshIndex: () => (indexAsking() ? null : repaintIndex())" in shell
+
+
+def test_gli_standard_della_stanza_vengono_prima_e_gli_altri_dietro():
+    lista = [{"id": "dai"}, {"id": "ue"}, {"id": "iccd"}, {"id": "dana"}]
+    unita = [{"scheda": {"template": "iccd"}}, {"scheda": {"template": "iccd"}},
+             {"scheda": {"template": "ue"}}, {}]
+    got = _run(f"splitByUse({json.dumps(lista)}, {json.dumps(unita)})")
+    assert [x["id"] for x in got["used"]] == ["iccd", "ue"]
+    assert [x["id"] for x in got["others"]] == ["dai", "dana"]
+
+
+def test_il_telefono_misura_lo_schermo_non_la_pagina_spinta():
+    shell = (WEB / "shell.js").read_text()
+    assert "window.innerWidth" not in shell.replace(
+        "return Math.min(window.innerWidth, screenWide);", "")
+    css = (WEB / "scheda.css").read_text()
+    assert "text-overflow: ellipsis;\n  white-space: nowrap; cursor: pointer;" in css

@@ -179,7 +179,7 @@ function takePosture(health) {
 /* ── il modo ─────────────────────────────────────────────────────────────── */
 
 function paintModes() {
-  const proposed = proposeMode(window.innerWidth);
+  const proposed = proposeMode(viewWidth());
   const bar = $("modes");
   bar.replaceChildren();
   for (const [value, key, fallback] of MODES) {
@@ -196,7 +196,7 @@ function paintModes() {
       // …E LA SCELTA PORTA LA FINESTRA SU CUI È STATA FATTA. `rememberMode` è
       // l'unico posto che scrive: qui prima c'era una `setItem` per conto suo,
       // cioè un secondo scrittore della stessa chiave.
-      rememberMode(value, window.innerWidth);
+      rememberMode(value, viewWidth());
       setMode(value);
     });
     bar.append(chip);
@@ -267,7 +267,7 @@ function paintThumbbar() {
 function paintWayBack() {
   const bottone = $("tb-back");
   if (!bottone) return;
-  const verso = wayBack(state.mode, window.innerWidth);
+  const verso = wayBack(state.mode, viewWidth());
   bottone.hidden = !verso;
   if (!verso) return;
   const voce = MODES.find(([value]) => value === verso);
@@ -286,6 +286,22 @@ function setNavOpen(open) {
   $("sidenav").dataset.open = open ? "true" : "false";
   const velo = $("nav-scrim");
   if (velo) velo.hidden = !(open && state.mode === "phone");
+}
+
+/** LA LARGHEZZA DELLO SCHERMO, non quella che il contenuto ha spinto.
+ *  Misurato il 31 ottobre (iPhone vero, nodo irraggiungibile): la pastiglia
+ *  «nodo assente · riprovo fra 5 s · 1 in coda», che non va a capo, allargava
+ *  la pagina; un browser da telefono allora allarga la finestra di layout
+ *  (`innerWidth` 700 su uno schermo da 390), la soglia diceva «tablet» e il
+ *  telefono perdeva barra e cassetto. Lo schermo è il tetto. */
+function viewWidth() {
+  //  iOS dice lo schermo sempre in verticale: in orizzontale vale il lato lungo
+  const sc = window.screen || {};
+  const sides = [sc.width || Infinity, sc.height || Infinity];
+  const landscape = window.matchMedia
+    && window.matchMedia("(orientation: landscape)").matches;
+  const screenWide = landscape ? Math.max(...sides) : Math.min(...sides);
+  return Math.min(window.innerWidth, screenWide);
 }
 
 function setMode(mode) {
@@ -1040,7 +1056,7 @@ function wireThumbbar() {
   $("tb-back").addEventListener("click", () => {
     const verso = $("tb-back").dataset.mode;
     if (!verso) return;
-    rememberMode(verso, window.innerWidth);
+    rememberMode(verso, viewWidth());
     setMode(verso);
   });
 }
@@ -1141,12 +1157,12 @@ function wireShell() {
   // Il modo si RIPROPONE quando la finestra cambia, ma non sovrascrive una
   // scelta: `effectiveMode` guarda prima cosa è stato scelto.
   window.addEventListener("resize", () => {
-    const wanted = effectiveMode(window.innerWidth);
+    const wanted = effectiveMode(viewWidth());
     if (wanted !== state.mode) setMode(wanted);
     else paintModes();
   });
 
-  setMode(effectiveMode(window.innerWidth));
+  setMode(effectiveMode(viewWidth()));
 }
 
 /* ── SI ARRIVA DA UNA STANZA ───────────────────────────────────────────────

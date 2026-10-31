@@ -182,6 +182,20 @@ function line(u, t, onPick, listing, lang) {
   return riga;
 }
 
+/** Gli standard divisi: quelli già usati nella stanza (dal più usato) e gli
+ *  altri, nell'ordine del nodo. Pura, per poterla provare. */
+export function splitByUse(lista, unita) {
+  const conta = new Map();
+  for (const u of unita) {
+    const id = u && u.scheda && u.scheda.template;
+    if (id) conta.set(id, (conta.get(id) || 0) + 1);
+  }
+  const used = lista.filter((x) => conta.has(x.id))
+    .sort((a, b) => conta.get(b.id) - conta.get(a.id));
+  const others = lista.filter((x) => !conta.has(x.id));
+  return { used, others };
+}
+
 export function mount({ t, openScheda, schede, current = () => null }) {
   const host = $("index-list");
   const nota = $("index-note");
@@ -199,7 +213,12 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     detto.textContent = u ? t("index.which", { unit: u.name || u.id })
                            : t("index.newWhich");
     host.append(detto);
-    for (const item of lista) {
+    // GLI STANDARD DI QUESTA STANZA PER PRIMI (31 ottobre: «le schede
+    // internazionali così sono dispersive»). Quelli con cui la stanza ha già
+    // compilato, dal più usato; gli altri dietro «Altri standard». Una stanza
+    // che non ha ancora compilato niente li mostra tutti.
+    const { used, others } = splitByUse(lista, room.units || []);
+    const voce = (item) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "navitem";
@@ -215,7 +234,20 @@ export function mount({ t, openScheda, schede, current = () => null }) {
       //  non questa pagina.
       b.addEventListener("click",
         () => openScheda(item.id, u ? { us: u.number } : null));
-      host.append(b);
+      return b;
+    };
+    if (used.length) {
+      host.append(...used.map(voce));
+      if (others.length) {
+        const altri = document.createElement("details");
+        altri.className = "indice-altri";
+        const apri = document.createElement("summary");
+        apri.textContent = t("index.otherStandards", { n: others.length });
+        altri.append(apri, ...others.map(voce));
+        host.append(altri);
+      }
+    } else {
+      host.append(...others.map(voce));
     }
     if (!lista.length) {
       const vuoto = document.createElement("p");
