@@ -87,7 +87,7 @@ except ImportError as exc:  # pragma: no cover
 #
 # The third segment is the COORDINATE OF A TEST REPORT: «on dev2 this no longer
 # happens» is information, «on the latest version» is not.
-__version__ = "1.6.0.dev1"
+__version__ = "1.6.0.dev2"
 
 log = logging.getLogger("stratigraph.chatbot")
 
