@@ -330,3 +330,13 @@ def test_asking_where_a_room_opens_is_not_an_act_on_the_record():
     assert descriptor.writes is False
     result = invoke(descriptor, {}, None)          # no author at all
     assert result.ok, result.message
+
+
+def test_a_web_link_keeps_the_servers_PREFIX():
+    """Behind the node's Caddy the server is `https://host/em`, and `/open` lives
+    under it. Keeping only the host named a server nobody configured (SF-13,
+    measured on the dev stack on 31 October 2026)."""
+    assert ho.parse("https://em.localhost:8443/em/open?room=tavolo")["server"] == \
+        "https://em.localhost:8443/em"
+    assert ho.parse("https://em.localhost:8443/em/open/?room=tavolo")["server"] == \
+        "https://em.localhost:8443/em"

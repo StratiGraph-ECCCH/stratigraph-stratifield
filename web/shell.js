@@ -1134,9 +1134,8 @@ async function land() {
     // puntare la stanza del link non la toglie a nessun altro. Chi ha aperto il
     // link di una stanza ci vuole scrivere, quindi si punta da solo — e se la
     // stanza dice di no (nessun ruolo, server non fidato) si dice e si resta.
-    const corpo = piano.server
-      ? { link: `${piano.server.replace(/\/+$/, "")}/open?room=${encodeURIComponent(piano.room)}` }
-      : { room: piano.room, server: (salute && salute.server_hint) || "" };
+    const corpo = { room: piano.room,
+                    server: piano.server || (salute && salute.server_hint) || "" };
     const detto = await pointRoom(corpo, SG().t);
     const mioOra = SG().where ? SG().where() : null;
     if (mioOra && mioOra.room === piano.room) {

@@ -77,7 +77,13 @@ def parse(link: str) -> Dict[str, str]:
     server = (query.get("server") or [""])[0].strip().rstrip("/")
     if not server:
         if parsed.scheme in ("http", "https"):
-            server = f"{parsed.scheme}://{parsed.netloc}"
+            # THE SERVER IS WHERE `/open` LIVES, prefix included: behind the
+            # node's Caddy that is `https://host/em`, and keeping only the host
+            # pointed the assistant at a server nobody named (`EM_ROOM_SERVERS`
+            # refused it). Measured on the dev stack, 31 October 2026 — it is
+            # why «Scrivi qui» with a pasted link failed (SF-13).
+            base = parsed.path.rstrip("/")[: -len(f"/{ACTION}")]
+            server = f"{parsed.scheme}://{parsed.netloc}{base}".rstrip("/")
         else:
             raise HandoffError("the link names no server")
     return {"server": server, "room": room}
