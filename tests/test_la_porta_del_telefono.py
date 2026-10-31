@@ -394,7 +394,7 @@ def test_UN_SOLO_POSTO_SCRIVE_LA_SCELTA():
     assert "rememberMode(value, viewWidth())" in shell
     #  …e chi disegna il ritorno lo chiede alla funzione pura invece di
     #  ricopiarne la regola: la stessa disciplina di `paintThumbbar`
-    assert "wayBack(state.mode, window.innerWidth)" in shell
+    assert "wayBack(state.mode, viewWidth())" in shell
     scheda = sorgenti.senza_prosa((WEB / "scheda.js").read_text(encoding="utf-8"))
     assert scheda.count("localStorage.setItem(MODE_KEY") == 1
 
