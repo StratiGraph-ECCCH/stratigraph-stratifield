@@ -184,6 +184,20 @@ def _now() -> str:
     return now_iso()
 
 
+def _op_now() -> str:
+    """L'orologio di un'OPERAZIONE, al millisecondo (s3Dgraphy, E.D. 12 ottobre
+    2026): due mani nello stesso secondo — una parola e poi il suo concetto,
+    una traduzione e poi la sua verifica — si ordinano per l'istante e non per
+    il valore. Al secondo, il 6 novembre 2026, la correzione fatta subito dopo
+    perdeva («tie-value») e la scheda diceva «erano già così». I timbri
+    editoriali (`created_at`) restano al secondo: `_now()`."""
+    try:
+        from s3dgraphy.editorial import now_op_iso
+    except ImportError:                      # una s3Dgraphy di prima del 12/10
+        return _now()
+    return now_op_iso()
+
+
 def _absent(outcomes: List[Dict[str, Any]]) -> bool:
     """Did the room (or the container) say the node is not here?"""
     return any(not o["applied"] and "is not here" in str(o.get("reason") or "")
@@ -545,7 +559,7 @@ class LocalWriter:
         with self._lock:
             doc = self._read()
             section = self._section(doc)
-            stamp = _now()
+            stamp = _op_now()
 
             # THE FIELDS FIRST, AND THE D7 LAST — and the order is the point.
             #
@@ -856,7 +870,7 @@ class RoomWriter:
         # riga mandava anche l'autore; l'ha fermata
         # `test_no_author_is_sent_because_the_relay_takes_it_from_the_token`,
         # che esisteva già ed è precisamente il test che serviva.
-        stamp = _now()
+        stamp = _op_now()
         ops: List[Dict[str, Any]] = []
         for node in delta.nodes + ([delta.process] if delta.process else []):
             ops.append({"op": "add_node", "id": node["id"], "node": node,
@@ -1334,7 +1348,7 @@ class RoomWriter:
         # ONE stamp for the whole act, not one per field: a scheda saved in one
         # gesture is one moment, and giving twelve fields twelve timestamps
         # would invent an order between boxes that nobody filled in sequence.
-        stamp = _now()
+        stamp = _op_now()
         ops: List[Dict[str, Any]] = []
         for name, value in fields.items():
             op: Dict[str, Any] = {"op": "update_field", "node_id": node_id,

@@ -34,10 +34,12 @@ console.log(JSON.stringify(withoutUnsigned(queue)));
     assert [i["describe"] for i in got["dropped"]] == ["vecchia 1", "vecchia 2"]
 
 
-def test_LE_PAROLE_ci_sono_in_ogni_lingua():
-    for locale, strings in LOCALES.items():
-        if not strings.get("queue.unsigned.many"):
-            continue                       # una lingua ancora vuota
+def test_LE_PAROLE_ci_sono_in_italiano_e_in_inglese():
+    """Le altre sei lingue sono le bozze dei partner, generate dal loro xlsx
+    (`scripts/ui_strings.py`): una chiave che il file non ha lì manca, e la
+    pagina ripiega sull'inglese. Tradurre è il loro lavoro."""
+    for locale in ("en", "it"):
+        strings = LOCALES[locale]
         for key in ("queue.unsigned.show", "queue.unsigned.discard",
                     "queue.unsigned.confirm", "queue.unsigned.gone"):
             assert strings.get(key), (locale, key)

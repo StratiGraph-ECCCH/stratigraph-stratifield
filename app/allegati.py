@@ -32,6 +32,10 @@ STILE: Dict[str, str] = {
     "room.read_only": "warn", "sync.aligned": "ok", "sync.pending": "warn",
     "sync.conflict": "bad", "role.owner": "info", "role.editor": "info",
     "role.viewer": "muted", "scene.only_here": "muted",
+    # dall'elenco comune di s3Dgraphy 1.6.0.dev9x (6 nov 2026): EMStudio e
+    # Blender appaiati senza stanza, e un file che è qui solo come segnaposto
+    # del cloud — si vede, ma non si legge finché non si scarica
+    "room.paired": "info", "file.in_cloud": "warn",
 }
 
 

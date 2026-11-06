@@ -159,6 +159,7 @@ def test_riscritta_con_la_2_0_0_la_stessa_proprieta_cambia_qualia_non_si_duplica
     _written_with_1_0_2(c)
     for module in (tools_module, writer_module):
         monkeypatch.setattr(module, "_now", lambda: "2099-01-01T00:00:00Z")
+        monkeypatch.setattr(module, "_op_now", lambda: "2099-01-01T00:00:00Z")
     answer = post(c, "3014", {**BASE, "formazione_natura": "artificial"})
     assert answer["data"]["updated"] == ["formazione_natura"], answer["message"]
     props = [n for n in writer.section()["nodes"] if n["id"].endswith("::formazione_natura")]

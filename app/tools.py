@@ -169,6 +169,20 @@ def _now() -> str:
     return now_iso()
 
 
+def _op_now() -> str:
+    """L'orologio di un'OPERAZIONE, al millisecondo (s3Dgraphy, E.D. 12 ottobre
+    2026): due mani nello stesso secondo — una parola e poi il suo concetto,
+    una traduzione e poi la sua verifica — si ordinano per l'istante e non per
+    il valore. Al secondo, il 6 novembre 2026, la correzione fatta subito dopo
+    perdeva («tie-value») e la scheda diceva «erano già così». I timbri
+    editoriali (`created_at`) restano al secondo: `_now()`."""
+    try:
+        from s3dgraphy.editorial import now_op_iso
+    except ImportError:                      # una s3Dgraphy di prima del 12/10
+        return _now()
+    return now_op_iso()
+
+
 def _process_node(kind: str, author: Optional[str], about: str,
                   detail: str = "") -> Dict[str, Any]:
     """The `crmdig:D7` that records the act.
@@ -262,7 +276,7 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
 
     from .operazioni import plan as make_plan
 
-    stamp = _now()
+    stamp = _op_now()
     made = make_plan(scheda, values, number=number,
                      section=graph_writer.section(), ts=stamp, create=create,
                      authored_by=authored_by, model=model, additive=additive,
@@ -424,7 +438,7 @@ def make_create_su(graph_writer) -> ToolDescriptor:
             from s3dgraphy import api
             extra_ops.append(api.make_op("update_field", node_id=unit_id,
                                          field="data.source_fields",
-                                         value=dict(extra), ts=_now()))
+                                         value=dict(extra), ts=_op_now()))
         try:
             made, process, outcomes, landed, already, held = _through_the_recipe(
                 graph_writer, scheda, values, number=number, create=True,
@@ -1456,7 +1470,7 @@ def make_translate_text(graph_writer, translator=None) -> ToolDescriptor:
                 data={"reason": "model-silent"})
 
         model = str(getattr(translator, "model", "") or type(translator).__name__)
-        stamp = _now()
+        stamp = _op_now()
         try:
             made = T.plan_translation(section, where, source["field"], lang,
                                       str(said).strip(), orcid=author or "",
@@ -1536,7 +1550,7 @@ def make_verify_node(graph_writer) -> ToolDescriptor:
         node_id = str(slots.get("node_id") or "").strip()
         if not node_id:
             return ToolResult(ok=False, message="Mi serve il nodo da verificare.")
-        stamp = _now()
+        stamp = _op_now()
         try:
             made = V.plan_verify(graph_writer.section(), node_id,
                                  orcid=author or "", ts=stamp)

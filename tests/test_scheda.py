@@ -474,8 +474,16 @@ def test_the_compiled_visual_half_draws_the_same_module_as_the_yaml():
     if not TEMPLATES.is_dir():
         pytest.skip("stratigraph-templates non è accanto")
     bridged = 0
+    compared = 0
     for compiled in schede.available({}):
-        source = schede.load(TEMPLATES / compiled.id / "template.yaml")
+        yaml_path = TEMPLATES / compiled.id / "template.yaml"
+        if not yaml_path.is_file():
+            # una forma che arriva SOLO compilata (la IAA, dal 28 settembre)
+            # non ha uno YAML accanto con cui confrontarsi: si salta, e il
+            # confronto resta obbligatorio per tutte le altre
+            continue
+        compared += 1
+        source = schede.load(yaml_path)
         for lang in compiled.languages:
             a, b = compiled.for_browser(lang), source.for_browser(lang)
             for fa in a.get("fields") or []:
@@ -491,6 +499,7 @@ def test_the_compiled_visual_half_draws_the_same_module_as_the_yaml():
                 if key in ("saveable", "standard", "datamodel_check"):
                     continue
                 assert a.get(key) == b.get(key), (compiled.id, lang, key)
+    assert compared >= 3, "il confronto si è fatto su troppe poche schede"
     assert bridged == 5 * 2, "le cinque caselle a vocabolario della US, in it ed en"
 
 
