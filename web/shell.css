@@ -193,6 +193,12 @@
     color: var(--sg-muted); margin-top: var(--sg-space-4);
   }
   .queue:empty { display: none; }
+  /* le note senza firma: si vedono e si scartano (6 nov 2026) */
+  .queue-unsigned { margin-top: var(--sg-space-2); font-family: var(--sg-font-body, inherit); }
+  .queue-unsigned summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; }
+  .queue-unsigned ul { margin: var(--sg-space-2) 0; padding-inline-start: 1.2em; }
+  .queue-unsigned button { min-height: 44px; }
+  .queue-unsigned button.warn { color: var(--sg-warn); border-color: var(--sg-warn); }
 
   /* ── the signature: who this device writes as, and how to hand it over ──
      A strip of its own under the header rather than a third thing crammed into

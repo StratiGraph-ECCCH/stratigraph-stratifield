@@ -341,6 +341,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} notes by {who}, waiting for them to return.",
     "queue.unsigned.one": "1 note with no signature, dictated before signing existed: it stays in the queue.",
     "queue.unsigned.many": "{n} notes with no signature, dictated before signing existed: they stay in the queue.",
+    "queue.unsigned.show": "See them",
+    "queue.unsigned.discard": "Discard {n}",
+    "queue.unsigned.confirm": "Yes, discard {n}: they do not come back",
+    "queue.unsigned.gone": "{n} notes with no signature discarded.",
     "queue.sent.one": "I sent 1 queued thing.",
     "queue.sent.many": "I sent {n} queued things.",
     "queue.kept": "Node unreachable: I put it in the queue.",
@@ -609,6 +613,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} note di {who} in attesa che rientri.",
     "queue.unsigned.one": "1 nota senza firma, dettata prima che la firma esistesse: resta in coda.",
     "queue.unsigned.many": "{n} note senza firma, dettate prima che la firma esistesse: restano in coda.",
+    "queue.unsigned.show": "Vedile",
+    "queue.unsigned.discard": "Scarta {n}",
+    "queue.unsigned.confirm": "Sì, scarta {n}: non tornano",
+    "queue.unsigned.gone": "{n} note senza firma scartate.",
     "queue.sent.one": "Ho mandato 1 cosa in coda.",
     "queue.sent.many": "Ho mandato {n} cose in coda.",
     "queue.kept": "Nodo non raggiungibile: l'ho messo in coda.",
@@ -848,6 +856,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} הערות של {who}, ממתינות לשובו.",
     "queue.unsigned.one": "הערה אחת ללא חתימה, שהוכתבה לפני שהייתה חתימה: היא נשארת בתור.",
     "queue.unsigned.many": "{n} הערות ללא חתימה, שהוכתבו לפני שהייתה חתימה: הן נשארות בתור.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "שלחתי פריט אחד מהתור.",
     "queue.sent.many": "שלחתי {n} פריטים מהתור.",
     "queue.kept": "הצומת אינו זמין: הכנסתי לתור.",
@@ -1043,6 +1055,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} Notizen von {who}, warten auf die Rückkehr.",
     "queue.unsigned.one": "1 Notiz ohne Anmeldung, diktiert, bevor es die Anmeldung gab: sie bleibt in der Warteschlange.",
     "queue.unsigned.many": "{n} Notizen ohne Anmeldung, diktiert, bevor es die Anmeldung gab: sie bleiben in der Warteschlange.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "Ich habe 1 Eintrag aus der Warteschlange gesendet.",
     "queue.sent.many": "Ich habe {n} Einträge aus der Warteschlange gesendet.",
     "queue.kept": "Knoten nicht erreichbar: ich habe es in die Warteschlange gestellt.",
@@ -1238,6 +1254,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} note de la {who}, care așteaptă să revină.",
     "queue.unsigned.one": "1 notă fără autentificare, dictată înainte să existe autentificarea: rămâne în coadă.",
     "queue.unsigned.many": "{n} note fără autentificare, dictate înainte să existe autentificarea: rămân în coadă.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "Am trimis 1 element din coadă.",
     "queue.sent.many": "Am trimis {n} elemente din coadă.",
     "queue.kept": "Nod inaccesibil: l-am pus în coadă.",
@@ -1433,6 +1453,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} σημειώσεις του/της {who}, σε αναμονή μέχρι να επιστρέψει.",
     "queue.unsigned.one": "1 σημείωση χωρίς σύνδεση, υπαγορευμένη πριν υπάρξει η σύνδεση: μένει σε αναμονή.",
     "queue.unsigned.many": "{n} σημειώσεις χωρίς σύνδεση, υπαγορευμένες πριν υπάρξει η σύνδεση: μένουν σε αναμονή.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "Έστειλα 1 στοιχείο από την αναμονή.",
     "queue.sent.many": "Έστειλα {n} στοιχεία από την αναμονή.",
     "queue.kept": "Ο κόμβος δεν είναι προσβάσιμος: το έβαλα σε αναμονή.",
@@ -1628,6 +1652,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} notas de {who}, esperando a que vuelva.",
     "queue.unsigned.one": "1 nota sin firma, dictada antes de que existiera la firma: se queda en la cola.",
     "queue.unsigned.many": "{n} notas sin firma, dictadas antes de que existiera la firma: se quedan en la cola.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "He enviado 1 cosa de la cola.",
     "queue.sent.many": "He enviado {n} cosas de la cola.",
     "queue.kept": "Nodo inalcanzable: lo he puesto en la cola.",
@@ -1823,6 +1851,10 @@ const STRINGS = {
     "queue.theirs.many": "{n} notatek od {who}, czekają na powrót tej osoby.",
     "queue.unsigned.one": "1 notatka bez podpisu, podyktowana, zanim istniało logowanie: zostaje w kolejce.",
     "queue.unsigned.many": "{n} notatek bez podpisu, podyktowanych, zanim istniało logowanie: zostają w kolejce.",
+    "queue.unsigned.show": "",
+    "queue.unsigned.discard": "",
+    "queue.unsigned.confirm": "",
+    "queue.unsigned.gone": "",
     "queue.sent.one": "Wysłałem 1 rzecz z kolejki.",
     "queue.sent.many": "Wysłałem {n} rzeczy z kolejki.",
     "queue.kept": "Węzeł nieosiągalny: dodałem to do kolejki.",
@@ -2872,6 +2904,17 @@ function heldBy(held) {
   return [...counts.entries()];
 }
 
+/** LE NOTE SENZA FIRMA, separate dalle altre (6 novembre 2026): dettate prima
+ *  che la firma esistesse su questo dispositivo, non partono e non si
+ *  attribuiscono a nessuno. Chi è firmato le può leggere e scartare; tutte le
+ *  altre note restano come sono. */
+const isUnsigned = (item) => !item.subject;
+function withoutUnsigned(queue) {
+  const kept = [], dropped = [];
+  for (const item of queue) (isUnsigned(item) ? dropped : kept).push(item);
+  return { kept, dropped };
+}
+
 function queueSentence(queue, subject) {
   const { mine, held } = partitionQueue(queue, subject);
   const lines = [];
@@ -2892,7 +2935,45 @@ function queueSentence(queue, subject) {
 }
 
 function renderQueue() {
-  $("queue").textContent = queueSentence(readQueue(), WHO?.subject || "");
+  const host = $("queue");
+  const queue = readQueue();
+  host.textContent = queueSentence(queue, WHO?.subject || "");
+  // SCARTARLE (6 novembre 2026): la frase diceva «restano in coda» e basta, per
+  // sempre. Chi è firmato le vede — il testo, per ricopiare quello che serve —
+  // e le scarta con due tocchi: il secondo dice che non tornano.
+  const { dropped } = withoutUnsigned(queue);
+  if (!dropped.length || !WHO?.subject) return;
+  const box = document.createElement("details");
+  box.className = "queue-unsigned";
+  const summary = document.createElement("summary");
+  summary.textContent = t("queue.unsigned.show");
+  const list = document.createElement("ul");
+  for (const item of dropped) {
+    const li = document.createElement("li");
+    li.textContent = (item.at ? new Date(item.at).toLocaleString(LOCALE) + " · " : "")
+      + (item.describe || item.path || "");
+    list.append(li);
+  }
+  const drop = document.createElement("button");
+  drop.type = "button";
+  drop.textContent = t("queue.unsigned.discard", { n: dropped.length });
+  let armed = false;
+  drop.addEventListener("click", () => {
+    if (!armed) {
+      armed = true;
+      drop.textContent = t("queue.unsigned.confirm", { n: dropped.length });
+      drop.classList.add("warn");
+      return;
+    }
+    // dalla coda di ADESSO, non da quella letta al disegno: nel frattempo può
+    // esserci entrata una nota nuova, e quella resta
+    const now = withoutUnsigned(readQueue());
+    writeQueue(now.kept);
+    renderQueue();
+    show(true, t("queue.unsigned.gone", { n: now.dropped.length }), "", LOCALE);
+  });
+  box.append(summary, list, drop);
+  host.append(" ", box);
 }
 
 /** What went wrong, in the three kinds that have different remedies:
