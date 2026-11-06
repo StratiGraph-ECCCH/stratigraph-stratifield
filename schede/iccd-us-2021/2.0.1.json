@@ -162,35 +162,35 @@
     ],
     "digest": "sha256:4802d763044f3eb47e08a118f94a0f194b4489d0dd129e1002482837a66bd0fb",
     "datamodel": {
-      "nodes": "1.6.39",
-      "node_registry": "1.6.37",
-      "connections": "1.6.51",
-      "visual_rules": "1.6.41",
+      "nodes": "1.6.40",
+      "node_registry": "1.6.40",
+      "connections": "1.6.52",
+      "visual_rules": "1.6.42",
       "qualia": "1.6.10",
       "translations": "1.15",
-      "digest": "sha256:cd0f774c236fe5799078f60257890c8e774bccc379c703b8f37606bafadddde9",
+      "digest": "sha256:24c590bb08878605d10fdc5c261f37576894c7dff1c908bf04bb4e55c955254f",
       "files": {
         "nodes": {
-          "digest": "sha256:03c168a37ec1ade3e501d09f0303e064584d7bf4afdd21403ba4d12aeb3f2299",
-          "version": "1.6.39"
+          "digest": "sha256:5bf21618ba4e4398f9b633fe7aef7e6be911ded0b34270aa5fab1fb11e01965e",
+          "version": "1.6.40"
         },
         "node_registry": {
-          "digest": "sha256:653a56e82710ece0f2f8c36f40e719c846a55f29dcae1f3d9d02e6cca88784cf",
-          "version": "1.6.37"
+          "digest": "sha256:6d3e29e818605df55ad386a00d901dfc7320364afc0543f3ae0b9fbbf8857dec",
+          "version": "1.6.40"
         },
         "connections": {
-          "digest": "sha256:2af53bde439cbb279882ca7a63c4239dea7ebe85eac26b325432fb5d315cf06e",
-          "version": "1.6.51"
+          "digest": "sha256:5bdb1db2304f12ace41d98701c6bdf00a5e07e55aea5951af86bf53a5f0b6a47",
+          "version": "1.6.52"
         },
         "qualia": {
           "digest": "sha256:2f8567e8e0f6a319327839ab5169c1495642eebef00c542b9b50c284abdb8502",
           "version": "1.6.10"
         }
       },
-      "em_ttl": "1.6.23",
-      "s3dgraphy": "1.6.0.dev91",
+      "em_ttl": "1.6.24",
+      "s3dgraphy": "1.6.0.dev92",
       "taken_from": {
-        "git_commit": "d7f759e769124e8a5421960fc96d0039b9d3f7a2",
+        "git_commit": "83ebc32cf3e369c37e9703eccb67780d0ff826a2",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
