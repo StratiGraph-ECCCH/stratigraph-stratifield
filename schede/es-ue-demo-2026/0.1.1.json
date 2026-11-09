@@ -41,10 +41,10 @@
       "visual_rules": "1.6.43",
       "qualia": "1.6.10",
       "translations": "1.16",
-      "digest": "sha256:2912ab599c52e46aa4e205af1a97bd962733d2b09e4c85d55d80cccc115a1028",
+      "digest": "sha256:b32a6c18d3253929c584b38a29309f99c7c15c0c1255653d77165928c228b2e8",
       "files": {
         "nodes": {
-          "digest": "sha256:29eb349ddcedc5c194615908e3326c8d725ffb96eff57227b587eeafd1695b1f",
+          "digest": "sha256:16d6e02abf05f5d69cf88113e6adad050901b4f3417ff73ad999d85418fb80db",
           "version": "1.6.42"
         },
         "node_registry": {
@@ -61,9 +61,9 @@
         }
       },
       "em_ttl": "1.6.26",
-      "s3dgraphy": "1.6.0.dev101",
+      "s3dgraphy": "1.6.0.dev102",
       "taken_from": {
-        "git_commit": "35241e21464b2ed5e535ce9b9a04cea4eb3b74be",
+        "git_commit": "6f0bee6c298f9220a5f55e34ab617a17d6218927",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
