@@ -538,3 +538,49 @@ input[type="date"], input[type="number"], time {
   padding: var(--sg-space-2) var(--sg-space-3);
   border-inline-start: 3px solid var(--sg-line);
 }
+
+/* ── LA MAPPA (12 novembre): luoghi e tagli con l'impronta ──────────────────
+   Niente US positive. Solo variabili del tema: i luoghi col tratto
+   dell'accento, i tagli con quello dell'informazione, la posizione pure. */
+.mappa-livelli {
+  display: flex; flex-wrap: wrap; gap: var(--sg-space-2); align-items: center;
+  margin-block-end: var(--sg-space-2);
+}
+.mappa-livelli .eyebrow {
+  font-size: var(--sg-text-xs); color: var(--sg-muted); text-transform: uppercase;
+}
+.mappa-base { display: inline-flex; gap: var(--sg-space-1); align-items: center;
+  font-size: var(--sg-text-sm); color: var(--sg-muted); }
+.mappa-base select { width: auto; margin: 0; }
+.mappa-tavola {
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius);
+  background: var(--sg-surface-sunk); overflow: hidden;
+}
+.mappa-svg { display: block; width: 100%; height: auto; max-height: 70vh; aspect-ratio: 4 / 3; }
+.mappa-luogo polygon {
+  fill: transparent; stroke: var(--sg-accent); stroke-width: 2px;
+  vector-effect: non-scaling-stroke; stroke-dasharray: 6 3; pointer-events: all;
+}
+.mappa-sito polygon { stroke: var(--sg-text); stroke-dasharray: none; stroke-width: 1.5px; }
+.mappa-luogo[role="button"] { cursor: pointer; }
+.mappa-luogo[role="button"]:hover polygon,
+.mappa-luogo[role="button"]:focus polygon {
+  fill: var(--sg-accent-quiet); fill-opacity: .45; outline: none;
+}
+.mappa-taglio polygon {
+  fill: var(--sg-info); fill-opacity: .18; stroke: var(--sg-info);
+  stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none;
+}
+.mappa-nome { fill: var(--sg-text); font-family: var(--sg-font-sans);
+  paint-order: stroke; stroke: var(--sg-surface); stroke-width: .25em; pointer-events: none; }
+.mappa-io circle:first-child { fill: var(--sg-info); fill-opacity: .2; stroke: var(--sg-info);
+  vector-effect: non-scaling-stroke; }
+.mappa-io circle:last-child { fill: var(--sg-info); }
+.mappa-io { pointer-events: none; }
+.mappa-didascalia {
+  font-size: var(--sg-text-xs); color: var(--sg-muted); font-family: var(--sg-font-mono);
+  margin-block: var(--sg-space-1) var(--sg-space-2);
+}
+.mappa-apri { display: flex; flex-wrap: wrap; gap: var(--sg-space-2); align-items: center; }
+.mappa-apri .hint { flex-basis: 100%; }
+.app[dir="rtl"] .mappa-svg, [dir="rtl"] .mappa-svg { direction: ltr; }

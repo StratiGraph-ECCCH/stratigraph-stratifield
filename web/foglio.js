@@ -53,6 +53,7 @@
 
 import { authorshipOf, datamodelNotice, isFilled, shown as asText, writeValue } from "./scheda.js";
 import { isStructured, mountWidget, valueView } from "./widgets.js";
+import { openSection } from "./mappa.js";
 
 const SG = () => (typeof window !== "undefined" && window.SG) || {};
 const tr = (key, values) => (SG().t ? SG().t(key, values) : key);
@@ -680,4 +681,6 @@ function paintSummary(insp, def, state) {
     el("span", { text: tr("insp.empty") }),
     el("span", { class: "fo-num", text: String(fields.filter((f) => !filled(f)).length) })));
   insp.append(check);
+  // «APRI IN…», gli stessi comandi della mappa (`mappa.js::openSection`)
+  insp.append(openSection(state, el, tr));
 }

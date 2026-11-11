@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import base64
 import contextlib
+import json
 import logging
 import os
 import pathlib
@@ -1665,6 +1666,82 @@ def room_choices(request: Request) -> Dict[str, Any]:
             status_code=502,
             detail=f"Non riesco a leggere la stanza: {chiusa}") from None
     return {**scelte, "room": scope.room}
+
+
+@v1.get("/room/map", tags=["room"])
+def room_map(request: Request) -> Dict[str, Any]:
+    """LA MAPPA DELLA STANZA (12 novembre): i luoghi — sito, aree, saggi — e i
+    tagli con la loro impronta, LETTI dal grafo (`app/mappa.py`), più le basi
+    che il nodo sa servire. Niente US positive: la loro geometria è il proxy.
+
+    Una lettura sola, come `/room/units`; la pagina la tiene sul dispositivo,
+    così senza rete la mappa delle impronte c'è."""
+    from .mappa import imagery
+    scope = _scope(request)
+    try:
+        letto = scope.writer.mappa()
+    except RoomRefused as chiusa:
+        raise _refused(chiusa) from None
+    except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
+        raise HTTPException(
+            status_code=502,
+            detail=f"Non riesco a leggere la stanza: {chiusa}") from None
+    return {**letto, "room": scope.room, "server": scope.server,
+            "bases": imagery(), "where": writer_describe(scope.writer)}
+
+
+@v1.get("/room/map/pyarchinit/{node_id}", tags=["room"])
+def room_map_pyarchinit(node_id: str, request: Request) -> Response:
+    """«APRI IN PYARCHINIT»: PyArchInit non ha (misurato il 12 novembre) un
+    modo di essere aperto dall'esterno, quindi il pulsante dà la cosa più utile
+    che c'è — un file di scambio con gli identificativi del luogo o
+    dell'unità, il link della stanza e il filtro della scheda di PyArchInit.
+    La proposta di contratto per Enzo è nel referto della notte."""
+    from .mappa import pyarchinit_exchange
+    scope = _scope(request)
+    try:
+        doc = scope.writer.document()
+        body = pyarchinit_exchange(doc, node_id, server=scope.server or "",
+                                   room=scope.room or "")
+    except KeyError:
+        raise HTTPException(status_code=404,
+                            detail=f"Nella stanza non c'è il nodo «{node_id}».") from None
+    except RoomRefused as chiusa:
+        raise _refused(chiusa) from None
+    name = "".join(c if c.isalnum() or c in "-_." else "_"
+                   for c in str((body.get("node") or {}).get("name") or node_id))
+    return Response(
+        content=json.dumps(body, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition":
+                 f'attachment; filename="pyarchinit-open-{name}.json"'})
+
+
+@public.get("/v1/bases", tags=["map"])
+def map_bases() -> Dict[str, Any]:
+    """Il catalogo delle basi (immagini) che il ponte serve: lo stesso di
+    EMStudio, con la licenza e il flag `offline` di ciascuna fonte."""
+    from .mappa import catalogue, imagery
+    return {"sources": imagery(), "default": catalogue().get("default_imagery")}
+
+
+@public.get("/v1/tiles/{source}/{z}/{x}/{y}", tags=["map"])
+def map_tile(source: str, z: int, x: int, y: str) -> Response:
+    """IL PONTE DEI TASSELLI: un tassello per richiesta, dalla cache su disco
+    del nodo o dalla fonte (User-Agent dichiarato, intestazioni di cache
+    rispettate). Nessun prefetch, per nessuna fonte — per OSM la policy lo
+    vieta. Pubblico come lo è la fonte: un `<img>` non porta una firma, e un
+    tassello del mondo non è un dato della stanza."""
+    from .mappa import TileRefused, tile
+    y_num = y.split(".", 1)[0]
+    if not y_num.isdigit():
+        raise HTTPException(status_code=404, detail="non è un tassello")
+    try:
+        body, headers = tile(source, z, x, int(y_num), version=__version__)
+    except TileRefused as no:
+        raise HTTPException(status_code=no.status, detail=str(no)) from None
+    return Response(content=body, media_type=headers.pop("Content-Type", None),
+                    headers=headers)
 
 
 # ── the device ────────────────────────────────────────────────────────────────

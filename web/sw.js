@@ -26,6 +26,14 @@
 // from disk still gives a working worker.
 const SHELL = "sg-shell-__SHELL_VERSION__";
 
+// I TASSELLI DELLA BASE (12 novembre), in una cache loro e che non cambia nome
+// con la conchiglia: una pagina nuova non deve buttare la mappa che il
+// dispositivo si è portato in trincea. Solo i tasselli GUARDATI, e solo delle
+// fonti che il catalogo dice `offline: true` (la pagina lo scrive come `k=1`
+// nell'indirizzo): OSM no — la sua policy vieta di tenerne una copia per
+// l'offline e qualunque prefetch. Rete prima, la copia quando la rete manca.
+const TILES = "sg-tiles-v1";
+
 // WHERE THIS WORKER LIVES — `/` in development, `/chat/` behind the node's Caddy.
 //
 // Derived from the worker's own URL and never written down, for the same reason
@@ -71,7 +79,7 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((keys) =>
-    Promise.all(keys.filter((k) => k !== SHELL).map((k) => caches.delete(k)))
+    Promise.all(keys.filter((k) => k !== SHELL && k !== TILES).map((k) => caches.delete(k)))
   ).then(() => self.clients.claim()));
 });
 
@@ -83,6 +91,18 @@ self.addEventListener("fetch", (e) => {
   // Matched against BASE, not against `/`: under a prefix this app's API is at
   // `/chat/v1/...`, and the bare test would have cached every answer it was
   // meant to refuse.
+  if (url.pathname.startsWith(BASE + "v1/tiles/") && e.request.method === "GET"
+      && url.searchParams.get("k") === "1") {
+    e.respondWith(fetch(e.request).then((answer) => {
+      if (answer.ok) {
+        const copy = answer.clone();
+        e.waitUntil(caches.open(TILES).then((c) => c.put(e.request, copy)));
+      }
+      return answer;
+    }).catch(() => caches.open(TILES).then((c) => c.match(e.request)))
+      .then((hit) => hit || new Response("", { status: 504 })));
+    return;
+  }
   if (url.pathname.startsWith(BASE + "v1/") || url.pathname === BASE + "health") {
     return;
   }

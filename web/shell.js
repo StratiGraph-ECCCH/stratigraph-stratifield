@@ -18,7 +18,8 @@ import {
 import { drawSheet, hasSheet, optionsFor, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
 import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./room.js";
-import { isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
+import { filters as indexFilters, isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
+import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
@@ -399,6 +400,7 @@ async function openScheda(id, su = null, lang = null) {
   $("scheda").hidden = false;
   $("work").hidden = true;
   $("index").hidden = true;
+  $("map").hidden = true;
   says.hidden = true;
   markNav(id);
   try {
@@ -919,6 +921,7 @@ function writeHash(id, number, replace = false, lens = false) {
 function readHash() {
   const raw = window.location.hash.replace(/^#/, "");
   if (raw === "unita") return { index: true };
+  if (raw === "mappa") return { map: true };
   const p = new URLSearchParams(raw);
   return { scheda: p.get("scheda") || "", us: p.get("us") || "",
            lens: p.get("lente") === "1" };
@@ -927,6 +930,7 @@ function readHash() {
 async function followHash() {
   const asked = readHash();
   if (asked.index) { await showIndex(false); return; }
+  if (asked.map) { await showMap(false); return; }
   if (!asked.scheda) return;
   const same = state.def && state.def.id === asked.scheda
     && state.panel === "scheda" && (state.us || "") === asked.us
@@ -948,13 +952,40 @@ async function showIndex(push = true) {
   state.panel = "index";
   $("work").hidden = true;
   $("scheda").hidden = true;
+  $("map").hidden = true;
   $("index").hidden = false;
   markNav("");
   $("nav-voice").removeAttribute("aria-current");
+  $("nav-map").removeAttribute("aria-current");
   $("nav-units").setAttribute("aria-current", "true");
   paintThumbbar();
   if (push && window.location.hash !== "#unita") history.pushState(null, "", "#unita");
   await repaintIndex();
+}
+
+/** LA MAPPA (12 novembre): i luoghi e i tagli con la loro impronta
+ *  (`mappa.js`). Un clic su un saggio apre l'elenco filtrato su quel luogo. */
+async function showMap(push = true) {
+  state.panel = "map";
+  $("work").hidden = true;
+  $("scheda").hidden = true;
+  $("index").hidden = true;
+  $("map").hidden = false;
+  markNav("");
+  $("nav-voice").removeAttribute("aria-current");
+  $("nav-units").removeAttribute("aria-current");
+  $("nav-map").setAttribute("aria-current", "true");
+  paintThumbbar();
+  if (push && window.location.hash !== "#mappa") history.pushState(null, "", "#mappa");
+  const title = $("map-title");
+  if (title) title.textContent = SG().t ? SG().t("map.title") : "Map";
+  await paintMap($("map-host"), {
+    onPlace: (place) => {
+      indexFilters.place = { id: place.id, name: place.name };
+      void showIndex();
+    },
+    onOpen: (tool, node, m) => openIn(tool, node, m),
+  });
 }
 
 function afterSave(body) {
@@ -1074,6 +1105,8 @@ function wireShell() {
     state.panel = "voice";
     $("scheda").hidden = true;
     $("index").hidden = true;
+    $("map").hidden = true;
+    $("nav-map").removeAttribute("aria-current");
     // LA DETTATURA SOLO A CHI FIRMA (31 ottobre, dal telefono vero): con la
     // voce «Detta» in barra il pannello si apriva anche senza firma, e una
     // dettatura finiva in coda come «nota senza firma». Senza firma resta la
@@ -1085,6 +1118,8 @@ function wireShell() {
   });
 
   $("nav-units").addEventListener("click", () => { void showIndex(); });
+  $("nav-map").addEventListener("click", () => { void showMap(); });
+  $("nav-map").textContent = SG().t ? SG().t("nav.map") : "Map";
   // la voce «Detta» della barra si accende con il suo gemello
   $("nav-voice").addEventListener("click", () => paintThumbbar());
   $("nav-units").textContent = SG().t ? SG().t("nav.units") : "Units";
@@ -1256,12 +1291,15 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                    onAccess: () => watchReading(),
                    onLocale: () => {
                      $("nav-units").textContent = SG().t("nav.units");
+                     $("nav-map").textContent = SG().t("nav.map");
+                     if (state.panel === "map") void showMap(false);
                      paintModes();
                      paintWayBack();
                      if (state.def) draw();
                    },
                    goUnit: (n) => goUnit(n), stepUnit: (d) => stepUnit(d),
                    showIndex: () => showIndex(),
+                   showMap: () => showMap(),
                    repaintPhotos: () => repaintPhotos(),
                    repaintIndex: () => repaintIndex(),
                    // per il CONTROLLO: ridisegna l'elenco, ma non mentre chi lo

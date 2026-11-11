@@ -341,6 +341,10 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
         #: arco `is_in_location` porta località, area e saggio.
         nomi = {str(n.get("id")): str(n.get("name") or "")
                 for n in section.get("nodes") or []}
+        luoghi: Dict[str, List[str]] = {}
+        for e in section.get("edges") or []:
+            if e.get("edge_type") == "is_in_location":
+                luoghi.setdefault(str(e.get("source")), []).append(str(e.get("target")))
         for node in section.get("nodes") or []:
             if is_message(node):
                 continue              # una frase non è una scheda
@@ -397,6 +401,10 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "definition": _definition_of(node),
                 #: le aree dal puntatore per ruolo, per i gettoni dei filtri
                 "area": [nomi[i] for i in _links(data, "area") if nomi.get(i)],
+                #: I LUOGHI in cui l'unità sta (`is_in_location`: sito, area,
+                #: saggio), per l'elenco filtrato che un clic sulla mappa apre
+                #: (12 novembre): l'id, perché due luoghi possono chiamarsi «1»
+                "places": luoghi.get(str(node.get("id")), []),
                 #: quante caselle un MODELLO ha proposto e nessuno ha validato
                 "ai": sum(1 for k, v in data.items()
                           if k.startswith("authorship.") and isinstance(v, dict)
@@ -518,6 +526,15 @@ class LocalWriter:
     def choices(self) -> Dict[str, List[Dict[str, Any]]]:
         """Periodi, attività e foto del CONTAINER (`choices_of`)."""
         return choices_of(self._read())
+
+    def mappa(self) -> Dict[str, Any]:
+        """I luoghi e i tagli del CONTAINER, con le impronte (`mappa.map_of`)."""
+        from .mappa import map_of
+        return map_of(self._read())
+
+    def document(self) -> Dict[str, Any]:
+        """Il container, per chi deve leggerne un nodo (il file di scambio)."""
+        return self._read()
 
     # ── the seam ─────────────────────────────────────────────────────────────
 
@@ -1654,6 +1671,15 @@ class RoomWriter:
     def choices(self) -> Dict[str, List[Dict[str, Any]]]:
         """Periodi, attività e foto della STANZA (`choices_of`)."""
         return choices_of(self._document())
+
+    def mappa(self) -> Dict[str, Any]:
+        """I luoghi e i tagli della STANZA, con le impronte (`mappa.map_of`)."""
+        from .mappa import map_of
+        return map_of(self._document())
+
+    def document(self) -> Dict[str, Any]:
+        """Il documento della STANZA, per chi deve leggerne un nodo."""
+        return self._document()
 
     def section(self) -> Dict[str, Any]:
         """La sezione attiva della STANZA; il container locale se non risponde.

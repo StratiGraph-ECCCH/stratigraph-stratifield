@@ -37,7 +37,12 @@ const SG = () => window.SG || {};
  * Pure le due funzioni che decidono (`matches`, `filled`), perché sono quelle
  * che si possono sbagliare in silenzio: un contatore giusto su un elenco
  * sbagliato sembra giusto. */
-export const filters = { q: "", area: null, ai: false, inc: false };
+export const filters = { q: "", area: null, ai: false, inc: false, place: null };
+
+/* IL LUOGO (12 novembre): un clic su un saggio della mappa apre l'elenco
+ * filtrato su quel luogo — `{id, name}`, l'id perché due luoghi possono
+ * chiamarsi «1» (l'area 1 e il settore 1). Le unità lo dicono in `places`
+ * (`is_in_location`, `app/writer.py::units_of`). */
 
 /** IL NOME DI UNO STANDARD PER PERSONE (SF-06, D4). Quello che la definizione
  *  dichiara (`standard.short`, una stringa o un dizionario per lingua); se non
@@ -93,6 +98,7 @@ export function matches(u, f, listing, fallback) {
     if (!hit) return false;
   }
   if (f.area && !(u.area || []).includes(f.area)) return false;
+  if (f.place && !(u.places || []).includes(f.place.id)) return false;
   if (f.ai && !(Number(u.ai) > 0)) return false;
   if (f.inc) {
     const share = filled(u, listing, fallback);
@@ -349,6 +355,11 @@ export function mount({ t, openScheda, schede, current = () => null }) {
         chip(a, filters.area === a,
              () => { filters.area = filters.area === a ? null : a; }, `area:${a}`);
       }
+    }
+    if (filters.place) {
+      // il luogo scelto sulla mappa, come gettone: un tocco lo toglie
+      chip(t("map.place_filter", { place: filters.place.name }), true,
+           () => { filters.place = null; }, "place");
     }
     chip(t("flt.ai"), filters.ai, () => { filters.ai = !filters.ai; }, "ai");
     chip(t("flt.incomplete"), filters.inc, () => { filters.inc = !filters.inc; }, "inc");

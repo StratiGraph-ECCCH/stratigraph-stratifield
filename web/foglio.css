@@ -519,3 +519,4 @@
 .fo-strip .fo-toggle[aria-pressed="true"] { border-color: var(--sg-accent); }
 
 @media (prefers-reduced-motion: reduce) { .fo * { transition: none !important; } }
+.fo-apri { display: flex; flex-wrap: wrap; gap: var(--sg-space-2); align-items: center; }
