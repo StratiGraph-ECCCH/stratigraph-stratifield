@@ -23,7 +23,7 @@
  * (`room.units`, `/v1/room/choices`, `/v1/room/places`) e chiama la
  * conchiglia (`shell`) per aprire una scheda o una sezione. */
 
-import { noNumberTag, room, unitLabel } from "./widgets.js";
+import { noNumberTag, opensById, room, unitLabel } from "./widgets.js";
 import { paint as paintPhotos } from "./photos.js";
 import { openIn } from "./mappa.js";
 
@@ -305,7 +305,7 @@ export function mount(shell) {
       // che qualcuno sta scrivendo nella testata (15 novembre)
       const current = shell.state.panel === "scheda"
         && (shell.state.byId ? shell.state.nodeId === u.id
-                             : Boolean(u.number && u.number === shell.state.us));
+                             : Boolean(u.number && !opensById(u) && u.number === shell.state.us));
       const b = el("button", { type: "button", class: "navitem", "data-unit": u.id,
                                "aria-current": String(Boolean(current)) },
         el("span", { text: unitLabel(u, shell.prefix(u)) }, u.number ? null : noNumberTag(t)),
@@ -412,7 +412,7 @@ export function mount(shell) {
     const photos = roomPhotos();
     const unitName = (id) => {
       const u = (room.units || []).find((x) => x.id === id);
-      return u ? (u.number ? `${shell.prefix(u)}${u.number}` : (u.name || u.id)) : "";
+      return u ? unitLabel(u, shell.prefix(u)) : "";
     };
     const linkedTo = [...new Set(photos.map((p) => p.unit).filter(Boolean))];
     const bar = el("div", { class: "filters" });

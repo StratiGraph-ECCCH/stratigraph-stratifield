@@ -815,8 +815,9 @@ class SchedaIn(BaseModel):
     us: str = ""
     #: THE UNIT'S ID, for a unit that has no number (15 November 2026): an
     #: imported unit (`1.US2`, a uuid) opens AND IS WRITTEN from its id. With
-    #: `node`, `us` is optional — and if it is given it is the number being
-    #: ADDED to a unit that had none (`data.us`), never a renumbering.
+    #: `node`, `us` is optional — and if it is given it must be the number the
+    #: unit's NAME already says: a number is never changed nor added in another
+    #: key (E.D., 12 Nov 2026: no `data.us`).
     node: str = ""
     #: `{field id: value}`, with the ids the DEFINITION declares. Anything else
     #: is refused — a form is not a way to put arbitrary keys into the graph.
@@ -912,7 +913,7 @@ def submit_scheda(scheda_id: str, request: Request,
     prima = (_refusals(scope), _queued(scope))
     if not values and node_id:
         # un'unità dal suo id che riceve SOLO il numero (o niente): è
-        # `update_su` lo stesso — numerarla è scrivere `data.us`
+        # `update_su` lo stesso (il numero si legge dal nome: non si aggiunge)
         slots["fields"] = {}
         result = invoke(registry.get("update_su"), slots, author, registry=registry)
         label = slots["us"] or str((result.data or {}).get("name") or node_id)
@@ -995,9 +996,10 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
     except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
         raise HTTPException(status_code=502,
                             detail=f"Non riesco a leggere il grafo: {chiusa}") from None
-    from .operazioni import UnitConflict, _Context, _find_unit
-    from .tools import number_of_node
+    from .operazioni import UnitConflict, _Context, _find_unit, area_of, same_key
+    from .tools import number_of_node, unit_label
     from .unita import is_unit
+    ctx = _Context(section)
     if by_id:
         # DAL SUO ID (14 novembre): un'unità importata il cui id non porta un
         # numero (`1.US5`, uuid di PyArchInit) si apre lo stesso — e dal 15
@@ -1010,7 +1012,7 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
                                 detail=f"nessuna unità «{by_id}» in questo grafo")
     else:
         try:
-            unit = _find_unit(_Context(section), number)
+            unit = _find_unit(ctx, number)
         except UnitConflict as doppio:
             raise HTTPException(status_code=409, detail=str(doppio)) from None
     unit_id = str(unit["id"]) if unit else unit_id_for(number)
@@ -1043,9 +1045,15 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
            # aperta dal suo id, cioè senza un numero con cui riscriverla
            "by_id": bool(by_id), "name": str((unit or {}).get("name") or ""),
            # IL NUMERO CHE L'UNITÀ HA (15 novembre), anche aperta dal suo id:
-           # `""` = non ne ha ancora uno, e la scheda lo dice e si scrive lo
-           # stesso; un numero qui con `by_id` = un conflitto, e si legge
+           # dal suo NOME (12 novembre, E.D.); `""` = il nome non ne porta uno,
+           # e la scheda lo dice e si scrive lo stesso
            "number": number_of_node(unit) if unit else number,
+           # come la si dice («US 2 · area 1» per un nome dell'importer) e
+           # quante unità hanno la sua chiave (tipo, numero, area): più di una
+           # è un conflitto, e allora si legge soltanto
+           "label": unit_label(unit, area_of(ctx, unit)) if unit else "",
+           "conflict": (lambda n: n if n > 1 else 0)(len(same_key(ctx, unit)))
+                       if unit else 0,
            # LA DESCRIZIONE: quale casella la scrive (la ricetta), dove è stata
            # scritta e quante parole ha — il riquadro «Dettata in trincea»
            "description_field": schede.description_field(read_with),

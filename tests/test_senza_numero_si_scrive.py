@@ -5,9 +5,10 @@ quando un numero manca l'app lo dice; numerare è buona pratica, non un obbligo.
 
 1. un'unità senza numero si SCRIVE dal suo id (`POST /v1/scheda` con `node`),
    senza numero e senza crearne una nuova;
-2. il numero si AGGIUNGE (`data.us`) a un'unità che non lo aveva, e da quel
-   momento si trova per numero; un numero già di un'altra unità è il conflitto
-   (nessuna sovrascrittura); un numero che ne sostituirebbe un altro si rifiuta;
+2. il numero di un'unità si legge dal suo NOME (E.D., 12 novembre: niente
+   `data.us`): un numero mandato per un'unità il cui nome non ne porta uno si
+   rifiuta (`NumberNotAdded`), uno che ne sostituirebbe un altro anche
+   (`NumberNotChanged`); il nome e l'id non cambiano mai;
 3. `1.Combinar900` (CombinerNode, codice pyArchInit `Combinar`) non è
    un'unità: lo dice il dato dell'importer (`data.unita_tipo`), e nelle stanze
    importate prima il codice del template nel nome, con la STESSA tabella;
@@ -50,9 +51,10 @@ def _scheda():
 
 def _section():
     return {"nodes": [
-        {"id": "019f-b", "node_type": "US", "name": "1.US2", "data": {"label": "US (or SU)"}},
+        {"id": "019f-b", "node_type": "US", "name": "Strato di crollo",
+         "data": {"label": "US (or SU)"}},
         {"id": "019f-c", "node_type": "US", "name": "1.USM12",
-         "data": {"us": "12", "unita_tipo": "USM"}},
+         "data": {"label": "US (or SU)"}},
     ], "edges": []}
 
 
@@ -61,28 +63,19 @@ def _section():
 def test_an_unnumbered_unit_is_written_from_its_id():
     plan = O.plan(_scheda(), {"colore": "bruno"}, number="", node_id="019f-b",
                   section=_section(), ts=TS)
-    assert plan.unit_id == "019f-b" and plan.number == "" and not plan.numbered
+    assert plan.unit_id == "019f-b" and plan.number == ""
     assert not plan.created
     assert not any(op["op"] == "add_node" and op.get("id") == "019f-b" for op in plan.ops)
     assert not any(op.get("field") == "data.us" for op in plan.ops)
     assert "colore" in plan.written
 
 
-def test_a_number_written_on_it_is_added_not_invented():
-    plan = O.plan(_scheda(), {}, number="7", node_id="019f-b", section=_section(), ts=TS)
-    assert plan.numbered and plan.number == "7"
-    added = [op for op in plan.ops if op.get("field") == "data.us"]
-    assert [(op["node_id"], op["value"]) for op in added] == [("019f-b", "7")]
-    # il nome e l'id non cambiano
-    assert not any(op.get("field") in ("name", "id") for op in plan.ops)
-
-
-def test_a_number_of_another_unit_is_the_conflict_and_nothing_is_overwritten():
-    with pytest.raises(O.UnitConflict) as doppio:
-        O.plan(_scheda(), {}, number="12", node_id="019f-b", section=_section(), ts=TS)
-    said = str(doppio.value)
-    assert "1.USM12" in said and "1.US2" in said and "conflitto" in said
-    assert {n["id"] for n in doppio.value.nodes} == {"019f-b", "019f-c"}
+def test_a_number_is_not_added_in_another_key():
+    for number in ("7", "12"):
+        with pytest.raises(O.NumberNotAdded) as no:
+            O.plan(_scheda(), {}, number=number, node_id="019f-b",
+                   section=_section(), ts=TS)
+        assert "Strato di crollo" in str(no.value) and "nome" in str(no.value)
 
 
 def test_a_number_is_never_changed():
@@ -91,7 +84,7 @@ def test_a_number_is_never_changed():
     # lo stesso numero che ha già: niente da aggiungere, si scrive
     plan = O.plan(_scheda(), {"colore": "bruno"}, number="12", node_id="019f-c",
                   section=_section(), ts=TS)
-    assert plan.unit_id == "019f-c" and not plan.numbered
+    assert plan.unit_id == "019f-c" and plan.number == "12"
 
 
 def test_from_an_id_nothing_is_created():
@@ -124,7 +117,9 @@ def client(tmp_path, monkeypatch):
     doc = writer._read()
     sec = next(iter(doc["graphs"].values()))
     sec["nodes"] += [
-        {"id": "019f-uuid", "node_type": "US", "name": "1.US5",
+        {"id": "019f-uuid", "node_type": "US", "name": "Strato di crollo",
+         "data": {"label": "US (or SU)"}},
+        {"id": "019f-imp", "node_type": "US", "name": "1.US5",
          "data": {"label": "US (or SU)"}},
         {"id": "019f-comb", "node_type": "US", "name": "1.Combinar900",
          "data": {"label": "US (or SU)"}},
@@ -137,11 +132,12 @@ def _units(c):
     return {u["id"]: u for u in c.get("/v1/room/units").json()["units"]}
 
 
-def test_the_service_writes_from_the_id_then_adds_the_number(client):
+def test_the_service_writes_from_the_id_and_adds_no_number(client):
     _scheda()
-    c, _ = client
+    c, writer = client
     read = c.get("/v1/scheda/iccd-us-2021/unita?node=019f-uuid").json()
-    assert read["by_id"] is True and read["number"] == "" and read["name"] == "1.US5"
+    assert read["by_id"] is True and read["number"] == ""
+    assert read["name"] == "Strato di crollo" and read["conflict"] == 0
 
     saved = c.post("/v1/scheda/iccd-us-2021",
                    json={"node": "019f-uuid", "values": {"descrizione": "muro a secco"},
@@ -149,37 +145,33 @@ def test_the_service_writes_from_the_id_then_adds_the_number(client):
     assert saved["ok"], saved
     units = _units(c)
     assert units["019f-uuid"]["number"] == ""                 # salvata senza numero
-    assert "US5" not in units and len([u for u in units.values() if u["name"] == "1.US5"]) == 1
     again = c.get("/v1/scheda/iccd-us-2021/unita?node=019f-uuid").json()
     assert again["values"].get("descrizione") == "muro a secco"
 
-    # il numero aggiunto: da qui l'unità si trova per numero
-    numbered = c.post("/v1/scheda/iccd-us-2021",
-                      json={"node": "019f-uuid", "us": "5", "values": {},
-                            "lang": "it"}).json()
-    assert numbered["ok"], numbered
-    assert _units(c)["019f-uuid"]["number"] == "5"
-    by_number = c.get("/v1/scheda/iccd-us-2021/unita?us=5").json()
-    assert by_number["node_id"] == "019f-uuid"
-
-    # un numero che non è il suo: non lo cambia
-    other = c.post("/v1/scheda/iccd-us-2021",
-                   json={"node": "019f-uuid", "us": "6", "values": {}, "lang": "it"}).json()
-    assert not other["ok"] and "non si cambia" in other["message"]
-    assert _units(c)["019f-uuid"]["number"] == "5"
-
-
-def test_the_service_refuses_a_number_already_in_the_room(client):
-    _scheda()
-    c, writer = client
-    answer = c.post("/v1/scheda/iccd-us-2021",
-                    json={"node": "019f-uuid", "us": "3", "values": {"descrizione": "y"},
-                          "lang": "it"}).json()
-    assert not answer["ok"] and "conflitto" in answer["message"]
-    assert _units(c)["019f-uuid"]["number"] == ""             # nessuna sovrascrittura
+    # un numero mandato per lei: rifiutato, non scritto in un'altra chiave
+    for number in ("5", "3"):
+        refused = c.post("/v1/scheda/iccd-us-2021",
+                         json={"node": "019f-uuid", "us": number, "values": {},
+                               "lang": "it"}).json()
+        assert not refused["ok"] and "nome" in refused["message"], refused
+    assert _units(c)["019f-uuid"]["number"] == ""
     sec = next(iter(writer._read()["graphs"].values()))
     node = next(n for n in sec["nodes"] if n["id"] == "019f-uuid")
     assert "us" not in (node.get("data") or {})
+
+
+def test_the_imported_unit_is_numbered_by_its_name(client):
+    _scheda()
+    c, _ = client
+    read = c.get("/v1/scheda/iccd-us-2021/unita?node=019f-imp").json()
+    assert read["number"] == "5" and read["label"] == "US 5 · area 1"
+    assert read["conflict"] == 0                              # si scrive
+    assert _units(c)["019f-imp"]["by_id"] is True
+    by_number = c.get("/v1/scheda/iccd-us-2021/unita?us=5").json()
+    assert by_number["node_id"] == "019f-imp"
+    other = c.post("/v1/scheda/iccd-us-2021",
+                   json={"node": "019f-imp", "us": "6", "values": {}, "lang": "it"}).json()
+    assert not other["ok"] and "non si cambia" in other["message"]
 
 
 def test_neither_number_nor_id_is_still_refused(client):
@@ -193,7 +185,7 @@ def test_neither_number_nor_id_is_still_refused(client):
 def test_combinar_is_a_combiner_and_stays_out(client):
     c, _ = client
     units = _units(c)
-    assert "019f-comb" not in units and "019f-uuid" in units
+    assert "019f-comb" not in units and "019f-uuid" in units and "019f-imp" in units
     listed = c.get("/v1/room/units").json()
     assert {x["class"]: x["count"] for x in listed["left_out"]}.get("CombinerNode") == 1
 
@@ -259,7 +251,7 @@ def test_the_sheet_says_the_number_is_missing_and_writes_anyway():
     assert "function paintNoNumber" in SHELL
     # dal suo id si scrive: si legge soltanto un'unità in conflitto
     reading = SHELL[SHELL.index("const reading = () =>"):][:200]
-    assert "state.byId && state.idNumber" in reading
+    assert "state.byId && state.idConflict" in reading
     scheda = (ROOT / "web" / "scheda.js").read_text(encoding="utf-8")
     assert "node: state.nodeId" in scheda and "!body.us && !body.node" in scheda
 
@@ -279,5 +271,8 @@ def test_the_words_are_in_the_page(locale):
 
 
 def test_the_positive_notice_in_italian():
-    assert ('"unit.no_number": "Questa unità non ha ancora un numero: '
-            'aggiungilo quando puoi."') in PAGE
+    assert ('"unit.no_number": "Il nome di questa unità non porta un numero: '
+            'si scrive dal suo id, senza."') in PAGE
+    # nessuna casella per aggiungerlo (12 novembre, E.D.)
+    nonum = SHELL[SHELL.index("function paintNoNumber"):][:900]
+    assert "input" not in nonum

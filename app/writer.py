@@ -356,6 +356,10 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
         livelli = {str(n.get("id")): str((n.get("data") or {}).get("level") or "")
                    for n in section.get("nodes") or []
                    if n.get("node_type") == "LocationNodeGroup"}
+        #: tutti i nodi e gli archi della sezione, per l'AREA di un'unità
+        #: (`tools.area_of_unit`)
+        nodi = {str(n.get("id")): n for n in section.get("nodes") or []}
+        archi = list(section.get("edges") or [])
         luoghi: Dict[str, List[str]] = {}
         for e in section.get("edges") or []:
             if e.get("edge_type") == "is_in_location":
@@ -394,12 +398,23 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
             #: accanto a lui. `""` quando l'id viene da un grafo importato, e
             #: allora la superficie lo dice invece di proporre una scheda su
             #: un'unità sbagliata.
-            #: …e dal 15 novembre anche il `data.us` che l'importer scrive per
-            #: un'unità importata (`tools.number_of_node`)
-            from .tools import number_of_node
+            #: …e dal 12 novembre (E.D.) dal NOME composto dell'importer
+            #: (`1.US2` → 2), mai da `data.us` (`tools.number_of_node`)
+            from .tools import area_of_unit, name_number, number_of_node, unit_key, unit_label
+            area_said, area_from = area_of_unit(node, nodi, archi)
             fuori.append({
                 "id": str(node.get("id")),
                 "number": number_of_node(node),
+                #: LA CHIAVE (tipo, numero, area): un conflitto è la stessa
+                #: chiave su due unità; l'area dal luogo `is_in_location` di
+                #: livello area, o dal prefisso del nome (`area_from`)
+                "key": list(unit_key(node, area_said)),
+                "area_from": area_from,
+                #: come si dice un'unità importata: «US 2 · area 1»
+                "label": unit_label(node, area_said),
+                #: un'unità dal nome composto si APRE DAL SUO ID: il numero da
+                #: solo non la indirizza (lo stesso numero in un'altra area)
+                "by_id": bool(name_number(node.get("name"))[1]),
                 "name": str(node.get("name") or node.get("id") or ""),
                 "node_type": str(node.get("node_type") or ""),
                 "description": str(node.get("description") or ""),
@@ -441,16 +456,18 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                                        words(node.get("description"))),
             })
     fuori.sort(key=lambda u: (u["node_type"], u["name"], u["id"]))
-    #: UN NUMERO DI DUE UNITÀ (15 novembre): una coniata qui e una importata, o
-    #: due importate da aree diverse. Si dice su ciascuna (`conflict`: quante
-    #: sono), e nessuna delle due si sceglie al posto di chi scava
-    #: (`operazioni.UnitConflict` rifiuta di scriverci per numero).
-    quante: Dict[str, int] = {}
+    #: UNA CHIAVE DI DUE UNITÀ (15 novembre; la chiave dal 12 novembre di
+    #: E.D.): lo stesso tipo e lo stesso numero NELLA STESSA AREA — una coniata
+    #: qui e una importata, o due importate. `1.US2` e `2.US2` non lo sono. Si
+    #: dice su ciascuna (`conflict`: quante sono), e nessuna si sceglie al posto
+    #: di chi scava (`operazioni.UnitConflict` rifiuta di scriverci per numero).
+    quante: Dict[tuple, int] = {}
     for unit in fuori:
         if unit["number"]:
-            quante[unit["number"]] = quante.get(unit["number"], 0) + 1
+            k = tuple(unit["key"])
+            quante[k] = quante.get(k, 0) + 1
     for unit in fuori:
-        n = quante.get(unit["number"], 0) if unit["number"] else 0
+        n = quante.get(tuple(unit["key"]), 0) if unit["number"] else 0
         unit["conflict"] = n if n > 1 else 0
     from .unita import left_out
 

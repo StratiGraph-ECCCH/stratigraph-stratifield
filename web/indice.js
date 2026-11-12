@@ -21,7 +21,13 @@
  * Zero colori letterali: tutto dalle variabili del tema.
  */
 
-import { noNumberTag, room, unitLabel } from "./widgets.js";
+import { noNumberTag, opensById, room, unitLabel } from "./widgets.js";
+
+/** L'indirizzo con cui un'unità dell'elenco si apre: `{node}` (dal suo id:
+ *  `widgets.opensById`) o `{us}`. */
+export function addressOf(u) {
+  return opensById(u) ? { node: u.id } : { us: u.number };
+}
 
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
@@ -211,7 +217,7 @@ function row(u, t, onPick, listing, fallback, prefix) {
   const tr = document.createElement("tr");
   tr.dataset.unit = u.id;
   tr.tabIndex = 0;
-  if (!u.number) tr.dataset.byId = "true";
+  if (opensById(u)) tr.dataset.byId = "true";
   const td = (text, cls) => {
     const c = document.createElement("td");
     if (cls) c.className = cls;
@@ -304,7 +310,7 @@ export function mount({ t, openScheda, schede, current = () => null,
       //  è la sua virtù. Il numero lo dice il nodo (`number_from_unit_id`),
       //  non questa pagina.
       b.addEventListener("click",
-        () => openScheda(item.id, u ? (u.number ? { us: u.number } : { node: u.id }) : null));
+        () => openScheda(item.id, u ? addressOf(u) : null));
       return b;
     };
     if (used.length) {
@@ -521,14 +527,14 @@ export function mount({ t, openScheda, schede, current = () => null,
    *  B5b). Le altre chiedono, come prima — il secondo tocco resta dove serve. */
   function pick(u) {
     const declared = u.scheda && u.scheda.template;
-    const su = u.number ? { us: u.number } : { node: u.id };
+    const su = addressOf(u);
     if (declared && schede().some((x) => x.id === declared)) {
       openScheda(declared, su);
       return;
     }
     // senza numero e con una sola definizione, o con quella aperta: si apre
     const lista = schede();
-    if (!u.number && (lista.length === 1 || current())) {
+    if (opensById(u) && (lista.length === 1 || current())) {
       openScheda(current() || lista[0].id, su);
       return;
     }

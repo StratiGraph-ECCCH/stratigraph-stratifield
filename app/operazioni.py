@@ -168,9 +168,6 @@ class Plan:
     notes: List[str] = dc_field(default_factory=list)
     #: il nome dell'unità, per dirla quando non ha un numero (15 novembre)
     name: str = ""
-    #: vero se questo piano AGGIUNGE il numero a un'unità che non lo aveva
-    #: (`data.us`, aperta dal suo id): mai un numero che ne sostituisce un altro
-    numbered: bool = False
     #: la lingua in cui si compila (`lang` di `plan`), scritta come `data.lang`
     #: sui nodi che questo piano CREA — mai su quelli che già c'erano
     lang: str = ""
@@ -259,36 +256,71 @@ def _is_unit(node: Dict[str, Any]) -> bool:
 
 
 class UnitConflict(OperazioniError):
-    """Due unità della stanza con lo stesso numero (15 novembre 2026): una
-    coniata qui e una importata, o due importate da aree diverse. Si DICE —
-    scrivere su una delle due sceglierebbe al posto di chi scava."""
+    """Due unità della stanza con la stessa CHIAVE (15 novembre 2026; la chiave
+    dal 12 novembre di E.D.): lo stesso tipo e lo stesso numero NELLA STESSA
+    AREA — una coniata qui e una importata, o due importate. Si DICE — scrivere
+    su una delle due sceglierebbe al posto di chi scava."""
 
-    def __init__(self, number: str, nodes: List[Dict[str, Any]],
-                 adding: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, number: str, nodes: List[Dict[str, Any]]) -> None:
         self.number = number
-        self.nodes = nodes + ([adding] if adding is not None else [])
+        self.nodes = nodes
         names = ", ".join(f"«{n.get('name') or n.get('id')}»" for n in nodes)
-        if adding is not None:
-            # IL NUMERO SCRITTO SU UN'UNITÀ CHE NON NE AVEVA, e che un'altra
-            # ha già (15 novembre): lo stesso conflitto, detto per chi scrive
-            OperazioniError.__init__(
-                self,
-                f"Il numero {number} è già di {names} in questa stanza: non lo "
-                f"do anche a «{adding.get('name') or adding.get('id')}», e non "
-                f"sovrascrivo niente. È un conflitto: scegline un altro.")
-            return
         super().__init__(
             f"Il numero {number} è di {len(nodes)} unità in questa stanza "
             f"({names}): è un conflitto, non lo risolvo scegliendone una. "
-            f"Aprile dal loro nome, in lettura, e date a una un altro numero.")
+            f"Aprile dal loro nome, in lettura.")
+
+
+class NumberInManyAreas(UnitConflict):
+    """Un numero DA SOLO che più unità hanno, in aree diverse (`1.US2`,
+    `2.US2`): non è un conflitto — l'area le distingue — ma il numero da solo
+    non dice quale. Non si sceglie: si apre dal suo id."""
+
+    def __init__(self, number: str, nodes: List[Dict[str, Any]]) -> None:
+        self.number = number
+        self.nodes = nodes
+        names = ", ".join(f"«{n.get('name') or n.get('id')}»" for n in nodes)
+        OperazioniError.__init__(
+            self,
+            f"Il numero {number} è di {len(nodes)} unità in aree diverse "
+            f"({names}): il numero da solo non dice quale. Aprila "
+            f"dall'elenco.")
+
+
+def area_of(ctx: _Context, node: Dict[str, Any]) -> str:
+    """L'area di un'unità nel contesto (`tools.area_of_unit`: il luogo
+    `is_in_location` di livello area, o il prefisso del nome)."""
+    from .tools import area_of_unit
+    return area_of_unit(node, ctx.nodes, ctx.edges)[0]
+
+
+def same_key(ctx: _Context, unit: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Le unità del contesto con la stessa CHIAVE di `unit` (tipo, numero,
+    area), lei compresa; `[]` per un'unità senza numero."""
+    from .tools import unit_key
+    key = unit_key(unit, area_of(ctx, unit))
+    if not key[1]:
+        return []
+    out = []
+    for node in ctx.nodes.values():
+        if not _is_unit(node):
+            continue
+        data = node.get("data") if isinstance(node.get("data"), dict) else {}
+        if data.get("removed"):
+            continue
+        if unit_key(node, area_of(ctx, node)) == key:
+            out.append(node)
+    return out
 
 
 def _find_unit(ctx: _Context, number: str) -> Optional[Dict[str, Any]]:
     """Un'unità per NUMERO, nel contesto: l'id che questo servizio conia, e
-    qualunque unità il cui numero risalga dall'id, dal nome o dal `data.us`
-    di un importer (`tools.number_of_node`). DUE unità con lo stesso numero
-    sono un conflitto (`UnitConflict`), non la prima trovata."""
-    from .tools import number_of_node, unit_id_for
+    qualunque unità il cui numero si legga dall'id o dal NOME
+    (`tools.number_of_node`; `data.us` no, E.D. 12 novembre). Due unità con la
+    stessa chiave (tipo, numero, area) sono un conflitto (`UnitConflict`); con
+    lo stesso numero in aree diverse il numero da solo non basta
+    (`NumberInManyAreas`). Mai la prima trovata."""
+    from .tools import number_of_node, unit_id_for, unit_key
 
     minted = ctx.nodes.get(unit_id_for(number))
     found: List[Dict[str, Any]] = [minted] if minted is not None else []
@@ -301,7 +333,10 @@ def _find_unit(ctx: _Context, number: str) -> Optional[Dict[str, Any]]:
         if number_of_node(node) == number:
             found.append(node)
     if len(found) > 1:
-        raise UnitConflict(number, found)
+        keys = {unit_key(n, area_of(ctx, n)) for n in found}
+        if len(keys) == 1:
+            raise UnitConflict(number, found)
+        raise NumberInManyAreas(number, found)
     return found[0] if found else None
 
 
@@ -310,19 +345,22 @@ class NumberNotChanged(OperazioniError):
     cambiano (E.D., 12 novembre 2026)."""
 
 
+class NumberNotAdded(OperazioniError):
+    """Un numero mandato per un'unità il cui NOME non ne porta uno: il numero
+    di un'unità si legge dal suo nome, e non si scrive in un'altra chiave
+    (E.D., 12 novembre 2026: niente `data.us`)."""
+
+
 def _unit_by_id(ctx: _Context, node_id: str,
-                number: str) -> Tuple[Dict[str, Any], str, str]:
-    """L'unità DAL SUO ID (15 novembre 2026), e il numero: `(unità, numero con
-    cui dirla, numero da aggiungere)`.
+                number: str) -> Tuple[Dict[str, Any], str]:
+    """L'unità DAL SUO ID (15 novembre 2026), e il numero con cui dirla.
 
     * l'unità c'è ed è un'unità, o si rifiuta (dal suo id non si crea niente);
-    * senza `number`: si scrive com'è, col numero che ha, o senza;
-    * con `number` e un'unità che ha già QUEL numero: niente da aggiungere;
-    * con `number` e un'unità che ne ha UN ALTRO: rifiuto, il numero non si
-      cambia (`NumberNotChanged`);
-    * con `number` e un'unità senza: il numero si aggiunge, se nessun'altra
-      unità della stanza lo ha già — altrimenti è il conflitto che c'è già
-      (`UnitConflict`, con le unità coinvolte), e niente si sovrascrive.
+    * senza `number`: si scrive com'è, col numero che il suo nome dice, o senza;
+    * con `number` uguale a quello del nome: lo stesso;
+    * con un ALTRO numero: rifiuto, il numero non si cambia (`NumberNotChanged`);
+    * con un numero per un'unità il cui nome non ne porta uno: rifiuto
+      (`NumberNotAdded`) — il numero non si aggiunge in un'altra chiave.
     """
     from .tools import number_of_node
 
@@ -333,21 +371,16 @@ def _unit_by_id(ctx: _Context, node_id: str,
             f"L'unità «{node_id}» non è in questo grafo: dal suo id si scrive "
             f"un'unità che c'è, non se ne crea una.")
     own = number_of_node(unit)
-    if not number:
-        return unit, own, ""
+    if not number or number == own:
+        return unit, own
     if own:
-        if own != number:
-            raise NumberNotChanged(
-                f"«{unit.get('name') or node_id}» ha già il numero {own}: un "
-                f"numero non si cambia, e {number} non lo sostituisce.")
-        return unit, own, ""
-    try:
-        other = _find_unit(ctx, number)
-    except UnitConflict as doppio:
-        raise UnitConflict(number, doppio.nodes, adding=unit) from None
-    if other is not None and str(other.get("id")) != node_id:
-        raise UnitConflict(number, [other], adding=unit)
-    return unit, number, number
+        raise NumberNotChanged(
+            f"«{unit.get('name') or node_id}» ha già il numero {own}: un "
+            f"numero non si cambia, e {number} non lo sostituisce.")
+    raise NumberNotAdded(
+        f"Il nome «{unit.get('name') or node_id}» non porta un numero: il "
+        f"numero di un'unità si legge dal suo nome, e non lo scrivo in "
+        f"un'altra chiave. La scheda si salva senza.")
 
 
 # ── i valori, nella forma che la ricetta si aspetta ─────────────────────────
@@ -646,9 +679,8 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
     template_id = scheda.id
 
     # ── 1 · l'unità ─────────────────────────────────────────────────────────
-    adding = ""
     if node_id:
-        existing, number, adding = _unit_by_id(ctx, node_id, number)
+        existing, number = _unit_by_id(ctx, node_id, number)
     else:
         existing = _find_unit(ctx, number)
     unit_id = str(existing["id"]) if existing else unit_id_for(number)
@@ -736,15 +768,6 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
 
     # quale definizione e quale versione l'ha compilata (audit B5b)
     op("update_field", node_id=unit_id, field=f"data.{MARK}", value=scheda.ref)
-
-    # IL NUMERO AGGIUNTO (15 novembre): un'unità aperta dal suo id che riceve
-    # adesso il suo numero. La chiave è quella dell'importer (`data.us`,
-    # `tools.IMPORTED_NUMBER`): il nome e l'id non cambiano.
-    if adding:
-        from .tools import IMPORTED_NUMBER
-        op("update_field", node_id=unit_id, field=f"data.{IMPORTED_NUMBER}",
-           value=adding)
-        out.numbered = True
 
     # ── 2 · i campi ─────────────────────────────────────────────────────────
     field_props: Dict[str, str] = {}

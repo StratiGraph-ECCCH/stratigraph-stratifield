@@ -182,7 +182,8 @@ NOT_UNIT_CODES_PINNED: Dict[str, str] = {
     "CON": "ContinuityNode",
 }
 
-#: la chiave in cui l'importer scrive il codice (accanto a `data.us`)
+#: la chiave in cui un importer ha scritto il codice (`sync/graph_projector`;
+#: s3Dgraphy dev103 per l'importer PyArchInit, tolto dal 12 novembre)
 CODE_KEY = "unita_tipo"
 
 

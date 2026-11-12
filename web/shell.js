@@ -13,7 +13,7 @@
 import {
   datamodelNotice, definitionFor, effectiveMode, keyField, payloadFor, proposeMode,
   refreshCompleteness, rememberMode, render, save, stepTo, thumbbarPlan,
-  trenchFields, otherFields, wayBack, writeValue,
+  trenchFields, otherFields, wayBack,
 } from "./scheda.js";
 import { drawSheet, hasSheet, optionsFor, paintInspector, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
@@ -21,7 +21,7 @@ import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./roo
 import { filters as indexFilters, isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
 import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
-import { loadRoom, numberOf, orderedUnits, unitFor, unitPrefix } from "./widgets.js";
+import { loadRoom, numberOf, opensById, orderedUnits, unitFor, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 import { mount as mountDesk, openingSection, SECTION_KEY, sectionOf, sectionToKeep } from "./scrivania.js";
 import { valueView } from "./widgets.js";
@@ -130,6 +130,9 @@ const state = {
   // il numero che un'unità aperta dal suo id HA già: c'è solo se è anche di
   // un'altra unità (un conflitto), e allora si legge
   idNumber: "",
+  // quante unità hanno la sua chiave (tipo, numero, area): più di una è un
+  // conflitto, e un'unità aperta dal suo id allora si LEGGE (12 novembre)
+  idConflict: 0,
   // Ciò che il nodo dice della descrizione dell'unità aperta: dove è stata
   // scritta e quante parole ha (`/v1/scheda/…/unita`), per «Dettata in trincea».
   unitInfo: null,
@@ -143,7 +146,7 @@ const state = {
   dirty: false,
   // Dopo un salvataggio, mandato o in coda: la stanza ha un'unità in più, e
   // l'indirizzo impara il numero di una scheda nuova.
-  onSaved: (sent, body) => afterSave(body, sent),
+  onSaved: (sent, body) => afterSave(body),
   onChange: () => paintCompleteness(),
   // «1/25» non diceva cosa conta (SF-10): sono i campi, uno per volta
   onStep: (i, n) => {
@@ -586,6 +589,7 @@ async function openScheda(id, su = null, lang = null) {
       state.byId = false;
       state.unitName = "";
       state.idNumber = "";
+      state.idConflict = 0;
       state.unitInfo = null;
       // …E UNA SCHEDA SENZA UNITÀ È NUOVA. Trovato il 22 ottobre: aperta la
       // US 3020 (esistente, `create` falso) e poi un'altra definizione vuota,
@@ -613,7 +617,7 @@ async function openScheda(id, su = null, lang = null) {
       if (reread && reread.other && !su.reread) {
         return openScheda(reread.other, { ...su, reread: true }, lang);
       }
-      const note = state.idNumber ? tr("unit.conflict_read", "") : "";
+      const note = state.idConflict ? tr("unit.conflict_read", "") : "";
       const said = [note, reread && reread.note].filter(Boolean).join(" ");
       if (said) {
         says.hidden = false;
@@ -641,6 +645,7 @@ async function openScheda(id, su = null, lang = null) {
       state.byId = false;
       state.unitName = "";
       state.idNumber = "";
+      state.idConflict = 0;
       state.unitInfo = null;
     }
     if (from === "cache") {
@@ -681,6 +686,7 @@ async function refill(def, us, lens = false, node = "") {
   state.nodeId = node || "";
   state.unitName = "";
   state.idNumber = "";
+  state.idConflict = 0;
   state.unitInfo = null;
   state.values = {};
   state.authored = {};
@@ -721,8 +727,11 @@ async function refill(def, us, lens = false, node = "") {
   if (state.byId) {
     // IL NOME si mostra, IL NUMERO resta il numero: vuoto se l'unità non ne
     // ha (la casella dell'identità non mostra il nome come se fosse un numero)
-    state.unitName = read.name || "";
+    // «US 2 · area 1» per un nome dell'importer (il nodo lo dice), il nome
+    // altrimenti
+    state.unitName = read.label || read.name || "";
     state.idNumber = String(read.number || "");
+    state.idConflict = Number(read.conflict || 0);
     state.us = state.idNumber;
     if (state.keyField) {
       state.values[state.keyField] = state.idNumber;
@@ -841,7 +850,7 @@ function paintLens(host) {
  * un'unità compilata con un altro. Stesso blocco, stessa ragione. */
 const reading = () => Boolean(SG().readOnly || state.lens
   // dal suo id si scrive (15 novembre); si legge solo un'unità in conflitto
-  || (state.byId && state.idNumber));
+  || (state.byId && state.idConflict));
 
 function lockForReading(host) {
   if (!host || !reading()) return;
@@ -1105,7 +1114,9 @@ async function goUnit(asked) {
 /** Un'unità dell'elenco, aperta: per numero, o DAL SUO ID, in lettura, se non
  *  ne ha uno o se il suo numero è anche di un'altra (15 novembre). */
 async function openFound(found) {
-  const byId = !found.number || found.conflict > 1;
+  // dal suo id anche un'unità dal nome dell'importer (`by_id`): il numero da
+  // solo non la indirizza (12 novembre, E.D.)
+  const byId = opensById(found);
   if (!byId && found.number === state.us && !state.create) return true;
   if (byId && state.byId && state.nodeId === found.id) return true;
   if (!(await leaveUnit())) return false;
@@ -1114,14 +1125,17 @@ async function openFound(found) {
   return true;
 }
 
+/** L'unità aperta, nell'elenco: dal suo id se aperta così, o per numero. */
+const isHere = (u) => (state.byId ? u.id === state.nodeId : u.number === state.us);
+
 async function stepUnit(delta) {
   const order = orderedUnits();
   if (!order.length || !state.def) return false;
-  const at = order.findIndex((u) => u.number === state.us);
+  const at = order.findIndex(isHere);
   const target = at < 0 ? (delta > 0 ? order[0] : order[order.length - 1])
     : order[at + delta];
   if (!target) return false;             // un estremo: ci si ferma
-  return target.conflict > 1 ? openFound(target) : goUnit(target.number);
+  return opensById(target) ? openFound(target) : goUnit(target.number);
 }
 
 const TEXTY = new Set(["text", "search", "number", "email", "url", "tel",
@@ -1144,7 +1158,7 @@ function paintUnav() {
   const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
   bar.classList.toggle("big", state.mode === "phone");
   const order = orderedUnits();
-  const at = order.findIndex((u) => u.number === state.us);
+  const at = order.findIndex(isHere);
 
   const arrow = (delta, glyph, key) => {
     const b = make("button", { type: "button", textContent: glyph });
@@ -1168,7 +1182,8 @@ function paintUnav() {
   jump.setAttribute("enterkeyhint", "go");
   const options = make("datalist", { id: listId });
   for (const u of order) {
-    const o = make("option", { value: u.number });
+    // un'unità dal nome dell'importer si cerca come la si dice: «US 2 · area 1»
+    const o = make("option", { value: opensById(u) ? (u.label || u.name || u.number) : u.number });
     o.label = u.definition || u.name || "";
     options.append(o);
   }
@@ -1198,47 +1213,26 @@ function paintUnav() {
   // scrive e quella con cui si legge sono la stessa scelta, in un posto.
 }
 
-/* ── «QUESTA UNITÀ NON HA ANCORA UN NUMERO» (15 novembre 2026) ───────────────
+/* ── «IL NOME DI QUESTA UNITÀ NON PORTA UN NUMERO» (15 novembre 2026) ─────────
  *
- * La regola di E.D. (12 novembre): i numeri non si cambiano né si inventano;
- * quando un numero manca l'app LO DICE; numerare è buona pratica, non un
- * obbligo. Nella testata della scheda, sotto ‹ unità ›, un avviso discreto in
- * forma positiva e il campo del numero a portata di mano. È la STESSA casella
- * dell'identità della scheda (`writeValue` sul `keyField`): un numero solo,
- * in due posti dove si può scrivere. Salvare senza si può; salvato con il
- * numero, il nodo lo aggiunge (`data.us`) se nessun'altra unità della stanza
- * lo ha — altrimenti il conflitto, e niente si sovrascrive. */
+ * Le regole di E.D. (12 novembre): i numeri non si cambiano né si inventano;
+ * quando un numero manca l'app LO DICE, senza imporlo; e il numero di
+ * un'unità SI LEGGE DAL SUO NOME — non si scrive in un'altra chiave (niente
+ * `data.us`). Nella testata della scheda, sotto ‹ unità ›, un avviso discreto:
+ * solo il testo, nessuna casella per aggiungerlo. La scheda si salva senza. */
 function paintNoNumber() {
   const note = $("scheda-nonum");
   if (!note) return;
   const show = Boolean(state.def && state.panel === "scheda" && state.byId
-                       && !state.idNumber && !state.lens && !SG().readOnly
-                       && state.keyField);
+                       && !state.idNumber && !state.lens && !SG().readOnly);
   note.hidden = !show;
   if (!show) { note.replaceChildren(); return; }
+  if (note.dataset.unit === state.nodeId && note.childElementCount) return;
   const t = SG().t || ((k) => k);
-  const box = note.querySelector("input");
-  if (box && note.dataset.unit === state.nodeId) {   // non sotto le dita
-    if (document.activeElement !== box) box.value = state.us || "";
-    return;
-  }
   const text = Object.assign(document.createElement("span"),
                              { textContent: t("unit.no_number") });
-  const label = document.createElement("label");
-  const input = Object.assign(document.createElement("input"), {
-    type: "text", inputMode: "text", autocomplete: "off", value: state.us || "",
-    placeholder: t("unit.number_label") });
-  input.dataset.nonum = "number";
-  input.setAttribute("enterkeyhint", "done");
-  input.addEventListener("input", () => {
-    writeValue(state, state.keyField, input.value);
-  });
-  // la casella del numero nella scheda mostra lo stesso valore
-  input.addEventListener("change", () => { if (state.def) draw(); });
-  label.append(Object.assign(document.createElement("span"),
-                             { textContent: t("unit.number_label") }), input);
-  note.dataset.unit = state.nodeId;   // un'altra unità: avviso nuovo, senza rifiuti vecchi
-  note.replaceChildren(text, label);
+  note.dataset.unit = state.nodeId;
+  note.replaceChildren(text);
 }
 
 /* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────
@@ -1330,32 +1324,11 @@ async function showMap(push = true) {
   });
 }
 
-function afterSave(body, sent = true) {
-  // UN'UNITÀ SENZA NUMERO CHE ADESSO NE HA UNO (15 novembre): salvata dal suo
-  // id col numero accanto, e la stanza l'ha preso. Si riapre PER NUMERO —
-  // l'avviso sparisce perché il numero c'è, non perché lo si è nascosto. Se
-  // la stanza ha rifiutato (un numero che è già di un'altra unità: il
-  // conflitto) o la scheda è in coda, si resta dove si è, dal suo id.
+function afterSave(body) {
+  // UN'UNITÀ APERTA DAL SUO ID resta dov'è, dal suo id: il numero non le si
+  // aggiunge (12 novembre, E.D.: si legge dal nome). La stanza si rilegge.
   if (body && body.node && state.byId && body.node === state.nodeId) {
-    if (sent && body.us && state.def) {
-      const def = state.def;
-      void loadRoom().then(() => openScheda(def.id, { us: body.us }, def.lang))
-        .then(() => { if (deskUI) deskUI.paint(); });
-    } else {
-      // IL RIFIUTO SI LEGGE DOVE SI È SCRITTO IL NUMERO: la frase della
-      // stanza (il conflitto) sta anche nella testata, non solo in fondo
-      const note = $("scheda-nonum");
-      const answer = $("answer");
-      if (note && body.us && answer && !answer.hidden && answer.classList.contains("bad")) {
-        let said = note.querySelector(".nonum-said");
-        if (!said) {
-          said = Object.assign(document.createElement("span"), { className: "nonum-said" });
-          note.append(said);
-        }
-        said.textContent = answer.textContent;
-      }
-      void loadRoom().then(() => { paintUnav(); if (deskUI) deskUI.paint(); });
-    }
+    void loadRoom().then(() => { paintUnav(); if (deskUI) deskUI.paint(); });
     void loadReview();
     return;
   }
@@ -1487,7 +1460,8 @@ async function openUnit(u) {
   if (!def) { SG().show(false, tr("index.noSchede", "")); return; }
   if (!(await leaveUnit())) return;
   // un numero che è anche di un'altra unità (15 novembre) non apre per numero
-  const byNumber = u.number && !(u.conflict > 1);
+  // (e dal 12 novembre nemmeno un'unità dal nome dell'importer: `opensById`)
+  const byNumber = !opensById(u);
   window.location.hash = byNumber ? hashFor(def, u.number) : hashFor(def, "", false, u.id);
 }
 

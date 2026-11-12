@@ -126,17 +126,21 @@ const byNumber = (a, b) => {
   return String(a).localeCompare(String(b), undefined, { numeric: true });
 };
 
-/** Le unità della stanza con un numero, UNA per numero, in ordine numerico. È
- *  l'ordine di ‹ ›, quello del completamento e quello dei suggerimenti. */
+/** Le unità della stanza con un numero, UNA per chiave (tipo, numero, area:
+ *  `1.US2` e `2.US2` sono due), in ordine numerico. È l'ordine di ‹ ›, quello
+ *  del completamento e quello dei suggerimenti. */
 export function orderedUnits(units = room.units) {
   const seen = new Map();
   for (const u of units || []) {
     if (!u || !u.number) continue;
-    const held = seen.get(u.number);
+    const k = u.key ? JSON.stringify(u.key) : u.number;
+    const held = seen.get(k);
     // una scheda vera batte uno stub con lo stesso numero
-    if (!held || (held.stub && !u.stub)) seen.set(u.number, u);
+    if (!held || (held.stub && !u.stub)) seen.set(k, u);
   }
-  return [...seen.values()].sort((a, b) => byNumber(a.number, b.number));
+  return [...seen.values()].sort((a, b) => byNumber(a.number, b.number)
+    || String((a.key || [])[2] || "").localeCompare(String((b.key || [])[2] || ""),
+                                                    undefined, { numeric: true }));
 }
 
 /** Il numero, il NOME ORIGINALE o la definizione di un'unità della stanza →
@@ -148,10 +152,15 @@ export function unitFor(said, number, units = room.units) {
   if (!said) return null;
   const all = (units || []).filter(Boolean);
   const same = all.filter((u) => u.number && u.number === number);
-  if (same.length > 1) return { conflict: same };
+  // UN CONFLITTO è la stessa chiave — tipo, numero, area (E.D., 12 novembre
+  // 2026): `1.US2` e `2.US2` non lo sono, e il numero da solo non sceglie fra
+  // loro (si cerca allora per nome o per «US 2 · area 1»)
+  const keyOf = (u) => JSON.stringify(u.key || [u.number]);
+  if (same.length > 1 && new Set(same.map(keyOf)).size === 1) return { conflict: same };
   if (same.length === 1) return same[0];
   const q = said.toLowerCase();
   const byName = all.filter((u) => String(u.name || "").toLowerCase() === q
+                                   || String(u.label || "").toLowerCase() === q
                                    || String(u.id || "").toLowerCase() === q);
   if (byName.length === 1) return byName[0];
   const byWords = orderedUnits(all).filter((u) =>
@@ -165,8 +174,19 @@ export function unitFor(said, number, units = room.units) {
 export function unitLabel(u, prefix = "") {
   if (!u) return "";
   if (!u.number) return u.name || u.id || "";
-  const base = `${prefix}${u.number}`;
+  // un'unità dal nome dell'importer si dice col SUO tipo e la sua area, come
+  // il nodo la dice: «US 2 · area 1» (`1.US2`), «USM 12 · area 1»
+  const base = u.label || `${prefix}${u.number}`;
   return u.conflict > 1 ? `${base} ⚠ ${u.name || u.id}` : base;
+}
+
+/** SI APRE DAL SUO ID (e non per numero) un'unità senza numero, una in
+ *  conflitto, e un'unità dal nome dell'importer (`by_id`): il suo numero da
+ *  solo non la indirizza — lo stesso numero può stare in un'altra area
+ *  (E.D., 12 novembre 2026: il numero si legge dal nome, l'area lo rende
+ *  unico). */
+export function opensById(u) {
+  return Boolean(u && (!u.number || u.by_id || u.conflict > 1));
 }
 
 /** IL PICCOLO SEGNO «SENZA NUMERO» (15 novembre 2026): un'unità senza numero

@@ -35,7 +35,7 @@ defend three years later, when it matters.
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from . import authorship, exif
 from .contract import (GraphDelta, Slot, ToolDescriptor, ToolRegistry,
@@ -157,27 +157,128 @@ def number_from_unit_id(node_id: str, name: str = "") -> str:
     return ""
 
 
-#: La chiave in cui un importer scrive il numero di un'unità che non ha
-#: coniato lui (s3Dgraphy `importer/unit_numbers`, 15 novembre 2026): la
-#: colonna `us` di pyArchInit, em.json `data.us`, accanto a `data.unita_tipo`.
-IMPORTED_NUMBER = "us"
+# ── IL NUMERO SI LEGGE DAL NOME (E.D., 12 novembre 2026) ─────────────────────
+#
+# In EM l'identificatore di un'unità è il suo NOME (P1 is identified by). Il
+# numero non si copia in un'altra chiave: niente `data.us`, né scritto né
+# letto (una stanza importata con s3Dgraphy dev103 che lo porta ancora non si
+# migra: qui lo si ignora). Il nome che l'importer PyArchInit costruisce
+# (`{area}.{settore}.{unita_tipo}{us}` → `1.US2`, `1.1.US1`, `1.USM12`) dice
+# già tipo e numero; l'area lo rende unico (in PyArchInit la chiave è sito +
+# area + numero). La regola è quella di s3Dgraphy
+# (`importer/unit_numbers.number_of_name`): l'ultimo componente dopo i punti,
+# codice di un'unità + numero di un'unità. Si prende da là quando c'è; questa
+# copia, tenuta uguale da un test, serve a un nodo con una s3Dgraphy di prima.
+
+#: l'ultimo componente di un nome come codice + numero (`US1`, `USM-12`)
+_NAME_CODE_NUMBER = re.compile(
+    r"^(?P<code>[^\W\d_]+)[\s_-]*(?P<number>\d[0-9A-Za-z]*)$", re.UNICODE)
+
+
+def _number_of_name_pinned(name: Any) -> Dict[str, Any]:
+    from s3dgraphy.nodes.stratigraphic_node import KIND_OF_CODE
+    from .unita import not_unit_codes, unit_types
+
+    def known(code: str, table: List[str]) -> Optional[str]:
+        # esatto, altrimenti l'UNICO che differisce solo per le maiuscole
+        if code in table:
+            return code
+        low = [k for k in table if k.lower() == code.lower()]
+        return low[0] if len(low) == 1 else None
+
+    text = str(name if name is not None else "").strip()
+    m = _NAME_CODE_NUMBER.match(text.rsplit(".", 1)[-1].strip())
+    if not m:
+        return {"status": "ambiguous", "reason": "no code and number"}
+    code, number = m.group("code"), m.group("number")
+    other = known(code, list(not_unit_codes()))
+    if other is not None:
+        return {"status": "not_unit", "code": other}
+    unit = known(code, list(dict.fromkeys([*unit_types()["units"], *KIND_OF_CODE])))
+    if unit is None or not _UNIT_NUMBER.fullmatch(number):
+        return {"status": "ambiguous", "reason": f"'{code}{number}'"}
+    return {"status": "numbered", "number": number, "code": unit}
+
+
+def _number_of_name(name: Any) -> Dict[str, Any]:
+    try:
+        from s3dgraphy.importer.unit_numbers import number_of_name
+    except Exception:                                    # noqa: BLE001
+        return _number_of_name_pinned(name)
+    return number_of_name(name)
+
+
+def name_number(name: Any) -> Tuple[str, str, str]:
+    """`(codice, numero, prefisso)` dal NOME composto dell'importer: `1.US2` →
+    `("US", "2", "1")`, `1.1.USM12` → `("USM", "12", "1.1")`. Solo un nome con
+    un prefisso (il luogo che il template mette davanti): «US2» da solo, o
+    «Strato 3», non è un nome dell'importer. `("", "", "")` quando il nome non
+    dice un'unità numerata — non si indovina."""
+    text = str(name if name is not None else "").strip()
+    if "." not in text:
+        return "", "", ""
+    prefix = text.rsplit(".", 1)[0].strip()
+    verdict = _number_of_name(text)
+    if not prefix or verdict.get("status") != "numbered":
+        return "", "", ""
+    return str(verdict["code"]), str(verdict["number"]), prefix
 
 
 def number_of_node(node: Dict[str, Any]) -> str:
-    """Il NUMERO di un'unità della stanza, da tutto ciò che lo dice: l'id
-    coniato da `unit_id_for`, il nome «US n — …», e (15 novembre) il numero che
-    l'importer ha scritto in `data.us` per un'unità importata con un uuid e un
-    nome come `1.1.US1`. `""` quando niente lo dice: non si indovina dal nome
-    qui — lo fa l'importer, alla fonte, una volta.
-    """
+    """Il NUMERO di un'unità della stanza, dal suo id e dal suo NOME: l'id
+    coniato da `unit_id_for` («US3014»), il nome «US n — …» di `create_su`, e il
+    nome composto dell'importer (`1.US2` → `2`). `""` quando niente di questo
+    lo dice. `data.us` non si legge (E.D., 12 novembre 2026)."""
     node = node or {}
     found = number_from_unit_id(node.get("id"),
                                 str(node.get("name") or "").split(" — ")[0])
     if found:
         return found
-    data = node.get("data") if isinstance(node.get("data"), dict) else {}
-    said = str(data.get(IMPORTED_NUMBER) or "").strip()
-    return said if _UNIT_NUMBER.fullmatch(said) else ""
+    return name_number(node.get("name"))[1]
+
+
+def area_of_unit(node: Dict[str, Any], nodes: Dict[str, Dict[str, Any]],
+                 edges: Iterable[Dict[str, Any]]) -> Tuple[str, str]:
+    """`(area, da dove)` di un'unità: il LUOGO di livello area in cui sta
+    (`is_in_location` → un LocationNodeGroup con `data.level` = `area`: il suo
+    nome), `"luogo"`; se il luogo non c'è, il PRIMO componente del prefisso del
+    nome dell'importer (`1.1.US1` → `1`), `"nome"`; altrimenti `("", "")`."""
+    nid = str((node or {}).get("id") or "")
+    for e in edges:
+        if e.get("edge_type") != "is_in_location" or str(e.get("source")) != nid:
+            continue
+        place = nodes.get(str(e.get("target"))) or {}
+        data = place.get("data") if isinstance(place.get("data"), dict) else {}
+        if str(data.get("level") or "") == "area" and str(place.get("name") or "").strip():
+            return str(place["name"]).strip(), "luogo"
+    prefix = name_number((node or {}).get("name"))[2]
+    if prefix:
+        return prefix.split(".")[0].strip(), "nome"
+    return "", ""
+
+
+def unit_key(node: Dict[str, Any], area: str = "") -> Tuple[str, str, str]:
+    """La CHIAVE di un'unità: `(tipo, numero, area)`. Un conflitto è la stessa
+    chiave su due unità: lo stesso tipo e lo stesso numero NELLA STESSA AREA
+    (`1.US2` e `2.US2` non lo sono). Il tipo di un'unità coniata qui è «US»;
+    `("", "", "")` per un'unità senza numero."""
+    node = node or {}
+    minted = number_from_unit_id(node.get("id"),
+                                 str(node.get("name") or "").split(" — ")[0])
+    if minted:
+        return "US", minted, area
+    code, number, _ = name_number(node.get("name"))
+    return (code, number, area) if number else ("", "", "")
+
+
+def unit_label(node: Dict[str, Any], area: str = "") -> str:
+    """Come si DICE un'unità importata col nome composto: «US 2 · area 1»
+    (`1.US2`). `""` per ogni altra (una coniata qui si dice col prefisso della
+    scheda e il numero, come prima)."""
+    code, number, _ = name_number((node or {}).get("name"))
+    if not number:
+        return ""
+    return f"{code} {number} · area {area}" if area else f"{code} {number}"
 
 
 #: What `update_su` will not change, though the CRDT would let it. `name` is
@@ -336,8 +437,6 @@ def _what_happened(made, landed, already, held, number: str) -> str:
     """La frase, per chi ha salvato: che cosa è entrato, che cosa no, e perché."""
     said = (f"US {number}: " if number else f"«{made.name or made.unit_id}»: ") \
         + f"{len(landed)} campi aggiornati."
-    if made.numbered:
-        said += f" Ha ora il numero {made.number}."
     if made.created:
         said += f" Creata come {made.node_type}."
     if already:
@@ -647,7 +746,6 @@ def make_update_su(graph_writer) -> ToolDescriptor:
         data = _plan_data(made, outcomes, landed, already, held)
         data["name"] = made.name
         data["number"] = made.number
-        data["numbered"] = made.numbered
         data["scheda"] = {**scheda.ref, "why": why}
         return ToolResult(
             ok=True,
