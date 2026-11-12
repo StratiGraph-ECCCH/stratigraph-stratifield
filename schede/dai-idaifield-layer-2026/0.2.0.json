@@ -99,17 +99,17 @@
     ],
     "digest": "sha256:87a606c82bd85484220c98dabbb813990d10ad669d597fa6331cbccbf973a0e1",
     "datamodel": {
-      "nodes": "1.6.42",
+      "nodes": "1.6.43",
       "node_registry": "1.6.41",
       "connections": "1.6.53",
-      "visual_rules": "1.6.43",
-      "qualia": "1.6.10",
+      "visual_rules": "1.6.45",
+      "qualia": "1.6.11",
       "translations": "1.16",
-      "digest": "sha256:b32a6c18d3253929c584b38a29309f99c7c15c0c1255653d77165928c228b2e8",
+      "digest": "sha256:bae7a32fbe0568d3b2881406f2c4bb8698d27ab18105df76d5ee862689430d87",
       "files": {
         "nodes": {
-          "digest": "sha256:16d6e02abf05f5d69cf88113e6adad050901b4f3417ff73ad999d85418fb80db",
-          "version": "1.6.42"
+          "digest": "sha256:31abff5b7ab70522ec8dba8cf75c7d652fc3aa60f217f24c9381f6726859e5cc",
+          "version": "1.6.43"
         },
         "node_registry": {
           "digest": "sha256:5669c0824d7149e22a25d424645b3b78b7c698c5338f3fd639d75c60b31483da",
@@ -120,14 +120,14 @@
           "version": "1.6.53"
         },
         "qualia": {
-          "digest": "sha256:2f8567e8e0f6a319327839ab5169c1495642eebef00c542b9b50c284abdb8502",
-          "version": "1.6.10"
+          "digest": "sha256:f7ac5853dddacd222e6b4eb75fe943a6a44e594742100160e6fad97f7c69da9c",
+          "version": "1.6.11"
         }
       },
       "em_ttl": "1.6.26",
-      "s3dgraphy": "1.6.0.dev102",
+      "s3dgraphy": "1.6.0.dev103",
       "taken_from": {
-        "git_commit": "6f0bee6c298f9220a5f55e34ab617a17d6218927",
+        "git_commit": "14e176881675dc79f70866391e91d9e75c75f5e2",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
