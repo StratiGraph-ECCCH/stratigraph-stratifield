@@ -21,7 +21,7 @@
  * Zero colori letterali: tutto dalle variabili del tema.
  */
 
-import { room } from "./widgets.js";
+import { room, unitLabel } from "./widgets.js";
 
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
@@ -209,7 +209,8 @@ function row(u, t, onPick, listing, fallback, prefix) {
     tr.append(c);
     return c;
   };
-  td(u.number ? `${prefix}${u.number}` : (u.name || u.id), "id");
+  td(unitLabel(u, prefix), "id");
+  if (u.conflict > 1) tr.dataset.conflict = String(u.conflict);
   td(u.definition || u.description || "");
   const wr = document.createElement("span");
   wr.className = `wr ${u.written_in || "unknown"}`;

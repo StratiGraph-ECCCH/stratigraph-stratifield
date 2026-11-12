@@ -972,7 +972,7 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
     except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
         raise HTTPException(status_code=502,
                             detail=f"Non riesco a leggere il grafo: {chiusa}") from None
-    from .operazioni import _Context, _find_unit
+    from .operazioni import UnitConflict, _Context, _find_unit
     from .unita import is_unit
     if by_id:
         # DAL SUO ID (14 novembre): un'unità importata il cui id non porta un
@@ -984,7 +984,10 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
             raise HTTPException(status_code=404,
                                 detail=f"nessuna unità «{by_id}» in questo grafo")
     else:
-        unit = _find_unit(_Context(section), number)
+        try:
+            unit = _find_unit(_Context(section), number)
+        except UnitConflict as doppio:
+            raise HTTPException(status_code=409, detail=str(doppio)) from None
     unit_id = str(unit["id"]) if unit else unit_id_for(number)
     declared = ((unit or {}).get("data") or {}).get(MARK) or {}
     read_with, note = asked, ""
@@ -1043,7 +1046,7 @@ def scheda_allegati(scheda_id: str, request: Request, us: str = "",
     risolutore UNICO di s3Dgraphy con i segni dell'elenco comune."""
     from . import allegati
     from .assets import ASSET_STORE
-    from .operazioni import _Context, _find_unit
+    from .operazioni import UnitConflict, _Context, _find_unit
     from .tools import unit_id_for
 
     scope = _scope(request)
@@ -1057,7 +1060,10 @@ def scheda_allegati(scheda_id: str, request: Request, us: str = "",
     except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
         raise HTTPException(status_code=502,
                             detail=f"Non riesco a leggere il grafo: {chiusa}") from None
-    unit = _find_unit(_Context(section), number)
+    try:
+        unit = _find_unit(_Context(section), number)
+    except UnitConflict as doppio:
+        raise HTTPException(status_code=409, detail=str(doppio)) from None
     unit_id = str(unit["id"]) if unit else unit_id_for(number)
     rows = allegati.state_of(allegati.attachments_of(section, unit_id),
                              store_has=allegati.store_probe(ASSET_STORE), lang=lang)

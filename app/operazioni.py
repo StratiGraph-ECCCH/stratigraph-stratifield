@@ -253,19 +253,41 @@ def _is_unit(node: Dict[str, Any]) -> bool:
     return str(node.get("node_type") or "").startswith(_UNIT_PREFIXES)
 
 
-def _find_unit(ctx: _Context, number: str) -> Optional[Dict[str, Any]]:
-    """Un'unità per NUMERO, nel contesto: l'id che questo servizio conia prima,
-    poi qualunque unità il cui numero risalga dall'id o dal nome."""
-    from .tools import number_from_unit_id, unit_id_for
+class UnitConflict(OperazioniError):
+    """Due unità della stanza con lo stesso numero (15 novembre 2026): una
+    coniata qui e una importata, o due importate da aree diverse. Si DICE —
+    scrivere su una delle due sceglierebbe al posto di chi scava."""
 
-    found = ctx.nodes.get(unit_id_for(number))
-    if found is not None:
-        return found
+    def __init__(self, number: str, nodes: List[Dict[str, Any]]) -> None:
+        self.number = number
+        self.nodes = nodes
+        names = ", ".join(f"«{n.get('name') or n.get('id')}»" for n in nodes)
+        super().__init__(
+            f"Il numero {number} è di {len(nodes)} unità in questa stanza "
+            f"({names}): è un conflitto, non lo risolvo scegliendone una. "
+            f"Aprile dal loro nome, in lettura, e date a una un altro numero.")
+
+
+def _find_unit(ctx: _Context, number: str) -> Optional[Dict[str, Any]]:
+    """Un'unità per NUMERO, nel contesto: l'id che questo servizio conia, e
+    qualunque unità il cui numero risalga dall'id, dal nome o dal `data.us`
+    di un importer (`tools.number_of_node`). DUE unità con lo stesso numero
+    sono un conflitto (`UnitConflict`), non la prima trovata."""
+    from .tools import number_of_node, unit_id_for
+
+    minted = ctx.nodes.get(unit_id_for(number))
+    found: List[Dict[str, Any]] = [minted] if minted is not None else []
     for node in ctx.nodes.values():
-        if _is_unit(node) and number_from_unit_id(
-                node.get("id"), str(node.get("name") or "").split(" — ")[0]) == number:
-            return node
-    return None
+        if node is minted or not _is_unit(node):
+            continue
+        data = node.get("data") if isinstance(node.get("data"), dict) else {}
+        if data.get("removed"):
+            continue
+        if number_of_node(node) == number:
+            found.append(node)
+    if len(found) > 1:
+        raise UnitConflict(number, found)
+    return found[0] if found else None
 
 
 # ── i valori, nella forma che la ricetta si aspetta ─────────────────────────
@@ -1135,7 +1157,7 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
     l'unità dichiara, e il problema non si pone.
     """
     from . import authorship
-    from .tools import number_from_unit_id
+    from .tools import number_of_node
     from s3dgraphy.crdt import get_field
 
     if scheda.recipe is None:
@@ -1150,9 +1172,7 @@ def values_from_graph(scheda: Scheda, section: Optional[Dict[str, Any]],
     silent: Dict[str, str] = {}
 
     def number_of(node: Dict[str, Any]) -> str:
-        return (number_from_unit_id(node.get("id"),
-                                    str(node.get("name") or "").split(" — ")[0])
-                or str(node.get("name") or node.get("id")))
+        return number_of_node(node) or str(node.get("name") or node.get("id"))
 
     # le proprietà coniate per questa unità, raggruppate per campo
     minted: Dict[str, List[Dict[str, Any]]] = {}

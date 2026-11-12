@@ -21,7 +21,7 @@ import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./roo
 import { filters as indexFilters, isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
 import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
-import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
+import { loadRoom, numberOf, orderedUnits, unitFor, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 import { mount as mountDesk, openingSection, SECTION_KEY, sectionOf, sectionToKeep } from "./scrivania.js";
 import { valueView } from "./widgets.js";
@@ -1051,34 +1051,36 @@ async function leaveUnit() {
   return !state.dirty;
 }
 
-/** Il numero o la definizione di un'unità della stanza → l'unità, o null. */
-async function unitFor(asked) {
-  const said = String(asked || "").trim();
-  if (!said || !state.def) return null;
-  const units = orderedUnits();
-  // il numero lo dice il servizio (`numberOf`): la regola è una sola
-  const number = (await numberOf(said, state.def)).number || said;
-  const exact = units.find((u) => u.number === number);
-  if (exact) return exact;
-  const q = said.toLowerCase();
-  const byWords = units.filter((u) =>
-    String(u.definition || "").toLowerCase().includes(q)
-    || String(u.name || "").toLowerCase() === q);
-  return byWords.length === 1 ? byWords[0] : null;
-}
-
 async function goUnit(asked) {
   if (!state.def) return false;
-  const found = await unitFor(asked);
+  const said = String(asked || "").trim();
+  // il numero lo dice il servizio (`numberOf`): la regola è una sola
+  const number = said ? ((await numberOf(said, state.def)).number || said) : "";
+  const found = unitFor(said, number);
+  const t = SG().t || ((k) => k);
   if (!found) {
-    const t = SG().t || ((k) => k);
-    SG().show(false, `${t("nav.no_unit")} ${String(asked || "").trim()}.`, "",
-              SG().locale);
+    SG().show(false, `${t("nav.no_unit")} ${said}.`, "", SG().locale);
     return false;
   }
-  if (found.number === state.us && !state.create) return true;
+  if (found.conflict) {
+    SG().show(false, t("nav.conflict", {
+      n: number, count: found.conflict.length,
+      names: found.conflict.map((u) => u.name || u.id).join(", ") }), "",
+    SG().locale);
+    return false;
+  }
+  return openFound(found);
+}
+
+/** Un'unità dell'elenco, aperta: per numero, o DAL SUO ID, in lettura, se non
+ *  ne ha uno o se il suo numero è anche di un'altra (15 novembre). */
+async function openFound(found) {
+  const byId = !found.number || found.conflict > 1;
+  if (!byId && found.number === state.us && !state.create) return true;
+  if (byId && state.byId && state.nodeId === found.id) return true;
   if (!(await leaveUnit())) return false;
-  await openScheda(state.def.id, { us: found.number }, state.def.lang);
+  await openScheda(state.def.id, byId ? { node: found.id } : { us: found.number },
+                   state.def.lang);
   return true;
 }
 
@@ -1089,7 +1091,7 @@ async function stepUnit(delta) {
   const target = at < 0 ? (delta > 0 ? order[0] : order[order.length - 1])
     : order[at + delta];
   if (!target) return false;             // un estremo: ci si ferma
-  return goUnit(target.number);
+  return target.conflict > 1 ? openFound(target) : goUnit(target.number);
 }
 
 const TEXTY = new Set(["text", "search", "number", "email", "url", "tel",
@@ -1382,7 +1384,9 @@ async function openUnit(u) {
     || (state.def && state.def.id) || (items[0] && items[0].id);
   if (!def) { SG().show(false, tr("index.noSchede", "")); return; }
   if (!(await leaveUnit())) return;
-  window.location.hash = u.number ? hashFor(def, u.number) : hashFor(def, "", false, u.id);
+  // un numero che è anche di un'altra unità (15 novembre) non apre per numero
+  const byNumber = u.number && !(u.conflict > 1);
+  window.location.hash = byNumber ? hashFor(def, u.number) : hashFor(def, "", false, u.id);
 }
 
 /** «Nuova US»: la stessa porta dell'elenco (`#index-new`). */

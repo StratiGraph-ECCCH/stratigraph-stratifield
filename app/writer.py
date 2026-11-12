@@ -394,11 +394,12 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
             #: accanto a lui. `""` quando l'id viene da un grafo importato, e
             #: allora la superficie lo dice invece di proporre una scheda su
             #: un'unità sbagliata.
-            from .tools import number_from_unit_id
+            #: …e dal 15 novembre anche il `data.us` che l'importer scrive per
+            #: un'unità importata (`tools.number_of_node`)
+            from .tools import number_of_node
             fuori.append({
                 "id": str(node.get("id")),
-                "number": number_from_unit_id(node.get("id"),
-                                              node.get("name") or ""),
+                "number": number_of_node(node),
                 "name": str(node.get("name") or node.get("id") or ""),
                 "node_type": str(node.get("node_type") or ""),
                 "description": str(node.get("description") or ""),
@@ -440,6 +441,17 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                                        words(node.get("description"))),
             })
     fuori.sort(key=lambda u: (u["node_type"], u["name"], u["id"]))
+    #: UN NUMERO DI DUE UNITÀ (15 novembre): una coniata qui e una importata, o
+    #: due importate da aree diverse. Si dice su ciascuna (`conflict`: quante
+    #: sono), e nessuna delle due si sceglie al posto di chi scava
+    #: (`operazioni.UnitConflict` rifiuta di scriverci per numero).
+    quante: Dict[str, int] = {}
+    for unit in fuori:
+        if unit["number"]:
+            quante[unit["number"]] = quante.get(unit["number"], 0) + 1
+    for unit in fuori:
+        n = quante.get(unit["number"], 0) if unit["number"] else 0
+        unit["conflict"] = n if n > 1 else 0
     from .unita import left_out
 
     elenco = Units(fuori)

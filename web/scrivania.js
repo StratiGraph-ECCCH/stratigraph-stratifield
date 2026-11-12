@@ -23,7 +23,7 @@
  * (`room.units`, `/v1/room/choices`, `/v1/room/places`) e chiama la
  * conchiglia (`shell`) per aprire una scheda o una sezione. */
 
-import { room } from "./widgets.js";
+import { room, unitLabel } from "./widgets.js";
 import { paint as paintPhotos } from "./photos.js";
 import { openIn } from "./mappa.js";
 
@@ -305,7 +305,7 @@ export function mount(shell) {
         && ((u.number && u.number === shell.state.us) || (shell.state.nodeId === u.id));
       const b = el("button", { type: "button", class: "navitem", "data-unit": u.id,
                                "aria-current": String(Boolean(current)) },
-        el("span", { text: u.number ? `${shell.prefix(u)}${u.number}` : (u.name || u.id) }),
+        el("span", { text: unitLabel(u, shell.prefix(u)) }),
         // in campo l'elenco breve dice solo l'unità, come nel mockup
         isDesk() ? el("span", { class: "count", text: total ? `${u.fields || 0}/${total}` : String(u.fields || 0) }) : null);
       b.addEventListener("click", () => shell.openUnit(u));
@@ -375,7 +375,7 @@ export function mount(shell) {
         el("p", { text: t("finds.none_note") })));
     } else {
       const rows = finds.map((u) => el("tr", { "data-unit": u.id, onclick: () => shell.openUnit(u) },
-        el("td", { class: "id", text: u.number ? `${shell.prefix(u)}${u.number}` : (u.name || u.id) }),
+        el("td", { class: "id", text: unitLabel(u, shell.prefix(u)) }),
         el("td", { text: u.node_type }),
         el("td", { text: u.definition || u.description || "" }),
         el("td", { text: (u.area || []).join(", ") })));

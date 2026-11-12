@@ -157,6 +157,29 @@ def number_from_unit_id(node_id: str, name: str = "") -> str:
     return ""
 
 
+#: La chiave in cui un importer scrive il numero di un'unità che non ha
+#: coniato lui (s3Dgraphy `importer/unit_numbers`, 15 novembre 2026): la
+#: colonna `us` di pyArchInit, em.json `data.us`, accanto a `data.unita_tipo`.
+IMPORTED_NUMBER = "us"
+
+
+def number_of_node(node: Dict[str, Any]) -> str:
+    """Il NUMERO di un'unità della stanza, da tutto ciò che lo dice: l'id
+    coniato da `unit_id_for`, il nome «US n — …», e (15 novembre) il numero che
+    l'importer ha scritto in `data.us` per un'unità importata con un uuid e un
+    nome come `1.1.US1`. `""` quando niente lo dice: non si indovina dal nome
+    qui — lo fa l'importer, alla fonte, una volta.
+    """
+    node = node or {}
+    found = number_from_unit_id(node.get("id"),
+                                str(node.get("name") or "").split(" — ")[0])
+    if found:
+        return found
+    data = node.get("data") if isinstance(node.get("data"), dict) else {}
+    said = str(data.get(IMPORTED_NUMBER) or "").strip()
+    return said if _UNIT_NUMBER.fullmatch(said) else ""
+
+
 #: What `update_su` will not change, though the CRDT would let it. `name` is
 #: derived from the unit number and is mentioned in other people's nodes; `id`
 #: is the identity itself. Refused by name rather than silently dropped, because

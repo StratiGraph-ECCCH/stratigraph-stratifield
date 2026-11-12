@@ -139,6 +139,36 @@ export function orderedUnits(units = room.units) {
   return [...seen.values()].sort((a, b) => byNumber(a.number, b.number));
 }
 
+/** Il numero, il NOME ORIGINALE o la definizione di un'unità della stanza →
+ *  l'unità, o null. Un numero di due unità → `{conflict: [unità…]}` (15
+ *  novembre): non se ne sceglie una. Il nome cerca fra TUTTE le unità,
+ *  anche quelle senza numero (`1.Combinar900`), che si aprono dal loro id. */
+export function unitFor(said, number, units = room.units) {
+  said = String(said || "").trim();
+  if (!said) return null;
+  const all = (units || []).filter(Boolean);
+  const same = all.filter((u) => u.number && u.number === number);
+  if (same.length > 1) return { conflict: same };
+  if (same.length === 1) return same[0];
+  const q = said.toLowerCase();
+  const byName = all.filter((u) => String(u.name || "").toLowerCase() === q
+                                   || String(u.id || "").toLowerCase() === q);
+  if (byName.length === 1) return byName[0];
+  const byWords = orderedUnits(all).filter((u) =>
+    String(u.definition || "").toLowerCase().includes(q));
+  return byWords.length === 1 ? byWords[0] : null;
+}
+
+/** Come si scrive un'unità in un elenco: «US 12»; senza numero il suo nome
+ *  (`1.Combinar900`); un numero che è anche di un'altra unità con «⚠» e il
+ *  nome originale accanto, perché le due si distinguano (15 novembre). */
+export function unitLabel(u, prefix = "") {
+  if (!u) return "";
+  if (!u.number) return u.name || u.id || "";
+  const base = `${prefix}${u.number}`;
+  return u.conflict > 1 ? `${base} ⚠ ${u.name || u.id}` : base;
+}
+
 /** Un'unità nominata in un rapporto è «da compilare» se la stanza non la ha,
  *  o la ha soltanto come stub: è la regola già decisa (creata minima e
  *  segnata, operazioni.py decisione 1), mostrata invece che taciuta. */
