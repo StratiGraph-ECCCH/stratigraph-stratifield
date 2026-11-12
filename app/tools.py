@@ -153,7 +153,12 @@ def number_from_unit_id(node_id: str, name: str = "") -> str:
     #: la forma che `create_su` dà al NOME, quando l'id viene da altrove
     label = str(name or "").strip()
     if label.upper().startswith("US ") and label[3:].strip():
-        return label[3:].strip()
+        rest = label[3:].strip()
+        # «US 12 capitello» (il nome che «Aggiungi il numero» può dare, 15
+        # novembre): il numero è la prima parola, non tutto il resto
+        # …e «US capitello» non ne porta uno
+        first = rest.split()[0]
+        return first if _UNIT_NUMBER.fullmatch(first) else ""
     return ""
 
 
@@ -224,6 +229,28 @@ def name_number(name: Any) -> Tuple[str, str, str]:
     return str(verdict["code"]), str(verdict["number"]), prefix
 
 
+#: un nome che COMINCIA con codice + numero, e dopo, se c'è, una parola libera:
+#: «USM 12», «US 12 capitello», «USN-3» (15 novembre: i nomi che «Aggiungi il
+#: numero» propone). Un nome dell'importer (`1.US2`) comincia con il luogo.
+_HEAD_NUMBER = re.compile(
+    r"^(?P<head>[^\W\d_]+[\s_-]*\d[0-9A-Za-z]*)(?:\s+(?P<rest>\S.*))?$", re.UNICODE)
+
+
+def head_number(name: Any) -> Tuple[str, str]:
+    """`(codice, numero)` da un nome che comincia con codice + numero di
+    un'unità («USM 12», «US 12 capitello»), con la regola di s3Dgraphy
+    (`number_of_name`) sulla testa; `("", "")` altrimenti — «Strato 3» no:
+    «Strato» non è il codice di un'unità."""
+    text = str(name if name is not None else "").split(" — ")[0].strip()
+    m = _HEAD_NUMBER.match(text)
+    if not m:
+        return "", ""
+    verdict = _number_of_name(m.group("head"))
+    if verdict.get("status") != "numbered":
+        return "", ""
+    return str(verdict["code"]), str(verdict["number"])
+
+
 def number_of_node(node: Dict[str, Any]) -> str:
     """Il NUMERO di un'unità della stanza, dal suo id e dal suo NOME: l'id
     coniato da `unit_id_for` («US3014»), il nome «US n — …» di `create_su`, e il
@@ -234,7 +261,7 @@ def number_of_node(node: Dict[str, Any]) -> str:
                                 str(node.get("name") or "").split(" — ")[0])
     if found:
         return found
-    return name_number(node.get("name"))[1]
+    return name_number(node.get("name"))[1] or head_number(node.get("name"))[1]
 
 
 def area_of_unit(node: Dict[str, Any], nodes: Dict[str, Dict[str, Any]],
@@ -268,6 +295,8 @@ def unit_key(node: Dict[str, Any], area: str = "") -> Tuple[str, str, str]:
     if minted:
         return "US", minted, area
     code, number, _ = name_number(node.get("name"))
+    if not number:
+        code, number = head_number(node.get("name"))
     return (code, number, area) if number else ("", "", "")
 
 
@@ -1743,6 +1772,76 @@ def make_verify_node(graph_writer) -> ToolDescriptor:
         service="s3dgraphy", handler=handler)
 
 
+# ── 1septies · number_unit — «Aggiungi il numero» (15 novembre 2026) ─────────
+
+def make_number_unit(graph_writer) -> ToolDescriptor:
+    """Il numero a un'unità che non lo ha: il NOME cambia (`app/numero.py`, la
+    scelta di chi scava fra le proposte), e la parola di prima va nella
+    descrizione se si è scelto così. Un'operazione firmata della stanza; il
+    verbale D7 dice il nome di prima, che resta anche nella cronologia della
+    stanza. Mai `data.us` (E.D., 12 novembre 2026)."""
+
+    def handler(slots: Dict[str, Any], author: Optional[str]) -> ToolResult:
+        from s3dgraphy import api
+
+        from . import numero as N
+        from .operazioni import OperazioniError
+
+        node_id = str(slots.get("node") or "").strip()
+        if not node_id:
+            return ToolResult(ok=False, message="Mi serve l'unità (il suo id).")
+        stamp = _op_now()
+        try:
+            made = N.plan_number(graph_writer.section(), node_id,
+                                 str(slots.get("number") or ""),
+                                 str(slots.get("choice") or ""), ts=stamp,
+                                 name=str(slots.get("name") or ""))
+        except N.NumberTaken as taken:
+            return ToolResult(ok=False, message=str(taken), data={
+                "node": node_id, "conflict": [
+                    {"id": str(o.get("id")), "name": str(o.get("name") or "")}
+                    for o in taken.others]})
+        except (N.NumeroError, OperazioniError) as wrong:
+            return ToolResult(ok=False, message=str(wrong), data={"node": node_id})
+        detail = (f"numero aggiunto: nome «{made.before}» → «{made.name}»"
+                  + (" (la parola di prima nella descrizione)"
+                     if made.description != made.description_before else ""))
+        process = _process_node("number_unit", author,
+                                f"{node_id}:{made.name}", detail)
+        ops = list(made.ops) + [api.make_op("add_node", id=process["id"],
+                                            node=process, ts=stamp)]
+        try:
+            outcomes = graph_writer.send(ops, author=author)
+            _note_write()
+        except Exception as exc:                                 # noqa: BLE001
+            return ToolResult(ok=False, message=str(exc))
+        data = {"node": node_id, "us": made.number, "code": made.code,
+                "choice": made.choice, "before": made.before, "name": made.name,
+                "description": made.description, "process": process["id"],
+                "queued": any(o.get("queued") for o in outcomes)}
+        refused = [o for o in outcomes if not o.get("applied")
+                   and o.get("reason") not in ("queued", "idempotent")]
+        if refused:
+            data["refused"] = refused
+            return ToolResult(ok=False, data=data, message=(
+                f"La stanza non ha preso il nome nuovo: {refused[0].get('reason')}."))
+        return ToolResult(ok=True, data=data, message=(
+            f"«{made.before}» ora si chiama «{made.name}»."))
+
+    return ToolDescriptor(
+        name="number_unit",
+        # nessuna frase: si chiede dal pannello della scheda, che sa l'unità
+        intents=[],
+        input_schema=[Slot("node", "string", True, "l'unità senza numero (il suo id)"),
+                      Slot("number", "string", False, "il numero"),
+                      Slot("choice", "string", False, "sposta | accoda | solo | libero"),
+                      Slot("name", "string", False, "il nome scritto da chi scava (libero)")],
+        description="Aggiunge il numero a un'unità che non lo ha: il nome "
+                    "cambia secondo la scelta, la parola di prima va nella "
+                    "descrizione o resta nel nome.",
+        service="s3dgraphy", handler=handler)
+
+
 # ── the five, registered ─────────────────────────────────────────────────────
 
 def build_registry(graph_writer, asset_store, *, translator=None) -> ToolRegistry:
@@ -1757,6 +1856,7 @@ def build_registry(graph_writer, asset_store, *, translator=None) -> ToolRegistr
     registry.register(make_validate_field(graph_writer))
     registry.register(make_translate_text(graph_writer, translator))
     registry.register(make_verify_node(graph_writer))
+    registry.register(make_number_unit(graph_writer))
     registry.register(make_which_project(graph_writer))
     registry.register(make_attach_photo(graph_writer, asset_store))
     registry.register(make_ingest_photos(graph_writer, asset_store))

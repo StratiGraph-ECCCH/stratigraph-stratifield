@@ -603,6 +603,46 @@ input[type="date"], input[type="number"], time {
 .nonum-note label { display: inline-flex; align-items: center; gap: 6px; color: var(--sg-text); }
 .nonum-note input { width: 7em; min-height: 0; height: auto; padding: 4px 8px; font-size: inherit; }
 .nonum-note .nonum-said { flex-basis: 100%; color: var(--sg-text); }
+.nonum-note .nonum-said:empty { display: none; }
+.nonum-note .nonum-said.bad { color: var(--sg-warn); }
+/* «Aggiungi il numero» (15 novembre 2026): il comando accanto all'avviso, e il
+ * piccolo pannello della scelta che si apre sotto; sul telefono a tutto schermo */
+.nonum-note .nonum-add { width: auto; flex: 0 0 auto; min-height: 0; padding: 3px 10px; font-size: inherit; }
+.nonum-panel {
+  flex-basis: 100%; display: flex; flex-direction: column; gap: 8px;
+  margin-top: 4px; padding: 10px 12px; border: 1px solid var(--sg-line);
+  border-radius: 8px; background: var(--sg-surface); color: var(--sg-text);
+}
+.nonum-panel p { margin: 0; }
+.nonum-panel .nonum-title { font-weight: 600; }
+.nonum-panel .nonum-choose, .nonum-panel .nonum-history { color: var(--sg-muted); }
+.nonum-panel .nonum-history { font-size: var(--sg-text-xs); }
+.nonum-panel .nonum-choices { display: flex; flex-direction: column; gap: 6px; }
+.nonum-panel .nonum-number { display: flex; align-items: center; gap: 8px; }
+.nonum-panel .nonum-number input { width: 8em; min-height: 0; padding: 4px 8px; font-size: inherit; }
+.nonum-panel .nonum-choice {
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 10px;
+  cursor: pointer;
+}
+.nonum-panel .nonum-choice input[type="radio"] {
+  width: auto; height: auto; min-height: 0; margin: 0; padding: 0; flex: none;
+}
+.nonum-panel .nonum-choice input[type="text"] {
+  grid-column: 2; width: 100%; min-height: 0; padding: 4px 8px; font-size: inherit;
+}
+.nonum-panel .nonum-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nonum-panel .nonum-actions button {
+  width: auto; flex: 0 0 auto; min-height: 0; padding: 6px 14px; font-size: inherit;
+}
+.nonum-panel.full {
+  position: fixed; inset: 0; z-index: 1000; margin: 0; border: 0; border-radius: 0;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  overflow: auto; font-size: 1.05rem; gap: 14px;
+}
+.nonum-panel.full .nonum-choice { min-height: 44px; }
+.nonum-panel.full .nonum-number input { flex: 1 1 auto; width: auto; min-height: 44px; }
+.nonum-panel.full .nonum-actions { margin-top: auto; }
+.nonum-panel.full .nonum-actions button { flex: 1 1 40%; min-height: 48px; }
 /* nella colonna «In questa stanza» il segno sta SEMPRE sotto il nome: accanto,
  * andava a capo solo per i nomi lunghi, e la colonna sembrava disordinata */
 .inroom .navitem .nonum { display: table; margin: 2px 0 0; }

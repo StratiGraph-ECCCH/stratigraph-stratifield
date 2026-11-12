@@ -61,7 +61,7 @@ export const room = {
   read: false,
 };
 
-function authHeaders() {
+export function authHeaders() {
   const seam = SG();
   // chi E DOVE (dal 25 ottobre): la stanza di questa persona, non quella del nodo
   if (seam.headers) return seam.headers();

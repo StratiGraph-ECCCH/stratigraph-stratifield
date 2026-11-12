@@ -21,7 +21,7 @@ import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./roo
 import { filters as indexFilters, isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
 import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
-import { loadRoom, numberOf, opensById, orderedUnits, unitFor, unitPrefix } from "./widgets.js";
+import { authHeaders, loadRoom, numberOf, opensById, orderedUnits, unitFor, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 import { mount as mountDesk, openingSection, SECTION_KEY, sectionOf, sectionToKeep } from "./scrivania.js";
 import { valueView } from "./widgets.js";
@@ -1213,26 +1213,167 @@ function paintUnav() {
   // scrive e quella con cui si legge sono la stessa scelta, in un posto.
 }
 
-/* ── «IL NOME DI QUESTA UNITÀ NON PORTA UN NUMERO» (15 novembre 2026) ─────────
+/* ── «QUESTA UNITÀ NON HA ANCORA UN NUMERO» e «AGGIUNGI IL NUMERO» ──────────
  *
- * Le regole di E.D. (12 novembre): i numeri non si cambiano né si inventano;
- * quando un numero manca l'app LO DICE, senza imporlo; e il numero di
- * un'unità SI LEGGE DAL SUO NOME — non si scrive in un'altra chiave (niente
- * `data.us`). Nella testata della scheda, sotto ‹ unità ›, un avviso discreto:
- * solo il testo, nessuna casella per aggiungerlo. La scheda si salva senza. */
+ * Le regole di E.D. (12 novembre 2026): i numeri non si cambiano né si
+ * inventano; quando un numero manca l'app LO DICE, senza imporlo; il numero di
+ * un'unità SI LEGGE DAL SUO NOME — niente `data.us`. Dal 15 novembre accanto
+ * all'avviso c'è il comando «Aggiungi il numero»: apre un piccolo pannello
+ * (sul telefono a tutto schermo) dove l'app PROPONE e chi scava SCEGLIE come
+ * cambia il nome (`GET /v1/numero/proposte`, `app/numero.py`):
+ *
+ *   · preselezionata: «US 12», e «capitello» va nella descrizione (in testa);
+ *   · «US 12 capitello»;
+ *   · «US 12», e la parola non va nella descrizione;
+ *   · un altro nome, scritto a mano, che porti il numero.
+ *
+ * Il prefisso dal TIPO dell'unità. Un numero già usato nella stessa area: lo si
+ * dice e il salvataggio non parte. Salvato (`POST /v1/numero`, un'operazione
+ * firmata della stanza), la scheda si riapre dal suo id: ha un numero, e
+ * l'avviso non c'è più. */
 function paintNoNumber() {
   const note = $("scheda-nonum");
   if (!note) return;
   const show = Boolean(state.def && state.panel === "scheda" && state.byId
                        && !state.idNumber && !state.lens && !SG().readOnly);
   note.hidden = !show;
-  if (!show) { note.replaceChildren(); return; }
+  if (!show) { note.replaceChildren(); delete note.dataset.unit; return; }
   if (note.dataset.unit === state.nodeId && note.childElementCount) return;
   const t = SG().t || ((k) => k);
   const text = Object.assign(document.createElement("span"),
                              { textContent: t("unit.no_number") });
+  const add = Object.assign(document.createElement("button"), {
+    type: "button", className: "nonum-add", textContent: t("unit.add_number") });
+  add.dataset.nonum = "add";
+  add.addEventListener("click", () => openNumberPanel(note));
   note.dataset.unit = state.nodeId;
-  note.replaceChildren(text);
+  note.replaceChildren(text, add);
+}
+
+/** Il pannello della scelta, dentro l'avviso. */
+function openNumberPanel(note) {
+  const t = SG().t || ((k) => k);
+  const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+  const old = note.querySelector(".nonum-panel");
+  if (old) { old.querySelector("input")?.focus(); return; }
+  const node = state.nodeId;
+  const panel = make("div", { className: "nonum-panel" });
+  panel.classList.toggle("full", state.mode === "phone");
+  panel.setAttribute("role", "group");
+  panel.dataset.nonum = "panel";
+  const title = make("p", { className: "nonum-title",
+                            textContent: t("num.title", { name: state.unitName || node }) });
+  const numLabel = make("label", { className: "nonum-number" });
+  const num = make("input", { type: "text", inputMode: "text", autocomplete: "off",
+                              placeholder: "12" });
+  num.dataset.nonum = "number";
+  num.setAttribute("enterkeyhint", "next");
+  numLabel.append(make("span", { textContent: t("unit.number_label") }), num);
+  const choose = make("p", { className: "nonum-choose", textContent: t("num.choose") });
+  const list = make("div", { className: "nonum-choices" });
+  const group = `nonum-${Math.random().toString(36).slice(2)}`;
+  const radios = {};
+  const labels = {};
+  for (const key of ["sposta", "accoda", "solo", "libero"]) {
+    const row = make("label", { className: "nonum-choice" });
+    const r = make("input", { type: "radio", name: group, value: key });
+    r.dataset.nonum = key;
+    radios[key] = r;
+    labels[key] = make("span");
+    row.append(r, labels[key]);
+    if (key === "libero") {
+      labels[key].textContent = t("num.free");
+      const free = make("input", { type: "text", autocomplete: "off" });
+      free.dataset.nonum = "name";
+      free.addEventListener("focus", () => { r.checked = true; check(); });
+      free.addEventListener("input", () => { r.checked = true; check(); });
+      row.append(free);
+    }
+    list.append(row);
+  }
+  radios.sposta.checked = true;
+  const history = make("p", { className: "nonum-history", textContent: t("num.history") });
+  const said = make("p", { className: "nonum-said", role: "status" });
+  const actions = make("div", { className: "nonum-actions" });
+  const save = make("button", { type: "button", className: "primary", textContent: t("num.save") });
+  save.dataset.nonum = "save";
+  const cancel = make("button", { type: "button", textContent: t("num.cancel") });
+  cancel.dataset.nonum = "cancel";
+  actions.append(save, cancel);
+  panel.append(title, numLabel, choose, list, history, said, actions);
+  note.append(panel);
+  num.focus();
+
+  let proposal = null;
+  let asked = 0;
+  const chosen = () => Object.keys(radios).find((k) => radios[k].checked) || "sposta";
+  const freeName = () => (panel.querySelector('[data-nonum="name"]').value || "").trim();
+  function check() {
+    const p = proposal;
+    let why = "";
+    if (chosen() === "libero") {
+      if (!freeName()) why = t("num.free_need", { code: (p && p.code) || "US" });
+    } else if (!p || !p.number) {
+      why = num.value.trim() ? t("num.need") : "";
+    } else if (p.taken && p.taken.length) {
+      why = t("num.taken", { label: `${p.code} ${p.number}`,
+                             names: p.taken.map((u) => u.name || u.id).join(", ") });
+    }
+    said.textContent = why;
+    said.classList.toggle("bad", Boolean(why));
+    save.disabled = Boolean(why) || (chosen() !== "libero" && !(p && p.number));
+  }
+  async function propose() {
+    const mine = ++asked;
+    const seam = SG();
+    const q = new URLSearchParams({ node, number: num.value.trim() });
+    try {
+      const r = await fetch(`${seam.node || ""}/v1/numero/proposte?${q}`,
+                            { headers: authHeaders() });
+      if (mine !== asked) return;
+      proposal = r.ok ? await r.json() : null;
+    } catch { if (mine === asked) proposal = null; }
+    const word = (proposal && proposal.name) || state.unitName || "";
+    const byChoice = Object.fromEntries(((proposal && proposal.choices) || [])
+      .map((c) => [c.choice, c]));
+    const shown = (k, key) => (byChoice[k] ? t(key, { name: byChoice[k].name, word }) : "");
+    labels.sposta.textContent = shown("sposta", "num.move") || t("num.move", { name: "…", word });
+    labels.accoda.textContent = shown("accoda", "num.append") || t("num.append", { name: "…" });
+    labels.solo.textContent = shown("solo", "num.only") || t("num.only", { name: "…", word });
+    check();
+  }
+  let timer = 0;
+  num.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(propose, 200); });
+  for (const r of Object.values(radios)) r.addEventListener("change", check);
+  cancel.addEventListener("click", () => panel.remove());
+  save.addEventListener("click", async () => {
+    check();
+    if (save.disabled) return;
+    save.disabled = true;
+    // una casella toccata e non salvata si salva PRIMA: la scheda si riapre
+    if (!(await leaveUnit())) { save.disabled = false; return; }
+    const seam = SG();
+    const body = { node, number: num.value.trim(), choice: chosen(), name: freeName() };
+    let answer = null;
+    try {
+      const r = await fetch(`${seam.node || ""}/v1/numero`, {
+        method: "POST", body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json", ...authHeaders() } });
+      answer = await r.json();
+    } catch (e) { answer = { ok: false, message: String(e) }; }
+    if (!answer || !answer.ok) {
+      said.textContent = (answer && (answer.message || answer.detail)) || "";
+      said.classList.add("bad");
+      save.disabled = false;
+      return;
+    }
+    seam.show(true, answer.message, "", seam.locale);
+    const def = state.def;
+    await loadRoom();
+    await openScheda(def.id, { node }, def.lang);
+    if (deskUI) deskUI.paint();
+  });
+  void propose();
 }
 
 /* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────

@@ -104,12 +104,17 @@ def test_the_registry_now_holds_twelve_tools():
       a person signs, in the room, a NODE that waited for them (`api.verify`).
       Not `validate_field`, which confirms a BOX a model composed: one signs a
       node, the other a value inside one.
+    * 2026-11-15 — `number_unit` («Aggiungi il numero», MICRO dev104 e il
+      numero proposto): a unit without a number gets one IN ITS NAME, as the
+      person chose among the proposals (`app/numero.py`). Not `update_su`,
+      which refuses `name` on purpose: renaming is its own signed act.
     """
     registry = build_registry(FakeNode(), InMemoryAssetStore())
     assert {d.name for d in registry.list()} == {
         "create_su", "update_su", "relate_su", "validate_field",
         "which_project", "attach_photo_to_su", "ingest_photos", "query_kg",
-        "build_model", "open_in_emstudio", "translate_text", "verify_node"}
+        "build_model", "open_in_emstudio", "translate_text", "verify_node",
+        "number_unit"}
 
 
 # ── 2 · what the node is asked ───────────────────────────────────────────────

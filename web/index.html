@@ -286,7 +286,9 @@
            fra le unità senza tornare all'elenco serve in trincea come al
            tavolo; sul telefono coi bersagli grandi. La dipinge `shell.js`. -->
       <div class="unav" id="scheda-unav" hidden></div>
-      <p class="nonum-note" id="scheda-nonum" role="note" hidden></p>
+      <!-- «senza numero» e «Aggiungi il numero» (15 novembre 2026): un div e
+           non un <p>, perché ci si apre dentro il pannello della scelta -->
+      <div class="nonum-note" id="scheda-nonum" role="note" hidden></div>
       <div class="fo-strip" id="scheda-strip" hidden></div>
       <p class="saysit" id="scheda-says" hidden></p>
       <div id="scheda-host"></div>
@@ -779,11 +781,24 @@ const STRINGS = {
     "nav.unnumbered": "{n} more without a number",
     "nav.conflict": "The number {n} belongs to {count} units in this room: a conflict. Open them by their name ({names}), for reading.",
     "unit.conflict": "same number as another unit",
-    "unit.no_number": "The name of this unit carries no number: it is written from its id, without one.",
+    "unit.no_number": "This unit has no number yet: add it when you can.",
+    "unit.add_number": "Add the number",
+    "num.title": "Add the number to «{name}»",
+    "num.choose": "Then the unit is called:",
+    "num.move": "«{name}», and «{word}» goes into the description",
+    "num.append": "«{name}»",
+    "num.only": "«{name}», and «{word}» does not go into the description",
+    "num.free": "Another name:",
+    "num.history": "The previous name stays in the room's history.",
+    "num.need": "Write the number: 12, 12a, 1001.2.",
+    "num.free_need": "The name has to carry the number, for example «{code} 12 …».",
+    "num.taken": "{label} is already in this area ({names}): choose another number.",
+    "num.save": "Save the name",
+    "num.cancel": "Cancel",
     "unit.no_number.tag": "no number",
     "unit.number_label": "Number",
     "flt.no_number": "No number",
-    "index.unnumberedNote": "{n} units have no number in their name: they open and are written from their id.",
+    "index.unnumberedNote": "{n} units have no number yet: they open and are written from their id; add the number when you can.",
     "unit.conflict_read": "Another unit has its type and number in the same area: opened from its id, for reading.",
   },
   it: {
@@ -1154,11 +1169,24 @@ const STRINGS = {
     "nav.unnumbered": "Altre {n} senza numero",
     "nav.conflict": "Il numero {n} è di {count} unità in questa stanza: un conflitto. Aprile dal loro nome ({names}), in lettura.",
     "unit.conflict": "stesso numero di un'altra unità",
-    "unit.no_number": "Il nome di questa unità non porta un numero: si scrive dal suo id, senza.",
+    "unit.no_number": "Questa unità non ha ancora un numero: aggiungilo quando puoi.",
+    "unit.add_number": "Aggiungi il numero",
+    "num.title": "Aggiungi il numero a «{name}»",
+    "num.choose": "Poi l'unità si chiama:",
+    "num.move": "«{name}», e «{word}» va nella descrizione",
+    "num.append": "«{name}»",
+    "num.only": "«{name}», e «{word}» non va nella descrizione",
+    "num.free": "Un altro nome:",
+    "num.history": "Il nome di prima resta nella cronologia della stanza.",
+    "num.need": "Scrivi il numero: 12, 12a, 1001.2.",
+    "num.free_need": "Il nome deve portare il numero, per esempio «{code} 12 …».",
+    "num.taken": "{label} c'è già in questa area ({names}): scegli un altro numero.",
+    "num.save": "Salva il nome",
+    "num.cancel": "Annulla",
     "unit.no_number.tag": "senza numero",
     "unit.number_label": "Numero",
     "flt.no_number": "Senza numero",
-    "index.unnumberedNote": "{n} unità non hanno un numero nel nome: si aprono e si scrivono dal loro id.",
+    "index.unnumberedNote": "{n} unità non hanno ancora un numero: si aprono e si scrivono dal loro id; aggiungilo quando puoi.",
     "unit.conflict_read": "Un'altra unità ha il suo tipo e il suo numero nella stessa area: aperta dal suo id, in lettura.",
   },
   // >>> ui_strings.py

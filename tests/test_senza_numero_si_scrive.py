@@ -271,8 +271,11 @@ def test_the_words_are_in_the_page(locale):
 
 
 def test_the_positive_notice_in_italian():
-    assert ('"unit.no_number": "Il nome di questa unità non porta un numero: '
-            'si scrive dal suo id, senza."') in PAGE
-    # nessuna casella per aggiungerlo (12 novembre, E.D.)
-    nonum = SHELL[SHELL.index("function paintNoNumber"):][:900]
-    assert "input" not in nonum
+    # 15 novembre (MICRO dev104 e il numero proposto): l'avviso torna a dire
+    # «aggiungilo quando puoi», perché ora accanto c'è il comando che lo fa —
+    # un pannello di scelta sul NOME, non una casella che scriva `data.us`
+    assert ('"unit.no_number": "Questa unità non ha ancora un numero: '
+            'aggiungilo quando puoi."') in PAGE
+    nonum = SHELL[SHELL.index("function paintNoNumber"):SHELL.index("function openNumberPanel")]
+    assert "input" not in nonum and "unit.add_number" in nonum
+    assert "data.us" not in SHELL[SHELL.index("function openNumberPanel"):][:6000]

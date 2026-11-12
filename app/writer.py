@@ -400,7 +400,8 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
             #: un'unità sbagliata.
             #: …e dal 12 novembre (E.D.) dal NOME composto dell'importer
             #: (`1.US2` → 2), mai da `data.us` (`tools.number_of_node`)
-            from .tools import area_of_unit, name_number, number_of_node, unit_key, unit_label
+            from .tools import (area_of_unit, name_number, number_of_node,
+                                unit_id_for, unit_key, unit_label)
             area_said, area_from = area_of_unit(node, nodi, archi)
             fuori.append({
                 "id": str(node.get("id")),
@@ -414,7 +415,12 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "label": unit_label(node, area_said),
                 #: un'unità dal nome composto si APRE DAL SUO ID: il numero da
                 #: solo non la indirizza (lo stesso numero in un'altra area)
-                "by_id": bool(name_number(node.get("name"))[1]),
+                #: …e dal 15 novembre ogni unità il cui numero viene dal NOME
+                #: e non dall'id coniato qui («capitello» diventata «US 12»):
+                #: il suo id resta quello di prima
+                "by_id": bool(name_number(node.get("name"))[1]
+                              or (number_of_node(node) and str(node.get("id"))
+                                  != unit_id_for(number_of_node(node)))),
                 "name": str(node.get("name") or node.get("id") or ""),
                 "node_type": str(node.get("node_type") or ""),
                 "description": str(node.get("description") or ""),

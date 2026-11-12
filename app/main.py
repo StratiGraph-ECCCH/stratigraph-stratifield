@@ -1202,6 +1202,46 @@ def verify(request: Request, body: VerifyIn = Body(...)) -> Answer:
                   **_told(result, scope, prima))
 
 
+class NumeroIn(BaseModel):
+    """«Aggiungi il numero» (15 novembre 2026): l'unità senza numero (il suo
+    id), il numero, la scelta fra le proposte (`app/numero.CHOICES`) e, per
+    `libero`, il nome scritto da chi scava."""
+
+    node: str
+    number: str = ""
+    choice: str = "sposta"
+    name: str = ""
+
+
+@v1.get("/numero/proposte", tags=["scheda"])
+def numero_proposte(request: Request, node: str, number: str = "") -> Dict[str, Any]:
+    """Le proposte per dare `number` all'unità `node`: il prefisso dal suo
+    tipo, le tre scelte (nome e descrizione dopo), e le unità che hanno già
+    quel tipo e quel numero NELLA STESSA AREA (`taken`: allora non si salva).
+    Non scrive niente."""
+    from . import numero as N
+    scope = _scope(request)
+    try:
+        return N.proposal(scope.writer.section(), node.strip(), number)
+    except N.NumeroError as wrong:
+        raise HTTPException(status_code=404, detail=str(wrong))
+
+
+@v1.post("/numero", response_model=Answer, tags=["scheda"])
+def numero_aggiungi(request: Request, body: NumeroIn = Body(...)) -> Answer:
+    """Il numero a un'unità che non lo ha: il NOME cambia secondo la scelta
+    (`tools.number_unit`), un'operazione firmata della stanza. Un numero già
+    di un'altra unità nella stessa area: niente si salva (`data.conflict`)."""
+    scope = _scope(request)
+    prima = (_refusals(scope), _queued(scope))
+    slots = {"node": body.node, "number": body.number, "choice": body.choice,
+             "name": body.name}
+    result: ToolResult = invoke(scope.registry.get("number_unit"), slots,
+                                scope.who, registry=scope.registry)
+    return Answer(ok=result.ok, tool="number_unit", slots=slots, data=result.data,
+                  **_told(result, scope, prima))
+
+
 @v1.get("/to-review", tags=["scheda"])
 def to_review_route(request: Request) -> Dict[str, Any]:
     """What waits for a person in this room, and why (`api.to_review`): the
