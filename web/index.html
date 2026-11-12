@@ -3390,7 +3390,11 @@ function render() {
       : reading ? t("role.viewer", { role: ACCESS.role || "viewer" }) : "";
   }
   window.SGShell?.onAccess?.();
-  $("work").hidden = !signed || elsewhere || outside;
+  // …E SOLO SE È LEI DAVANTI (MICRO, 14 novembre): alla scrivania la conchiglia
+  // può aprire la Scheda o Unità prima che la firma arrivi, e la firma non deve
+  // rimettere «Detta» accanto a loro. Il pannello lo sceglie `only()` in shell.js.
+  const voiceInFront = !window.SGShell || window.SGShell.state.panel === "voice";
+  $("work").hidden = !signed || elsewhere || outside || !voiceInFront;
   // …e L'ELENCO, se è lui davanti, si ridipinge quando la firma arriva: aperto
   // da `#unita` prima della firma diceva «Firma per vedere» anche dopo.
   if (signed && window.SGShell && window.SGShell.state.panel === "index") {

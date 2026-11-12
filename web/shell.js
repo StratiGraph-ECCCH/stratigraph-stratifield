@@ -23,7 +23,7 @@ import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
-import { mount as mountDesk, sectionOf } from "./scrivania.js";
+import { mount as mountDesk, openingSection, SECTION_KEY, sectionOf, sectionToKeep } from "./scrivania.js";
 import { valueView } from "./widgets.js";
 
 const $ = (id) => document.getElementById(id);
@@ -212,6 +212,7 @@ function only(panel) {
     else node.hidden = id !== panel;
   }
   state.panel = panel === "work" ? "voice" : panel;
+  keepSection();
   if (panel === "work") $("nav-voice").setAttribute("aria-current", "true");
   else $("nav-voice").removeAttribute("aria-current");
   for (const [id, p] of [["nav-units", "index"], ["nav-map", "map"]]) {
@@ -219,6 +220,42 @@ function only(panel) {
     else $(id).removeAttribute("aria-current");
   }
   placeDesk();
+}
+
+/* ── DOVE SI APRE LA SCRIVANIA (MICRO, 14 novembre) ──────────────────────────
+ *
+ * Alla scrivania, all'avvio e passando da «In campo» a «Scrivania», la sezione è
+ * la Scheda se ce n'è una aperta o un'unità toccata per ultima, altrimenti
+ * Unità (`openingSection`, pura, in scrivania.js). «Detta» si apre solo
+ * premendola. In campo non cambia niente: telefono e tablet partono su «Detta».
+ *
+ * `opened` dice che l'avvio è finito: prima, i pannelli li sceglie l'indirizzo o
+ * il link della stanza, non una persona, e non si ricordano. */
+let opened = false;
+
+/** Ricorda la sezione scelta alla scrivania, sul dispositivo (try/catch come
+ *  la lingua: una finestra privata la tiene per la sessione). */
+function keepSection() {
+  if (!opened || state.mode !== "desktop") return;
+  const sec = sectionToKeep(state.panel);
+  if (!sec) return;
+  try { localStorage.setItem(SECTION_KEY, sec); } catch { /* private window */ }
+}
+
+/** Apri la scrivania sulla sua sezione. `useSaved`: all'avvio vale la scelta
+ *  ricordata; passando da «In campo» no — si arriva al tavolo, non si ricarica. */
+async function openDesk(useSaved) {
+  if (state.mode !== "desktop") return;
+  let saved = null;
+  if (useSaved) {
+    try { saved = localStorage.getItem(SECTION_KEY); } catch { saved = null; }
+  }
+  const hasDef = Boolean(state.def);
+  const hasRecent = !hasDef && (((await loadRoom()) || {}).units || []).length > 0;
+  const pick = openingSection({ saved, hasDef, hasRecent });
+  if (state.mode !== "desktop") return;       // la finestra è cambiata intanto
+  if (pick === "voice") { only("work"); paintThumbbar(); markNav(""); return; }
+  await showSection(pick, false);
 }
 
 /* ── il modo ─────────────────────────────────────────────────────────────── */
@@ -406,6 +443,7 @@ function viewWidth() {
 }
 
 function setMode(mode) {
+  const was = state.mode;
   state.mode = mode;
   $("surface").dataset.sgMode = mode;
   placeControls(mode);
@@ -415,6 +453,11 @@ function setMode(mode) {
   $("nav-onepage").hidden = mode !== "desktop";
   paintModes();
   if (state.def) draw();
+  // DA «IN CAMPO» A «SCRIVANIA» con «Detta» davanti: la scrivania si apre sulla
+  // sua sezione. Una sezione già scelta in campo (Unità, la Scheda) resta.
+  if (opened && was !== "desktop" && mode === "desktop" && state.panel === "voice") {
+    void openDesk(false);
+  }
 }
 
 /* ── le schede che il nodo serve ─────────────────────────────────────────── */
@@ -1439,6 +1482,12 @@ function wireShell() {
     only("work");
     paintThumbbar();
     markNav("");
+    // ALLA SCRIVANIA «Detta» non ha un indirizzo suo: se restasse `#unita`,
+    // ricaricando l'indirizzo vincerebbe sulla scelta ricordata (MICRO, 14
+    // novembre). Si toglie, e l'avvio legge `sg.section.v1`. In campo no.
+    if (state.mode === "desktop" && window.location.hash) {
+      history.pushState(null, "", window.location.pathname + window.location.search);
+    }
   });
 
   $("nav-units").addEventListener("click", () => { void showIndex(); });
@@ -1610,7 +1659,12 @@ wireShell();
 const schedeLoaded = loadSchede();
 // L'INDIRIZZO VINCE sull'arrivo: un link a una scheda (`#scheda=…&us=…`) la
 // riapre, anche se il link della stanza avrebbe mostrato l'elenco.
-void land().then(() => schedeLoaded).then(() => followHash());
+// …E SE NÉ L'INDIRIZZO NÉ IL LINK HANNO SCELTO UN PANNELLO, alla scrivania si
+// apre la sua sezione (`openDesk`); in campo resta «Detta».
+void land().then(() => schedeLoaded).then(() => followHash())
+  .then(() => (state.panel === "voice" && !window.location.hash.replace(/^#/, "")
+    ? openDesk(true) : null))
+  .finally(() => { opened = true; });
 
 // Esposto per la verifica dal browser: è quello che una cattura non può
 // dimostrare (dove stanno i bersagli, quale modo è attivo, quanti campi).

@@ -218,7 +218,9 @@ def test_a_card_link_waits_for_the_listing_before_choosing_the_cards_language():
     shell = (pathlib.Path(__file__).resolve().parent.parent / "web" / "shell.js"
              ).read_text(encoding="utf-8")
     assert "const schedeLoaded = loadSchede();" in shell
-    assert "void land().then(() => schedeLoaded).then(() => followHash());" in shell
+    # la catena può continuare dopo `followHash` (MICRO 14 novembre: la scrivania
+    # si apre sulla sua sezione), ma l'elenco viene sempre prima
+    assert "void land().then(() => schedeLoaded).then(() => followHash())" in shell
 
 
 # ── la cornice scritta fissa (25 ottobre) ───────────────────────────────────

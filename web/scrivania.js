@@ -81,6 +81,35 @@ export function sectionOf(panel) {
   return hit ? hit[0] : null;
 }
 
+/* ── DOVE SI APRE LA SCRIVANIA (MICRO, 14 novembre) ────────────────────────────
+ *
+ * Misurato da Cowork il 12 novembre: la conchiglia partiva con il pannello della
+ * voce in ogni modo, e alla scrivania l'app si apriva su «Detta» con la striscia
+ * e l'ispettore nascosti. Nel mockup v7.2 la scrivania si apre sulla Scheda.
+ *
+ * La sezione scelta si ricorda SUL DISPOSITIVO, accanto alla lingua
+ * (`sg.locale.v1`): chi ricarica torna dove era. «voice» è «Detta». */
+export const SECTION_KEY = "sg.section.v1";
+const OPENABLE = ["voice", "sheet", "units", "finds", "photos", "excavation", "map"];
+
+/** La sezione con cui la scrivania si apre. Pura.
+ *  - `saved`: la sezione che chi usa il dispositivo ha scelto l'ultima volta
+ *    (null al primo avvio, e quando si passa da «In campo» a «Scrivania»);
+ *  - `hasDef`: una scheda è aperta;
+ *  - `hasRecent`: la stanza ha un'unità toccata per ultima.
+ *  La Scheda vale con la regola della sezione Scheda (`showSection("sheet")`):
+ *  la scheda aperta, o l'unità toccata per ultima. Senza nessuna delle due,
+ *  Unità — la Scheda aprirebbe una scheda vuota che nessuno ha chiesto. */
+export function openingSection({ saved = null, hasDef = false, hasRecent = false } = {}) {
+  if (OPENABLE.includes(saved) && saved !== "sheet") return saved;
+  return hasDef || hasRecent ? "sheet" : "units";
+}
+
+/** La sezione da ricordare per il pannello che la conchiglia ha davanti. */
+export function sectionToKeep(panel) {
+  return panel === "voice" || panel === "work" ? "voice" : sectionOf(panel);
+}
+
 /* Ciò che la stanza ha, letto una volta per giro e tenuto qui: i conteggi
  * delle sezioni lo leggono. */
 const known = { choices: null, places: null };
