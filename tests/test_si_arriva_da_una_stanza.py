@@ -345,5 +345,7 @@ def test_LA_STANZA_DEL_LINK_SOPRAVVIVE_ALLA_FIRMA():
     land = land[:land.index("\nwireShell();")]
     assert land.index("await window.SGReady") < land.index("readArrival(window.location.search)")
     assert 'piano.do === "offer" && SG().signed' in land and "pointRoom(corpo" in land
-    # …e sul telefono la colonna non copre il messaggio (SF-03)
-    assert 'if (state.mode !== "phone") setNavOpen(true);' in land
+    # …e sul telefono la scelta della stanza non copre il messaggio (SF-03).
+    # Dal 15 novembre la scelta non sta più nella colonna (che in campo non
+    # c'è): è sotto il nome della stanza, nella barra (`#room-pop`)
+    assert 'if (state.mode !== "phone" && $("room-pop")) {' in land

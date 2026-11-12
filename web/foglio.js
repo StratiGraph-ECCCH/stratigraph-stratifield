@@ -700,9 +700,12 @@ function paintSummary(insp, def, state) {
   bar("insp.all", fields);
   bar("insp.trench", fields.filter((f) => f.recorded_in === "trench"));
   bar("insp.lab", fields.filter((f) => f.recorded_in === "lab"), true);
+  // «QUESTA SCHEDA» E IL SUO NOME IN UNA RIGA PICCOLA sopra i contatori
+  // (revisione C.5, 15 novembre): il nome lungo in corpo grande ripeteva il menu
+  // «Scheda» della striscia, e spingeva i contatori sotto la piega.
   insp.append(el("section", {},
     el("p", { class: "fo-eyebrow", text: tr("insp.thiscard") }),
-    el("h2", { text: def.title }), meter));
+    el("p", { class: "fo-defname", text: def.title }), meter));
 
   const check = el("section", {},
     el("p", { class: "fo-eyebrow", text: tr("insp.check") }));

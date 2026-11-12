@@ -123,6 +123,29 @@ async function readJSON(path) {
   } catch { return null; }
 }
 
+/** L'ORDINE NATURALE DEL NUMERO (revisione C.2): «US 9» prima di «US 10»,
+ *  3009 prima di 3014; le unità senza numero dopo, per nome. Pura. */
+export function byNumber(units) {
+  const key = (u) => String(u.number || "");
+  return (units || []).slice().sort((a, b) => {
+    if (key(a) && !key(b)) return -1;
+    if (!key(a) && key(b)) return 1;
+    const ka = key(a) || String(a.name || a.id || "");
+    const kb = key(b) || String(b.name || b.id || "");
+    return ka.localeCompare(kb, undefined, { numeric: true, sensitivity: "base" });
+  });
+}
+
+/** Il perché di un bottone spento, in una riga grigia sotto (revisione C.4):
+ *  il suggerimento al passaggio non c'è su un tablet, e chi non lo cerca non
+ *  lo trova. */
+export function whyLine(text) {
+  const p = document.createElement("p");
+  p.className = "why";
+  p.textContent = text;
+  return p;
+}
+
 /** I REPERTI della stanza: le unità di tipo reperto (SF, VSF, RSF — i tipi
  *  `…SpecialFind…` del datamodel, che il nodo riporta in `node_type`). Una
  *  SCHEDA MATERIALI (ICCD RA, TMA) questo nodo non la serve: lo stato vuoto lo
@@ -224,21 +247,29 @@ export function mount(shell) {
       // L'AZIONE CHE NON C'È SI DICE, non si finge: «Nuova area» e «Nuova
       // scheda materiali» questo nodo non le sa fare ancora.
       const key = sec === "excavation" ? "act.new_area" : "act.new_find";
+      const why = t(sec === "excavation" ? "exc.cannot" : "finds.cannot");
       const b = el("button", { type: "button", class: "primary", "data-act": key,
-                               text: t(key), disabled: true,
-                               title: t(sec === "excavation" ? "exc.cannot" : "finds.cannot") });
-      box.append(b);
+                               text: t(key), disabled: true, title: why });
+      box.append(el("span", { class: "withwhy" }, b, whyLine(why)));
     }
   }
 
   /* ── la colonna: «In questa stanza» ────────────────────────────────────── */
-  //: quante unità nella colonna: è l'elenco BREVE; l'elenco intero è Unità
-  const INROOM = 12;
+  /* PER NUMERO (15 novembre, revisione C.2): l'ordine «toccate più di
+   * recente» non si vedeva — 25, 13, 500, 501, 42, 24 — e una colonna senza
+   * un criterio leggibile non si scorre, si cerca. Adesso è l'ordine naturale
+   * del numero (3009 prima di 3014, US 9 prima di US 10), detto
+   * nell'intestazione, e TUTTE le unità della stanza (la colonna scorre);
+   * l'unità aperta resta evidenziata. Sul tablet in campo è la stessa colonna,
+   * l'elenco breve del mockup a sinistra della scheda. */
   function paintInRoom() {
     const box = $("nav-inroom-box");
     if (!box) return;
-    box.hidden = !isDesk();
+    box.hidden = shell.state.mode === "phone";
     if (box.hidden) return;
+    const head = $("nav-inroom-title");
+    if (head) head.replaceChildren(t("nav.inroom"), " ",
+      el("span", { class: "sub", text: `· ${t("nav.by_number")}` }));
     const host = $("nav-inroom");
     const units = room.units || [];
     const listing = shell.listing();
@@ -247,10 +278,7 @@ export function mount(shell) {
       host.append(el("p", { class: "hint", text: room.read ? t("index.empty") : "…" }));
       return;
     }
-    // le più recenti in cima: quelle su cui si sta lavorando
-    const recent = units.slice().sort((a, b) =>
-      String(b.modified_at || "").localeCompare(String(a.modified_at || "")));
-    for (const u of recent.slice(0, INROOM)) {
+    for (const u of byNumber(units)) {
       const declared = u.scheda && u.scheda.template;
       const item = listing.find((x) => x.id === declared)
         || listing.find((x) => shell.state.def && x.id === shell.state.def.id)
@@ -261,7 +289,8 @@ export function mount(shell) {
       const b = el("button", { type: "button", class: "navitem", "data-unit": u.id,
                                "aria-current": String(Boolean(current)) },
         el("span", { text: u.number ? `${shell.prefix(u)}${u.number}` : (u.name || u.id) }),
-        el("span", { class: "count", text: total ? `${u.fields || 0}/${total}` : String(u.fields || 0) }));
+        // in campo l'elenco breve dice solo l'unità, come nel mockup
+        isDesk() ? el("span", { class: "count", text: total ? `${u.fields || 0}/${total}` : String(u.fields || 0) }) : null);
       b.addEventListener("click", () => shell.openUnit(u));
       host.append(b);
     }
@@ -292,6 +321,8 @@ export function mount(shell) {
                     : tool === "heriverse" ? "map.heriverse_none" : "insp.open_pick");
       }
       sec.append(b);
+      // IL PERCHÉ SI LEGGE SENZA PASSARCI SOPRA (revisione C.4)
+      if (b.disabled) sec.append(whyLine(b.title));
     }
     return sec;
   }
@@ -336,6 +367,13 @@ export function mount(shell) {
     const host = $("photos-sec");
     known.choices = (await readJSON("/v1/room/choices")) || known.choices;
     const wrap = el("div", { class: "sheetwrap" });
+    // IN CAMPO la sezione è la voce «Foto»: scattare in cima, a un tocco (alla
+    // scrivania lo stesso gesto è l'azione della striscia)
+    if (!isDesk()) {
+      wrap.append(el("button", { type: "button", class: "primary fld-shoot", "data-act": "act.add_photos",
+                                 text: t("act.add_photos"),
+                                 onclick: () => { const c = $("camera"); if (c) c.click(); } }));
+    }
     // 1 · QUELLE DI QUESTO DISPOSITIVO, che aspettano: ciò che fa `photos.js`
     const waiting = el("div", { class: "waiting dk-waiting" });
     wrap.append(waiting);

@@ -24,19 +24,28 @@ def test_i_controlli_di_aspetto_stanno_nel_foglio_e_ci_si_spostano():
     # novembre alla scrivania la LINGUA va nella barra (`#bar-lang`, mockup
     # v7.2): lo stesso nodo, un'altra casa — ancora un solo append
     assert "cloneNode" not in place and place.count(".append(node)") == 1
-    assert 'id === "lang" && mode === "desktop"' in place
+    # …e dal 15 novembre in OGNI modo: la lingua resta nella barra anche in
+    # campo (mockup v7.2, NIGHT il campo come nel mockup)
+    assert 'id === "lang" && $("bar-lang")' in place
 
 
 def test_le_quattro_voci_ci_sono_e_la_porta_resta():
-    bar = PAGE[PAGE.index('<div class="thumbbar"'):]
-    bar = bar[:bar.index("</div>")]
-    order = [m for m in re.findall(r'id="(tb-[a-z]+)"', bar)]
-    assert order[:4] == ["tb-voice", "tb-units", "tb-photo", "tb-nav"], order
+    """Dal 15 novembre (mockup v7.2) le quattro voci in campo sono Detta ·
+    Scheda · Foto · Consegna: «Le US» è dentro la Scheda (elenco e mappa dalla
+    sua striscia), «Stanza» (☰, la colonna) non c'è più perché in campo la
+    colonna non c'è — la stanza è nella barra, le soglie e «Esci» nel foglio
+    delle iniziali, il ritorno nella barra dei pollici. Le voci si vedono
+    SEMPRE, anche dentro la scheda, sotto i passi."""
+    nav = PAGE[PAGE.index('<nav class="fieldtabs" id="field-tabs"'):]
+    nav = nav[:nav.index("</nav>")]
+    order = [m for m in re.findall(r'id="(tb-[a-z]+)"', nav)]
+    assert order == ["tb-voice", "tb-sheet", "tb-photo", "tb-deliver"], order
+    assert 'id="tb-nav"' not in PAGE and 'id="tb-units"' not in PAGE
     paint = SHELL[SHELL.index("function paintThumbbar"):]
     paint = paint[:paint.index("\n}\n")]
-    assert "const tabs = plan.bar && !plan.steps;" in paint
-    # ☰ non si nasconde mai qui: resta l'unica maniglia della colonna
-    assert '"tb-nav"' not in paint
+    # le voci non si spengono dentro la scheda: si nascondono solo i passi
+    assert '$("thumbbar").dataset.tabs = String(plan.bar);' in paint
+    assert '$("tb-steps").hidden = !plan.steps' in paint
 
 
 def test_chi_firma_sta_nelle_iniziali_e_la_fascia_non_si_vede_piu():

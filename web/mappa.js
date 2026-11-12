@@ -299,6 +299,7 @@ function draw(host, m, { onPlace, onOpen }) {
       b.addEventListener("click", () => onOpen && onOpen(tool, target, m));
     }
     open.append(b);
+    if (b.disabled) open.append(el("span", { class: "why", text: b.title }));
   }
   open.append(el("span", { class: "hint", text: t("map.gis_note") }));
   host.append(open);
@@ -365,6 +366,8 @@ export function openSection(state, mk, tr) {
       b.addEventListener("click", () => openIn(tool, { id: unit.id, name: unit.name }, last));
     }
     sec.append(b);
+    // IL PERCHÉ DI UN BOTTONE SPENTO SI LEGGE, in grigio sotto (15 novembre)
+    if (b.disabled) sec.append(mk("p", { class: "why", text: b.title }));
   }
   return sec;
 }

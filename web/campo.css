@@ -1,0 +1,239 @@
+/* «IN CAMPO» COME NEL MOCKUP, E LA REVISIONE DELLA SCRIVANIA (NIGHT 15 novembre
+ * 2026, v7.2).
+ *
+ * In campo (telefono e tablet) la colonna di sinistra di prima non c'è più:
+ *
+ *   telefono   barra · il pannello · [◀ n/N ▶ Salva] · Detta Scheda Foto Consegna
+ *   tablet     barra · Detta Scheda Foto Consegna · [US ‹ › … | la scheda]
+ *
+ * Sul tablet — e su uno schermo più largo in campo — la cornice è quella del
+ * tablet, CENTRATA con una larghezza massima: prima era una colonna a sinistra
+ * e il vuoto a destra.
+ *
+ * Solo ruoli del tema (`--sg-*`): nessun colore scritto qui
+ * (`tests/test_brand.py`). */
+
+/* ── la colonna: in campo non c'è ─────────────────────────────────────────── */
+#surface[data-sg-mode="phone"] .sidenav,
+#surface[data-sg-mode="phone"] .navscrim { display: none !important; }
+/* sul tablet resta SOLO l'elenco breve delle unità, accanto alla scheda */
+#surface[data-sg-mode="tablet"] .sidenav > :not(#nav-inroom-box) { display: none; }
+#surface[data-sg-mode="tablet"] .sidenav { width: auto; padding: var(--sg-space-2) 0; }
+#surface[data-sg-mode="tablet"]:not(:has(#scheda:not([hidden]))) .sidenav { display: none; }
+
+/* ── il tablet: la cornice del mockup, centrata ───────────────────────────── */
+#surface[data-sg-mode="tablet"] {
+  grid-template-areas: "bar bar" "tabs tabs" "nav work";
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  max-width: 64rem;
+  margin-inline: auto;
+  border-inline: 1px solid var(--sg-line);
+  background: var(--sg-bg);
+}
+#surface[data-sg-mode="tablet"]:not(:has(#scheda:not([hidden]))) {
+  grid-template-areas: "bar" "tabs" "work";
+  grid-template-columns: minmax(0, 1fr);
+}
+#surface[data-sg-mode="tablet"] .fieldtabs-top { grid-area: tabs; }
+/* Detta, al centro della sua colonna e non incollata a sinistra */
+#surface[data-sg-mode="tablet"] #work,
+#surface[data-sg-mode="tablet"] .queue,
+#surface[data-sg-mode="tablet"] .answer { margin-inline: auto; }
+
+/* ── le quattro voci ──────────────────────────────────────────────────────── */
+.fieldtabs-top[hidden] { display: none; }
+.fieldtabs svg {
+  width: 22px; height: 22px; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.fieldtabs .badge {
+  position: absolute; inset-block-start: 2px; inset-inline-start: calc(50% + 6px);
+  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+  background: var(--sg-warn); color: var(--sf-accent-ink);
+  font: 600 var(--sg-text-xs)/17px var(--sg-font-mono); text-align: center;
+}
+.fieldtabs .badge[hidden] { display: none; }
+.fieldtabs button.tab { position: relative; }
+/* in alto (tablet): come le sezioni della scrivania */
+.fieldtabs-top .fieldtabs {
+  display: flex; gap: 2px; padding: 0 var(--sg-space-3);
+  background: var(--sg-surface); border-bottom: 1px solid var(--sg-line);
+}
+.fieldtabs-top .fieldtabs button.tab {
+  display: inline-flex; flex: 1 1 0; justify-content: center; align-items: center; gap: 8px;
+  width: auto; margin: 0; min-height: 48px; box-shadow: none; border: 0; border-radius: 0;
+  background: none; color: var(--sg-muted); cursor: pointer; font: inherit;
+  font-size: var(--sg-text-sm); border-bottom: 2px solid transparent;
+}
+.fieldtabs-top .fieldtabs button.tab[aria-current="true"] {
+  color: var(--sg-text); font-weight: var(--sg-weight-subtitle);
+  border-bottom-color: var(--sg-accent);
+}
+.fieldtabs-top .fieldtabs .badge { inset-inline-start: auto; position: static; }
+
+/* in basso (telefono): i passi sopra, le quattro voci sotto */
+#surface[data-sg-mode="phone"] .thumbbar {
+  flex-direction: column; gap: 0; padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tb-steps { display: flex; gap: var(--sg-space-2); padding: var(--sg-space-2); }
+.tb-steps[hidden] { display: none; }
+#surface[data-sg-mode="phone"] .thumbbar .fieldtabs {
+  display: flex; border-top: 1px solid var(--sg-line); padding-top: 2px;
+}
+#surface[data-sg-mode="phone"] .thumbbar .tb-steps + .fieldtabs { border-top: 1px solid var(--sg-line); }
+#surface[data-sg-mode="phone"] .work {
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+}
+#surface:not([data-sg-mode="phone"]) .thumbbar .fieldtabs,
+#surface[data-sg-mode="desktop"] .fieldtabs { display: none; }
+
+/* ── la barra in campo: la stessa della scrivania ─────────────────────────── */
+/* sul telefono va su due righe: marchio · stanza · iniziali, poi stato · lingua */
+#surface[data-sg-mode="phone"] .topbar { flex-wrap: wrap; row-gap: 6px; }
+#surface[data-sg-mode="phone"] .whoroom { order: 1; flex: 1 1 calc(100% - 6.5rem); }
+#surface[data-sg-mode="phone"] #me { order: 2; }
+#surface[data-sg-mode="phone"] #state { order: 3; flex: 1 1 auto; }
+#surface[data-sg-mode="phone"] .barlang { order: 4; }
+#surface[data-sg-mode="phone"] .barlang select { padding: 4px 6px; font-size: var(--sg-text-sm); }
+/* sul tablet stretto il sottotitolo lascia il posto all'interruttore e allo stato */
+@media (max-width: 960px) {
+  #surface[data-sg-mode="tablet"] #app-subtitle { display: none; }
+}
+/* la stanza, che apre la scelta: una cosa sola con lo stato accanto */
+#surface:not([data-sg-mode="desktop"]) .whoroom button.room { font-size: var(--sg-text-sm); }
+
+/* ── la Scheda in campo ───────────────────────────────────────────────────── */
+/* la riga «US n ‹ Vai alla US… ›» e i comandi, come la riga del tablet del
+   mockup: in campo `#scheda-unav` e `#scheda-strip` stanno in cima alla scheda */
+#surface:not([data-sg-mode="desktop"]) #scheda-strip {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sg-space-2) var(--sg-space-3);
+}
+#surface:not([data-sg-mode="desktop"]) #scheda-strip[hidden] { display: none; }
+#surface:not([data-sg-mode="desktop"]) #scheda-strip select.std {
+  width: auto; max-width: 100%; margin: 0; padding: 6px 10px;
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface); color: var(--sg-text); font: inherit;
+  font-size: var(--sg-text-sm);
+}
+#surface[data-sg-mode="phone"] #scheda-strip [data-ctl="card"] { flex: 1 1 100%; }
+#surface[data-sg-mode="phone"] #scheda-strip [data-ctl="card"] select.std { width: 100%; }
+.fld-links { display: inline-flex; gap: var(--sg-space-3); margin-inline-start: auto; }
+.fld-link {
+  width: auto; margin: 0; padding: 4px 0; border: 0; box-shadow: none; background: none;
+  color: var(--sg-text); font: inherit; font-size: var(--sg-text-sm); cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+/* l'elenco breve a sinistra della scheda, sul tablet: «US n», niente conteggi */
+#surface[data-sg-mode="tablet"] .inroom h3 { margin: var(--sg-space-2) var(--sg-space-3) var(--sg-space-1); }
+#surface[data-sg-mode="tablet"] .inroom .navitem { padding: 9px var(--sg-space-3); font-size: var(--sg-text-sm); }
+
+/* ── Consegna ─────────────────────────────────────────────────────────────── */
+.fld-deliver { max-width: 34rem; }
+.fld-deliver .dcard {
+  background: var(--sg-surface); border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius); padding: var(--sg-space-3);
+}
+.fld-deliver .qitem {
+  display: flex; justify-content: space-between; gap: var(--sg-space-2);
+  padding: 10px 0; border-top: 1px solid var(--sg-line); font-size: var(--sg-text-sm);
+}
+.fld-deliver .qitem:first-child { border-top: 0; }
+.fld-deliver .qitem .k { font: 400 var(--sg-text-xs) var(--sg-font-mono); color: var(--sg-muted); text-align: end; }
+.fld-deliver .bigq { margin: 0; }
+.fld-deliver .bigq[disabled] { opacity: .45; cursor: not-allowed; }
+.fld-deliver .pbtn { margin: 0; text-align: start; box-shadow: none; }
+.fld-deliver .pbtn[disabled] { opacity: .5; }
+.okmsg {
+  border-inline-start: 4px solid var(--sg-ok); background: var(--sg-surface);
+  border-radius: var(--sg-radius-sm); padding: 10px 12px; font-size: var(--sg-text-sm);
+}
+.fld-shoot { margin: 0; }
+
+/* ── IL PERCHÉ DI UN BOTTONE SPENTO, sempre leggibile (revisione C.4) ────── */
+.why {
+  display: block; margin: -4px 0 var(--sg-space-2); color: var(--sg-muted);
+  font-size: var(--sg-text-xs); line-height: 1.35;
+}
+.withwhy { display: inline-grid; justify-items: end; gap: 2px; }
+.withwhy .why { margin: 0; max-width: 22rem; text-align: end; }
+.mappa-apri .why { flex-basis: 100%; margin: 0; }
+
+/* ── la Scrivania più densa, verso il mockup (revisione C.1) ──────────────── */
+#surface[data-sg-mode="desktop"] .desktabs button { padding: 10px 14px 9px; font-size: var(--sg-text-sm); }
+#surface[data-sg-mode="desktop"] .deskstrip { padding-block: 6px; }
+#surface[data-sg-mode="desktop"] .deskstrip h1,
+#surface[data-sg-mode="desktop"] .deskstrip-sheet .unav-here { font-size: var(--sg-text-lg); }
+#surface[data-sg-mode="desktop"] .deskstrip .fo-ctl-label { font-size: var(--sg-text-xs); }
+#surface[data-sg-mode="desktop"] .deskstrip .fo-seg button { padding: 5px 10px; font-size: var(--sg-text-sm); }
+#surface[data-sg-mode="desktop"] .deskstrip-sheet select.std { padding: 5px 8px; font-size: var(--sg-text-sm); }
+#surface[data-sg-mode="desktop"] .deskstrip-sheet .unav input { padding: 5px 8px; font-size: var(--sg-text-sm); }
+#surface[data-sg-mode="desktop"] .inroom .navitem {
+  padding: 7px var(--sg-space-3); font-size: var(--sg-text-sm); line-height: 1.3;
+}
+#surface[data-sg-mode="desktop"] .sidenav h3 { margin-top: var(--sg-space-2); }
+#surface[data-sg-mode="desktop"] .deskinsp section { padding: var(--sg-space-3) var(--sg-space-4); }
+#surface[data-sg-mode="desktop"] .deskinsp h2 { font-size: var(--sg-text-base); }
+#surface[data-sg-mode="desktop"] .tbl td { padding: 8px 12px; }
+#surface[data-sg-mode="desktop"] .dk-open { padding: 8px 12px; font-size: var(--sg-text-sm); }
+/* «Questa scheda» e il suo nome: una riga piccola sopra i contatori (C.5) */
+.fo-defname { margin: 0 0 var(--sg-space-2); font-size: var(--sg-text-sm); color: var(--sg-muted); }
+
+/* la vista Unità: ciò che manca, sotto ciò che è scritto (C.3) */
+.unit-left { margin: 0; color: var(--sg-muted); font-size: var(--sg-text-sm); }
+.linkish {
+  width: auto; margin: 0; padding: 0; border: 0; box-shadow: none; background: none;
+  color: var(--sg-text); font: inherit; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* l'intestazione della colonna dice l'ordine, in piccolo e senza maiuscole */
+.inroom h3 .sub { text-transform: none; letter-spacing: 0; font-weight: 400; }
+/* la vista Unità alla densità del resto (C.1) */
+#surface[data-sg-mode="desktop"] .unitpage .hero h2 { font-size: var(--sg-text-xl); }
+#surface[data-sg-mode="desktop"] .up-row { padding: 4px 0; font-size: var(--sg-text-sm); }
+#surface[data-sg-mode="desktop"] .up-l { font-size: var(--sg-text-xs); }
+/* «Altrove» UGUALE in ogni sezione (C.6): nella Scheda i comandi vengono dalla
+   mappa (`openSection`, gettoni), nelle altre dalla scrivania (righe con il
+   glifo). Alla scrivania hanno la stessa forma. */
+.deskinsp .fo-apri .indice-chip {
+  display: flex; width: 100%; margin: 0 0 8px; box-shadow: none;
+  padding: 8px 12px; border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-bg); color: var(--sg-text); font: inherit;
+  font-size: var(--sg-text-sm); text-align: start;
+}
+.deskinsp .fo-apri .indice-chip[disabled] { opacity: .55; cursor: not-allowed; }
+
+/* ── 1100 px alla scrivania: come il mockup, la colonna «In questa stanza» si
+   ritira (sotto 1180 px) e il piano tiene la larghezza; l'unità si raggiunge
+   con ‹ › e «Vai alla US…» della striscia, o dall'elenco Unità (C.6). ───── */
+@media (max-width: 1180px) {
+  #surface[data-sg-mode="desktop"] {
+    grid-template-areas: "bar bar" "tabs tabs" "strip strip" "work insp";
+    grid-template-columns: minmax(0, 1fr) 16rem;
+  }
+  #surface[data-sg-mode="desktop"]:has(#desk-insp[hidden]) {
+    grid-template-areas: "bar" "tabs" "strip" "work";
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #surface[data-sg-mode="desktop"] .sidenav { display: none; }
+}
+
+/* la barra non va a capo dentro i suoi elementi (tablet stretto, 820 px) */
+.postseg button, .whoroom button.room { white-space: nowrap; }
+
+/* PRIMA DELLA FIRMA la porta è tutto lo schermo: le quattro voci non ci sono */
+:root[data-access=""] .fieldtabs,
+:root:not([data-access]) .fieldtabs { display: none !important; }
+/* la scelta della stanza sul telefono: sotto la barra, che lì è su due righe */
+#surface[data-sg-mode="phone"] .roompop { inset-block-start: 5.9rem; inset-inline: 8px; width: auto; }
+#room-pop-host > .hint, #room-pop-host .room-other { margin-inline: var(--sg-space-3); }
+
+/* il titolo lungo dello standard sopra il foglio, sul tablet: lo dice il menu
+   «Scheda» (come alla scrivania, C.5); resta «Svuota la scheda» */
+#surface[data-sg-mode="tablet"] .fo-head h2 { display: none; }
+#surface[data-sg-mode="tablet"] .fo-head { justify-content: flex-end; }
+/* nella Consegna la riga della coda ripeterebbe l'elenco che sta sopra */
+#surface:has(#deliver:not([hidden])) .queue { display: none; }

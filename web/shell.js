@@ -25,6 +25,7 @@ import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
 import { mount as mountDesk, openingSection, SECTION_KEY, sectionOf, sectionToKeep } from "./scrivania.js";
 import { valueView } from "./widgets.js";
+import { fieldStateLine, mount as mountField } from "./campo.js";
 
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
@@ -167,10 +168,12 @@ const state = {
 /* LA POSTURA CHE VALE: quella forzata, se qualcuno la sta provando, altrimenti
  * quella letta dal nodo. */
 const posture = () => state.postureForced
-  // ALLA SCRIVANIA LA POSTURA È LA SCRIVANIA (14 novembre): l'interruttore della
-  // barra è una dichiarazione, e «Scrivania» vuol dire fronte e retro. In campo
-  // (telefono, tablet) resta quella letta dal nodo, come prima.
-  || (state.mode === "desktop" ? "desk" : state.posture);
+  // LA POSTURA È L'INTERRUTTORE DELLA BARRA (14 novembre la scrivania, 15
+  // novembre il campo): «Scrivania» vuol dire fronte e retro, «In campo» una
+  // facciata per volta e «Solo i campi da trincea», come nel mockup. Prima in
+  // campo valeva quella letta dal nodo (`seated`), e un tablet «in campo» su un
+  // nodo seduto mostrava i comandi della scrivania: due cose dette in due modi.
+  || (state.mode === "desktop" ? "desk" : "field");
 
 /** Il battito di `ping()` porta la salute; cambia la postura solo se cambia, e
  *  ridisegna solo se la scheda è a schermo sul foglio. */
@@ -200,7 +203,7 @@ function takePosture(health) {
  * Prima ogni funzione nascondeva gli altri per conto suo — `openScheda`,
  * `showIndex`, `showMap`, «Detta» — e una sezione nuova voleva dire quattro
  * righe in quattro posti. Adesso le sezioni sono sette e la riga è una. */
-const PANELS = ["work", "scheda", "index", "map", "finds", "photos-sec", "excavation"];
+const PANELS = ["work", "scheda", "index", "map", "finds", "photos-sec", "excavation", "deliver"];
 
 function only(panel) {
   for (const id of PANELS) {
@@ -308,9 +311,10 @@ function placeControls(mode) {
   for (const id of MOVABLE) {
     const node = $(id);
     if (!node) continue;
-    // LA LINGUA DELL'INTERFACCIA, ALLA SCRIVANIA, STA NELLA BARRA (14 novembre,
-    // mockup v7.2): la si cambia guardando lo schermo, non aprendo un foglio
-    const target = id === "lang" && mode === "desktop" && $("bar-lang") ? $("bar-lang") : home;
+    // LA LINGUA DELL'INTERFACCIA STA NELLA BARRA (14 novembre alla scrivania, 15
+    // novembre anche in campo, mockup v7.2): la si cambia guardando lo schermo,
+    // non aprendo un foglio — e un dispositivo che passa di mano la cambia lì
+    const target = id === "lang" && $("bar-lang") ? $("bar-lang") : home;
     if (node.parentElement !== target) target.append(node);
   }
 }
@@ -327,24 +331,29 @@ function placeDesk() {
     const node = $(id);
     if (node && there && node.parentElement !== there) there.append(node);
   };
+  // LA SCELTA DELLA STANZA sta sotto il nome della stanza, nella barra, in
+  // OGNI modo (15 novembre): in campo la colonna che la teneva non c'è più
+  move("nav-room", $("room-pop-host"));
   if (desk) {
     move("scheda-unav", $("desk-strip-sheet"));
     move("scheda-strip", $("desk-strip-sheet"));
-    move("nav-room", $("room-pop-host"));
   } else {
     const scheda = $("scheda");
     if (scheda && $("scheda-unav") && $("scheda-unav").parentElement !== scheda) {
       scheda.prepend($("scheda-unav"), $("scheda-strip"));
     }
-    const title = $("nav-room-title");
-    if (title && $("nav-room") && $("nav-room").parentElement !== title.parentElement) {
-      title.after($("nav-room"));
-    }
-    if ($("room-pop")) $("room-pop").hidden = true;
+  }
+  // LE QUATTRO VOCI IN CAMPO: in basso sul telefono (nella barra dei pollici),
+  // in alto sul tablet e sugli schermi larghi. La stessa `<nav>`, spostata.
+  const top = $("field-tabs-top");
+  if (top) {
+    top.hidden = state.mode !== "tablet";
+    move("field-tabs", state.mode === "tablet" ? top : $("thumbbar"));
   }
   state.inspHost = desk && state.panel === "scheda" ? $("desk-insp") : null;
   $("surface").dataset.desk = desk ? "true" : "false";
   if (deskUI) deskUI.paint();
+  if (fieldUI) fieldUI.paint();
 }
 
 /** LA POSTURA DI CHI SCRIVE, per il segno accanto alla descrizione: l'interruttore
@@ -367,6 +376,7 @@ function choosePlace(place) {
 }
 
 let deskUI = null;
+let fieldUI = null;
 
 /* L'UNICO posto che decide se la barra dei pollici c'è. Prima erano quattro
  * righe sparse in quattro funzioni, e la porta murata è nata da lì: `setMode`,
@@ -379,17 +389,15 @@ function paintThumbbar() {
   for (const id of ["tb-prev", "tb-step", "tb-next", "tb-save"]) {
     $(id).hidden = !plan.steps;
   }
-  // LE QUATTRO VOCI, fuori dalla scheda (D2). Dentro la scheda la barra torna
-  // ai passi: ☰ resta in entrambe, ed è la porta che non si mura.
-  const tabs = plan.bar && !plan.steps;
-  $("thumbbar").dataset.tabs = String(tabs);
-  for (const [id, panel] of [["tb-voice", "voice"], ["tb-units", "index"], ["tb-photo", null]]) {
-    const tab = $(id);
-    if (!tab) continue;
-    tab.hidden = !tabs;
-    if (panel) tab.setAttribute("aria-current", String(state.panel === panel));
-  }
+  // LE QUATTRO VOCI IN CAMPO (15 novembre, mockup v7.2): Detta · Scheda · Foto ·
+  // Consegna, SEMPRE — anche dentro la scheda, sotto i passi, come nel mockup.
+  // La colonna (☰) non c'è più: la stanza è nella barra, le definizioni nel menu
+  // «Scheda», le soglie e «Esci» nel foglio delle iniziali, e il ritorno qui.
+  $("thumbbar").dataset.tabs = String(plan.bar);
   paintWayBack();
+  const back = $("tb-back");
+  $("tb-steps").hidden = !plan.steps && !(back && !back.hidden);
+  if (fieldUI) fieldUI.paintTabs();
   paintUnav();
 }
 
@@ -453,6 +461,8 @@ function setMode(mode) {
   $("nav-onepage").hidden = mode !== "desktop";
   paintModes();
   if (state.def) draw();
+  // la pastiglia dice cose diverse alla scrivania e in campo
+  if (was !== mode && SG().paintState) SG().paintState();
   // DA «IN CAMPO» A «SCRIVANIA» con «Detta» davanti: la scrivania si apre sulla
   // sua sezione. Una sezione già scelta in campo (Unità, la Scheda) resta.
   if (opened && was !== "desktop" && mode === "desktop" && state.panel === "voice") {
@@ -847,12 +857,53 @@ function paintCompleteness() {
  * I testi vengono dal dizionario (`STRINGS`, chiavi dell'xlsx del WP1); le
  * lingue della scheda vengono dalla DEFINIZIONE e si scrivono come codici,
  * perché sono le sue. */
+/** «SOLO I CAMPI DA TRINCEA», in campo: sul Foglio attenua gli altri, sul
+ *  telefono decide quali campi si percorrono (il «Tutti i campi» di prima, al
+ *  contrario). Uno stato per la scelta, letto da tutte e due le strade. */
+function trenchToggle() {
+  const box = document.createElement("div");
+  box.className = "fo-ctl";
+  box.dataset.ctl = "trench";
+  const toggle = Object.assign(document.createElement("button"), {
+    type: "button", className: "fo-toggle", textContent: tr("f.trench_only", "Trench fields only") });
+  toggle.setAttribute("aria-pressed", String(state.trenchOnly));
+  toggle.addEventListener("click", () => {
+    state.trenchOnly = !state.trenchOnly;
+    state.showAll = !state.trenchOnly;
+    state.step = 0;
+    draw();
+  });
+  box.append(toggle);
+  return box;
+}
+
+/** In campo l'elenco delle unità e la mappa non hanno una voce loro: si
+ *  raggiungono dalla Scheda, che è la strada verso una scheda. */
+function fieldLinks() {
+  const box = document.createElement("div");
+  box.className = "fo-ctl fld-links";
+  box.dataset.ctl = "links";
+  for (const [key, go] of [["nav.units", () => showIndex()], ["nav.map", () => showMap()]]) {
+    const b = Object.assign(document.createElement("button"), {
+      type: "button", className: "fld-link", textContent: tr(key, key) });
+    b.dataset.go = key;
+    b.addEventListener("click", () => { void go(); });
+    box.append(b);
+  }
+  return box;
+}
+
 function paintStrip() {
   const strip = $("scheda-strip");
   if (!strip) return;
   strip.replaceChildren();
-  strip.hidden = state.mode === "phone" || !state.def;
+  // SUL TELEFONO ANCHE (15 novembre): il menu «Scheda» e «Solo i campi da
+  // trincea», che hanno preso il posto dell'elenco delle definizioni e di
+  // «Tutti i campi» della colonna. Il resto (vista, facciate) là non serve.
+  strip.hidden = !state.def;
   if (strip.hidden) return;
+  const phone = state.mode === "phone";
+  const field = state.mode !== "desktop";
   const t = (key) => (SG().t ? SG().t(key) : key);
   const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
 
@@ -883,7 +934,12 @@ function paintStrip() {
   // scegliere una definizione diversa da quella con cui è stata scritta la
   // legge con quella, e la lente lo dice; scegliere quella di compilazione la
   // chiude. Su una scheda nuova cambia la definizione con cui si compila.
-  if (state.mode === "desktop") {
+  // …IN OGNI MODO (15 novembre): in campo l'elenco delle definizioni nella
+  // colonna era un elenco per una scelta che si fa di rado; adesso è questo
+  // stesso menu. In campo l'opzione porta, come testo secondario, quanti campi
+  // la definizione dice da trincea («25 da trincea su 59»): un'informazione,
+  // non una lista.
+  {
     const box = make("div", { className: "fo-ctl" });
     box.dataset.ctl = "card";
     const label = make("label", { className: "fo-ctl-label", textContent: t("ctl.card") });
@@ -893,9 +949,11 @@ function paintStrip() {
       ? state.lens.written_with.template : def.id;
     for (const item of listing()) {
       const demo = item.standard && item.standard.invented;
+      const trench = field && item.recorded_in
+        ? ` — ${tr("schede.count", "", { t: item.recorded_in.trench, n: item.fields })}` : "";
       const o = make("option", { value: item.id,
         textContent: standardName(item, SG().locale) + (demo ? " · demo" : "")
-          + (state.lens && item.id === written ? ` · ${t("lens.written")}` : "") });
+          + (state.lens && item.id === written ? ` · ${t("lens.written")}` : "") + trench });
       o.selected = item.id === def.id;
       pick.append(o);
     }
@@ -915,6 +973,13 @@ function paintStrip() {
     box.append(label, pick);
     strip.append(box);
   }
+  if (phone) {
+    // IL TELEFONO: un campo per volta; «Solo i campi da trincea» decide quali
+    // (era «Tutti i campi» nella colonna: la stessa scelta, al contrario)
+    strip.append(trenchToggle());
+    strip.append(fieldLinks());
+    return;
+  }
   if ((def.languages || []).length > 1) {
     control("ctl.cardlang", "cardlang",
       def.languages.map((l) => [l, l]), def.lang,
@@ -927,23 +992,17 @@ function paintStrip() {
     ? "unit" : (hasSheet(def) && state.view !== "fields" ? "sheet" : "fields");
   control("ctl.view", "view", views, view,
     (v) => { state.view = v; draw(); });
-  if (!sheetActive() || view === "unit") return;
+  if (!sheetActive() || view === "unit") {
+    if (field) strip.append(fieldLinks());
+    return;
+  }
 
   if (posture() === "field") {
     control("f.side", "side",
       [["recto", t("faces.recto")], ["verso", t("faces.verso")]],
       state.fieldSide, (v) => { state.fieldSide = v; draw(); });
-    const box = make("div", { className: "fo-ctl" });
-    box.dataset.ctl = "trench";
-    const toggle = make("button", { type: "button", className: "fo-toggle",
-                                    textContent: t("f.trench_only") });
-    toggle.setAttribute("aria-pressed", String(state.trenchOnly));
-    toggle.addEventListener("click", () => {
-      state.trenchOnly = !state.trenchOnly;
-      draw();
-    });
-    box.append(toggle);
-    strip.append(box);
+    strip.append(trenchToggle());
+    if (field) strip.append(fieldLinks());
   } else {
     control("ctl.faces", "faces",
       [["both", t("faces.both")], ["recto", t("faces.recto")],
@@ -1087,33 +1146,9 @@ function paintUnav() {
   });
   bar.append(arrow(-1, "‹", "nav.prev_unit"), here, jump, options,
              arrow(1, "›", "nav.next_unit"));
-  // LEGGI CON… — la lente. Solo su un'unità che esiste, e solo alla scrivania
-  // o sul tablet: in trincea si compila, non si confrontano standard. Le schede
-  // sono quelle della colonna, cioè quelle che il NODO dichiara.
-  // ALLA SCRIVANIA LA LENTE È IL MENU «SCHEDA» della striscia (14 novembre):
-  // la scheda con cui si scrive e quella con cui si legge sono la stessa scelta.
-  if (state.us && !state.create && state.mode === "tablet") {
-    const pick = make("select", { className: "unav-lens" });
-    pick.setAttribute("aria-label", t("lens.pick"));
-    pick.title = t("lens.pick");
-    pick.append(make("option", { value: "", textContent: t("lens.pick") }));
-    for (const item of document.querySelectorAll(".sidenav .navitem")) {
-      const id = item.dataset.scheda;
-      if (!id || (id === state.def.id && !state.lens)) continue;
-      pick.append(make("option", { value: id, textContent: id }));
-    }
-    if (state.lens) {
-      pick.append(make("option", { value: "-", textContent: t("lens.off") }));
-    }
-    pick.addEventListener("change", () => {
-      if (!pick.value) return;
-      window.location.hash = pick.value === "-"
-        ? hashFor(state.lens.written_with ? state.lens.written_with.template : state.def.id,
-                  state.us, false, state.byId ? state.nodeId : "")
-        : hashFor(pick.value, state.us, true, state.byId ? state.nodeId : "");
-    });
-    bar.append(pick);
-  }
+  // LEGGI CON… — la lente — È IL MENU «SCHEDA» della striscia, in ogni modo
+  // (14 novembre alla scrivania, 15 novembre sul tablet): la scheda con cui si
+  // scrive e quella con cui si legge sono la stessa scelta, in un posto.
 }
 
 /* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────
@@ -1147,6 +1182,7 @@ function readHash() {
   if (raw === "materiali") return { section: "finds" };
   if (raw === "foto") return { section: "photos" };
   if (raw === "scavo") return { section: "excavation" };
+  if (raw === "consegna") return { section: "deliver" };
   const p = new URLSearchParams(raw);
   return { scheda: p.get("scheda") || "", us: p.get("us") || "",
            node: p.get("nodo") || "", lens: p.get("lente") === "1" };
@@ -1276,17 +1312,13 @@ function clearScheda() {
 function wireThumbbar() {
   //  Le voci fanno quello che fanno i loro gemelli nella colonna, e niente di
   //  più: una sola strada per ciascun gesto.
+  //  LE QUATTRO VOCI IN CAMPO: ciascuna va a ciò che l'app ha già.
   $("tb-voice")?.addEventListener("click", () => $("nav-voice").click());
-  $("tb-units")?.addEventListener("click", () => { void showIndex(); });
-  //  FOTO scatta: in trincea il gesto è quello. La foto aspetta poi nella
-  //  dettatura, dove si collega a una US (photos.js).
-  $("tb-photo")?.addEventListener("click", () => {
-    $("nav-voice").click();
-    $("shoot").click();
-  });
-  $("tb-nav").addEventListener("click", () => {
-    setNavOpen($("sidenav").dataset.open !== "true");
-  });
+  $("tb-sheet")?.addEventListener("click", () => { void showSection("sheet"); });
+  //  FOTO apre le foto (quelle che aspettano e quelle della stanza), con
+  //  «Scatta» in cima: scattare resta un tocco, collegare si fa lì.
+  $("tb-photo")?.addEventListener("click", () => { void showSection("photos"); });
+  $("tb-deliver")?.addEventListener("click", () => { void showSection("deliver"); });
   $("nav-scrim")?.addEventListener("click", () => setNavOpen(false));
   $("nav-close")?.addEventListener("click", () => setNavOpen(false));
   //  una voce scelta chiude il cassetto sul telefono: il gesto è fatto
@@ -1374,14 +1406,36 @@ async function showSection(key, push = true) {
     if (first) window.location.hash = hashFor(first.id, "");
     return;
   }
-  const panel = { finds: "finds", photos: "photos-sec", excavation: "excavation" }[key];
+  const panel = { finds: "finds", photos: "photos-sec", excavation: "excavation",
+                  deliver: "deliver" }[key];
   if (!panel) return;
   only(panel);
   markNav("");
   paintThumbbar();
-  const tag = { finds: "#materiali", photos: "#foto", excavation: "#scavo" }[key];
+  const tag = { finds: "#materiali", photos: "#foto", excavation: "#scavo",
+                deliver: "#consegna" }[key];
   if (push && window.location.hash !== tag) history.pushState(null, "", tag);
+  if (panel === "deliver") { if (fieldUI) fieldUI.paintDeliver(); return; }
   if (deskUI) await deskUI.paintPanel(panel);
+}
+
+/** «PRENDI DALLA STANZA» (Consegna, in campo): le letture che l'app fa già,
+ *  tutte insieme, perché il dispositivo scenda in trincea con ciò che serve —
+ *  l'elenco delle definizioni, ciascuna nella lingua in cui si apre (nella
+ *  cache del dispositivo, `definitionFor`), e le unità della stanza. Torna i
+ *  conteggi, o null se la rete non c'è. */
+async function pullRoom() {
+  await loadSchede();
+  const items = listing();
+  let schede = 0;
+  for (const item of items) {
+    try { await definitionFor(item.id, cardLanguageFor(item.id)); schede += 1; }
+    catch { /* quella definizione non scende: le altre sì */ }
+  }
+  const read = await loadRoom();
+  if (!schede && !(read && read.read)) return null;
+  if (deskUI) deskUI.paint();
+  return { schede, units: ((read && read.units) || []).length };
 }
 
 /** «Rifinisci la descrizione»: porta al campo. Sul Foglio lo sceglie (l'ispettore
@@ -1447,6 +1501,20 @@ function drawUnitPage(host) {
   if (page.childElementCount === 1) {
     page.append(make("p", { className: "hint", textContent: tr("unit.empty", "") }));
   }
+  // SOTTO CIÒ CHE È SCRITTO, CIÒ CHE MANCA (revisione C.3, 15 novembre): una
+  // vista con due righe e poi una pagina vuota non diceva che il resto c'è, da
+  // compilare. Quante caselle sono vuote, e la strada per il Foglio.
+  const empty = (def.fields || []).filter((f) => f.id !== state.keyField
+    && !filled(state.values[f.id])).length;
+  if (empty) {
+    const go = make("button", { type: "button", className: "linkish",
+                                textContent: tr("unit.open_sheet", "open the Sheet") });
+    go.dataset.go = "sheet";
+    go.addEventListener("click", () => { state.view = "sheet"; draw(); });
+    page.append(make("p", { className: "unit-left" },
+      make("span", { textContent: tr("unit.left", `${empty} empty boxes`, { n: empty }) }),
+      document.createTextNode(" · "), go));
+  }
   host.replaceChildren(page);
 }
 
@@ -1454,10 +1522,9 @@ function drawUnitPage(host) {
 
 function wireShell() {
   applyTheme(savedTheme());
-  // LA STANZA NELLA BARRA: alla scrivania un clic apre la scelta (`#room-pop`,
-  // dove sta «Dove scrivo»); altrove apre la colonna, dove «Dove scrivo» è.
+  // LA STANZA NELLA BARRA: un clic apre la scelta (`#room-pop`, dove sta «Dove
+  // scrivo»), alla scrivania e in campo (15 novembre: la colonna non c'è più).
   $("room-name")?.addEventListener("click", () => {
-    if (state.mode !== "desktop") { setNavOpen(true); return; }
     const pop = $("room-pop");
     pop.hidden = !pop.hidden;
     $("room-name").setAttribute("aria-expanded", String(!pop.hidden));
@@ -1571,6 +1638,10 @@ function wireShell() {
   deskUI = mountDesk({ state, choosePlace, showSection, newUnit, openUnit, unitsIn,
                        listing, prefix: prefixOf });
   void deskUI.warm();
+  // IN CAMPO (15 novembre): le quattro voci e la Consegna
+  fieldUI = mountField({ state, pullRoom });
+  // la riga dello stato in campo, per la pagina (`checkSays`)
+  window.SGField = { stateLine: fieldStateLine };
 
   // Il modo si RIPROPONE quando la finestra cambia, ma non sovrascrive una
   // scelta: `effectiveMode` guarda prima cosa è stato scelto.
@@ -1638,7 +1709,10 @@ async function land() {
     // La colonna, aperta sul pannello che punta il nodo, con la stanza già
     // scritta: il gesto resta uno, e resta di chi lo fa. SUL TELEFONO NO: la
     // colonna è un foglio che copre il messaggio (SF-03), e il messaggio basta.
-    if (state.mode !== "phone") setNavOpen(true);
+    if (state.mode !== "phone" && $("room-pop")) {
+      $("room-pop").hidden = false;
+      $("room-name").setAttribute("aria-expanded", "true");
+    }
     const campo = $("room-target");
     if (campo) campo.value = piano.server
       ? `${piano.server.replace(/\/+$/, "")}/open?room=${encodeURIComponent(piano.room)}`
@@ -1679,6 +1753,9 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                      if (state.def) draw();
                    },
                    onAccess: () => watchReading(),
+                   // la coda è cambiata (la pagina, `renderQueue`): il numero
+                   // sulla Consegna e la Consegna stessa
+                   onQueue: () => { if (fieldUI) fieldUI.paint(); },
                    onLocale: () => {
                      $("nav-units").textContent = SG().t("nav.units");
                      $("nav-map").textContent = SG().t("nav.map");
@@ -1692,6 +1769,7 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                      }
                      paintModes();
                      paintWayBack();
+                     if (fieldUI) fieldUI.paint();
                      if (state.def) draw();
                    },
                    goUnit: (n) => goUnit(n), stepUnit: (d) => stepUnit(d),

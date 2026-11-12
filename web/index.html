@@ -30,6 +30,7 @@
 <link rel="stylesheet" href="./scheda.css">
 <link rel="stylesheet" href="./foglio.css">
 <link rel="stylesheet" href="./scrivania.css">
+<link rel="stylesheet" href="./campo.css">
 </head>
 <body>
 <!-- ══ LA CONCHIGLIA ═══════════════════════════════════════════════════════
@@ -129,6 +130,9 @@
        Foto · Scavo · Mappa, ciascuna col suo conteggio. Solo alla scrivania;
        in campo la colonna resta com'era. `scrivania.js`. -->
   <nav class="desktabs" id="desk-tabs" aria-label="StratiField" hidden></nav>
+  <!-- IN CAMPO SUL TABLET E SULLO SCHERMO LARGO le quattro voci stanno qui,
+       in alto (la stessa `<nav>` del telefono, spostata da `placeDesk`). -->
+  <div class="fieldtabs-top" id="field-tabs-top" hidden></div>
   <!-- LA STRISCIA sotto le sezioni: nella Scheda l'unità ‹ › e i comandi della
        scheda (ci si spostano `#scheda-unav` e `#scheda-strip`), nelle altre il
        titolo e l'azione principale. -->
@@ -145,7 +149,7 @@
     <!-- IN QUESTA STANZA (alla scrivania la colonna è solo questo): l'elenco
          breve delle unità con la loro compilazione; un clic apre la scheda. -->
     <div class="inroom" id="nav-inroom-box" hidden>
-      <h3 data-t="nav.inroom">In this room</h3>
+      <h3 id="nav-inroom-title">In this room</h3>
       <div id="nav-inroom"></div>
     </div>
     <h3 data-t="nav.room">Room</h3>
@@ -255,6 +259,10 @@
     <section id="finds" class="deskpanel" hidden></section>
     <section id="photos-sec" class="deskpanel" hidden></section>
     <section id="excavation" class="deskpanel" hidden></section>
+    <!-- CONSEGNA, in campo (15 novembre, mockup v7.2): ciò che aspetta su questo
+         dispositivo, l'ultima consegna, «Consegna ora» e «Prendi dalla stanza».
+         La dipinge `campo.js` con ciò che la pagina sa già (la coda, `flush`). -->
+    <section id="deliver" class="deskpanel" hidden></section>
 
     <!-- Dove il modulo si disegna. Vuoto finche' non si apre una scheda: un
          nodo che non serve definizioni e' l'assistente che e' sempre stato. -->
@@ -283,27 +291,34 @@
   <aside class="deskinsp" id="desk-insp" aria-live="polite" hidden></aside>
 
   <!-- LA BARRA DEI POLLICI, solo sul telefono. Dentro ci sono SOLO azioni non
-       distruttive: apri la colonna, indietro, avanti, salva. L'azione che
-       svuota la scheda sta in CIMA alla scheda, dove il pollice non arriva. -->
+       distruttive: indietro, avanti, salva. L'azione che svuota la scheda sta
+       in CIMA alla scheda, dove il pollice non arriva. -->
   <div class="thumbbar" id="thumbbar" hidden>
-    <!-- LE QUATTRO VOCI DEL TELEFONO (SF-03, D2 — 31 ottobre 2026): Detta,
-         Le US, Foto, e la Stanza, che è la colonna. Fuori dalla scheda la barra
-         è questa; dentro la scheda tornano i passi e Salva. La colonna si apre
-         sempre dalla barra, come prima: è la quarta voce. -->
-    <button type="button" class="tab" id="tb-voice" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-t="tab.dictate">Dictate</span></button>
-    <button type="button" class="tab" id="tb-units" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg><span data-t="tab.units">Units</span></button>
-    <button type="button" class="tab" id="tb-photo" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-t="tab.photo">Photo</span></button>
-    <button type="button" id="tb-nav" aria-label="Open the navigation" data-t-aria="aria.openNav"><span class="tb-icon">☰</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="tb-label" data-t="tab.room">Room</span></button>
-    <!-- IL RITORNO, quando il modo a schermo non è quello che questa finestra
-         proporrebbe. Qui e non nella colonna: sul telefono i chip del modo
-         STANNO nella colonna, e una via d'uscita che si apre solo da ☰ è la
-         via d'uscita che il 5 ottobre non è stata trovata. Compare solo quando
-         serve — `wayBack` — così non è un bottone in più tutto il giorno. -->
-    <button type="button" id="tb-back" hidden></button>
-    <button type="button" id="tb-prev" aria-label="Previous field" data-t-aria="aria.prevField">◀</button>
-    <span class="step" id="tb-step"></span>
-    <button type="button" id="tb-next" aria-label="Next field" data-t-aria="aria.nextField">▶</button>
-    <button type="button" class="save" id="tb-save" data-t="act.save">Save</button>
+    <!-- I PASSI DELLA SCHEDA, sopra le quattro voci (mockup v7.2): dentro la
+         scheda ◀ n/N ▶ Salva; fuori, solo il ritorno quando serve. -->
+    <div class="tb-steps" id="tb-steps">
+      <!-- IL RITORNO, quando il modo a schermo non è quello che questa finestra
+           proporrebbe. Qui e non nella colonna: una via d'uscita che si apre
+           solo da un cassetto è la via d'uscita che il 5 ottobre non è stata
+           trovata. Compare solo quando serve — `wayBack`. -->
+      <button type="button" id="tb-back" hidden></button>
+      <button type="button" id="tb-prev" aria-label="Previous field" data-t-aria="aria.prevField">◀</button>
+      <span class="step" id="tb-step"></span>
+      <button type="button" id="tb-next" aria-label="Next field" data-t-aria="aria.nextField">▶</button>
+      <button type="button" class="save" id="tb-save" data-t="act.save">Save</button>
+    </div>
+    <!-- LE QUATTRO VOCI IN CAMPO (15 novembre, mockup v7.2): Detta · Scheda ·
+         Foto · Consegna, col numero da consegnare. Sul telefono in basso, dove
+         arriva il pollice; sul tablet e sugli schermi larghi in campo la stessa
+         `<nav>` si SPOSTA in alto (`#field-tabs-top`), non si copia. La colonna
+         di prima (Stanza ☰) non c'è più: la stanza è nella barra, le
+         definizioni nel menu «Scheda», la vista in «Solo i campi da trincea». -->
+    <nav class="fieldtabs" id="field-tabs" aria-label="In the field" data-t-aria="mode.field">
+      <button type="button" class="tab" id="tb-voice" data-ftab="voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-t="tab.dictate">Dictate</span></button>
+      <button type="button" class="tab" id="tb-sheet" data-ftab="sheet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h7v15H4zM13 4.5h7v15h-7z"/><path d="M6 8h3M6 11h3M15 8h3M15 11h3M15 14h2"/></svg><span data-t="tab.sheet">Sheet</span></button>
+      <button type="button" class="tab" id="tb-photo" data-ftab="photos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-t="tab.photos">Photos</span></button>
+      <button type="button" class="tab" id="tb-deliver" data-ftab="deliver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4.5 14v5.5h15V14"/></svg><span data-t="tab.deliver">Deliver</span><b class="badge" id="tb-deliver-n" hidden></b></button>
+    </nav>
   </div>
 </div>
 
@@ -733,6 +748,22 @@ const STRINGS = {
     "unit.empty": "Nothing has been written for this unit yet.",
     "f.stop": "Stop",
     "f.no_mic": "This device does not listen: type the rest.",
+    "tab.sheet": "Sheet",
+    "tab.photos": "Photos",
+    "tab.deliver": "Deliver",
+    "f.queue": "{n} to deliver",
+    "f.last": "Last delivery",
+    "f.pending": "Waiting",
+    "f.need_net": "The network is needed. We keep them here until it comes back.",
+    "f.delivered": "{n} delivered: the room has them.",
+    "f.pull": "Take from the room",
+    "f.pull_note": "Before going down to the trench: the room's units and sheets, to work without a network.",
+    "f.pulling": "Taking from the room…",
+    "f.pulled": "Taken: {s} sheets and {u} units, to work without a network.",
+    "f.nothing": "Nothing waits on this device.",
+    "nav.by_number": "by number",
+    "unit.left": "{n} empty boxes",
+    "unit.open_sheet": "open the Sheet",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -1082,6 +1113,22 @@ const STRINGS = {
     "unit.empty": "Di questa unità non è ancora scritto niente.",
     "f.stop": "Fermati",
     "f.no_mic": "Questo dispositivo non ascolta: scrivi il resto.",
+    "tab.sheet": "Scheda",
+    "tab.photos": "Foto",
+    "tab.deliver": "Consegna",
+    "f.queue": "{n} da consegnare",
+    "f.last": "Ultima consegna",
+    "f.pending": "In attesa",
+    "f.need_net": "Serve la rete. Le teniamo qui finché torna.",
+    "f.delivered": "Consegnate {n}: la stanza le ha.",
+    "f.pull": "Prendi dalla stanza",
+    "f.pull_note": "Prima di scendere in trincea: le unità e le schede della stanza, per lavorare senza rete.",
+    "f.pulling": "Prendo dalla stanza…",
+    "f.pulled": "Prese: {s} schede e {u} unità, per lavorare senza rete.",
+    "f.nothing": "Niente aspetta su questo dispositivo.",
+    "nav.by_number": "per numero",
+    "unit.left": "{n} caselle vuote",
+    "unit.open_sheet": "apri il Foglio",
   },
   // >>> ui_strings.py
   // GENERATO da scripts/ui_strings.py leggendo StratiGraph_UI_strings.xlsx
@@ -1338,6 +1385,51 @@ const STRINGS = {
     "col.complete": "מולא",
     "col.edited": "עריכה אחרונה",
     "col.class": "סוג",
+    "col.written": "נכתב",
+    "col.words": "מילים",
+    "flt.refine": "לשיפור בשולחן העבודה",
+    "w.trench": "בשטח",
+    "w.desk": "בשולחן העבודה",
+    "w.both": "שטח + שולחן",
+    "refine.title": "הוכתב בשטח",
+    "refine.note": "{w} מילים בתיאור. שטח ועוד שולחן נותנים את התיאורים המלאים ביותר: השלם אותו כאן כל עוד אתה זוכר את השכבה.",
+    "refine.go": "שפר את התיאור",
+    "f.words": "{n} מילים",
+    "save.saved": "נשמר ב-{t}",
+    "save.queued": "{n} בתור · שום דבר לא אובד",
+    "f.signout_guard": "{n} עדיין למסירה: מסור לפני ההתנתקות, אחרת הם נשארים בטלפון הזה.",
+    "f.full": "מסך מלא",
+    "f.dictate_more": "הכתב את השאר",
+    "f.done": "סיום",
+    "flt.refine_note": "נכתב רק בשטח, עם פחות מ-{n} מילים בתיאור.",
+    "me.signout_anyway": "התנתק בכל זאת: הם נשארים במכשיר הזה",
+    "index.leftOut": "מחוץ לרשימה: {n} צמתים מסוג יחידה ששמם מעיד על סוג אחר ({list}).",
+    "index.byIdNote": "ל-{n} יחידות אין מספר: הן נפתחות לפי המזהה שלהן, לקריאה בלבד.",
+    "index.byId": "נפתחה לפי המזהה: ליחידה הזו אין מספר לכתוב תחתיו, ולכן היא לקריאה בלבד.",
+    "lens.written": "נכתב עם",
+    "finds.none": "עדיין אין ממצאים בחדר הזה",
+    "finds.none_note": "הצומת הזה אינו מספק גיליון ממצאים (ICCD RA, TMA), ולכן לא ממציאים כאן גיליון. הממצאים המיוחדים (SF) של החדר מופיעים ברשימה הזו כשיש לחדר כאלה.",
+    "finds.cannot": "הצומת הזה עדיין אינו יכול למלא גיליון ממצאים: הוא אינו מספק את ההגדרה שלו.",
+    "photos.none": "עדיין אין תצלומים בחדר הזה",
+    "photos.none_note": "כאן מופיעים התצלומים המקושרים ליחידה ואלה שממתינים במכשיר הזה.",
+    "exc.none": "עדיין אין מקומות בחדר הזה",
+    "exc.cannot": "הצומת הזה עדיין אינו יכול ליצור מקום: העץ נקרא מהגרף.",
+    "exc.read_only": "אתר, שטחים, ריבועים וגזרות, נקראים מהגרף. לחץ על מקום כדי לראות את היחידות שלו. עדיין אי אפשר ליצור מקום מכאן.",
+    "exc.units": "{n} יחידות",
+    "insp.open_pick": "פתח גיליון, או מקום במפה, כדי לפתוח אותו ב-PyArchInit.",
+    "unit.empty": "עדיין לא נכתב דבר על היחידה הזו.",
+    "f.stop": "עצור",
+    "f.no_mic": "המכשיר הזה אינו מקשיב: הקלד את השאר.",
+    "tab.sheet": "גיליון",
+    "tab.photos": "תצלומים",
+    "tab.deliver": "מסירה",
+    "f.queue": "{n} למסירה",
+    "f.last": "מסירה אחרונה",
+    "f.pending": "ממתין",
+    "f.need_net": "נדרשת רשת. נשמור אותם כאן עד שתחזור.",
+    "f.delivered": "{n} נמסרו: החדר קיבל אותם.",
+    "f.pull": "קח מהחדר",
+    "f.pull_note": "לפני הירידה לשטח: היחידות והגיליונות של החדר, כדי לעבוד בלי רשת.",
   },
   de: {
     "app.subtitle": "Feldassistent",
@@ -1589,6 +1681,51 @@ const STRINGS = {
     "col.complete": "Ausgefüllt",
     "col.edited": "Zuletzt bearbeitet",
     "col.class": "Klasse",
+    "col.written": "Erfasst",
+    "col.words": "Wörter",
+    "flt.refine": "Am Schreibtisch zu überarbeiten",
+    "w.trench": "im Schnitt",
+    "w.desk": "am Schreibtisch",
+    "w.both": "Schnitt + Schreibtisch",
+    "refine.title": "Im Schnitt diktiert",
+    "refine.note": "{w} Wörter in der Beschreibung. Schnitt plus Schreibtisch ergibt die vollständigsten Beschreibungen: ergänze sie hier, solange du die Schicht noch vor Augen hast.",
+    "refine.go": "Beschreibung überarbeiten",
+    "f.words": "{n} Wörter",
+    "save.saved": "gespeichert um {t}",
+    "save.queued": "{n} in der Warteschlange · nichts geht verloren",
+    "f.signout_guard": "Noch {n} zu übergeben: übergib vor dem Abmelden, sonst bleiben sie auf diesem Telefon.",
+    "f.full": "Vollbild",
+    "f.dictate_more": "Den Rest diktieren",
+    "f.done": "Fertig",
+    "flt.refine_note": "Nur im Schnitt erfasst, mit weniger als {n} Wörtern in der Beschreibung.",
+    "me.signout_anyway": "Trotzdem abmelden: sie bleiben auf diesem Gerät",
+    "index.leftOut": "Nicht in der Liste: {n} Knoten vom Typ Einheit, deren Name eine andere Art nennt ({list}).",
+    "index.byIdNote": "{n} Einheiten haben keine Nummer: sie öffnen sich über ihre ID, nur zum Lesen.",
+    "index.byId": "Über die ID geöffnet: diese Einheit hat keine Nummer, unter der man sie schreiben könnte, daher nur zum Lesen.",
+    "lens.written": "erfasst mit",
+    "finds.none": "In diesem Raum gibt es noch keine Funde",
+    "finds.none_note": "Dieser Knoten bietet kein Fundblatt (ICCD RA, TMA), daher wird hier keines erfunden. Die Einzelfunde (SF) des Raums erscheinen in dieser Liste, sobald der Raum welche hat.",
+    "finds.cannot": "Dieser Knoten kann noch kein Fundblatt ausfüllen: er bietet keine Definition dafür.",
+    "photos.none": "In diesem Raum gibt es noch keine Fotos",
+    "photos.none_note": "Hier erscheinen die mit einer Einheit verknüpften Fotos und die, die auf diesem Gerät warten.",
+    "exc.none": "In diesem Raum gibt es noch keine Orte",
+    "exc.cannot": "Dieser Knoten kann noch keinen Ort anlegen: der Baum wird aus dem Graphen gelesen.",
+    "exc.read_only": "Fundplatz, Flächen, Schnitte und Sektoren, aus dem Graphen gelesen. Klicke auf einen Ort für seine Einheiten. Von hier aus lässt sich noch keiner anlegen.",
+    "exc.units": "{n} Einheiten",
+    "insp.open_pick": "Öffne ein Blatt oder einen Ort auf der Karte, um ihn in PyArchInit zu öffnen.",
+    "unit.empty": "Zu dieser Einheit ist noch nichts geschrieben.",
+    "f.stop": "Stopp",
+    "f.no_mic": "Dieses Gerät hört nicht zu: tippe den Rest.",
+    "tab.sheet": "Blatt",
+    "tab.photos": "Fotos",
+    "tab.deliver": "Übergeben",
+    "f.queue": "{n} zu übergeben",
+    "f.last": "Letzte Übergabe",
+    "f.pending": "Wartet",
+    "f.need_net": "Das Netz wird gebraucht. Wir behalten sie hier, bis es zurück ist.",
+    "f.delivered": "{n} übergeben: der Raum hat sie.",
+    "f.pull": "Aus dem Raum holen",
+    "f.pull_note": "Bevor du in den Schnitt gehst: Einheiten und Blätter des Raums, um ohne Netz zu arbeiten.",
   },
   ro: {
     "app.subtitle": "asistent de teren",
@@ -1840,6 +1977,51 @@ const STRINGS = {
     "col.complete": "Completare",
     "col.edited": "Ultima modificare",
     "col.class": "Clasă",
+    "col.written": "Scrisă",
+    "col.words": "Cuvinte",
+    "flt.refine": "De finisat la birou",
+    "w.trench": "în secțiune",
+    "w.desk": "la birou",
+    "w.both": "secțiune + birou",
+    "refine.title": "Dictată în secțiune",
+    "refine.note": "{w} cuvinte în descriere. Secțiunea plus biroul dau descrierile cele mai complete: termin-o aici cât timp îți amintești depunerea.",
+    "refine.go": "Finisează descrierea",
+    "f.words": "{n} cuvinte",
+    "save.saved": "salvat la {t}",
+    "save.queued": "{n} în coadă · nimic nu se pierde",
+    "f.signout_guard": "{n} încă de predat: predă înainte de a ieși, altfel rămân pe acest telefon.",
+    "f.full": "Ecran complet",
+    "f.dictate_more": "Dictează restul",
+    "f.done": "Gata",
+    "flt.refine_note": "Scrisă doar în secțiune, cu mai puțin de {n} cuvinte în descriere.",
+    "me.signout_anyway": "Ieși oricum: rămân pe acest dispozitiv",
+    "index.leftOut": "În afara listei: {n} noduri de tip unitate al căror nume indică alt tip ({list}).",
+    "index.byIdNote": "{n} unități nu au număr: se deschid după id, doar pentru citire.",
+    "index.byId": "Deschisă după id: această unitate nu are un număr sub care să fie scrisă, deci este doar pentru citire.",
+    "lens.written": "scrisă cu",
+    "finds.none": "Încă nu există artefacte în această cameră",
+    "finds.none_note": "Acest nod nu oferă o fișă de artefacte (ICCD RA, TMA), așa că aici nu se inventează niciuna. Artefactele speciale (SF) ale camerei apar în această listă atunci când camera le are.",
+    "finds.cannot": "Acest nod nu poate încă completa o fișă de artefacte: nu oferă definiția ei.",
+    "photos.none": "Încă nu există fotografii în această cameră",
+    "photos.none_note": "Aici apar fotografiile legate de o unitate și cele care așteaptă pe acest dispozitiv.",
+    "exc.none": "Încă nu există locuri în această cameră",
+    "exc.cannot": "Acest nod nu poate încă crea un loc: arborele se citește din graf.",
+    "exc.read_only": "Sit, zone, secțiuni și sectoare, citite din graf. Faceți clic pe un loc pentru unitățile lui. Crearea unuia de aici nu este încă posibilă.",
+    "exc.units": "{n} unități",
+    "insp.open_pick": "Deschide o fișă sau un loc pe hartă pentru a-l deschide în PyArchInit.",
+    "unit.empty": "Pentru această unitate nu s-a scris încă nimic.",
+    "f.stop": "Oprește",
+    "f.no_mic": "Acest dispozitiv nu ascultă: scrie restul.",
+    "tab.sheet": "Fișă",
+    "tab.photos": "Foto",
+    "tab.deliver": "Predă",
+    "f.queue": "{n} de predat",
+    "f.last": "Ultima predare",
+    "f.pending": "În așteptare",
+    "f.need_net": "E nevoie de rețea. Le păstrăm aici până revine.",
+    "f.delivered": "{n} predate: camera le are.",
+    "f.pull": "Ia din cameră",
+    "f.pull_note": "Înainte de a coborî în șanț: unitățile și fișele camerei, ca să lucrezi fără rețea.",
   },
   el: {
     "app.subtitle": "βοηθός πεδίου",
@@ -2091,6 +2273,51 @@ const STRINGS = {
     "col.complete": "Συμπλήρωση",
     "col.edited": "Τελευταία αλλαγή",
     "col.class": "Κατηγορία",
+    "col.written": "Γράφτηκε",
+    "col.words": "Λέξεις",
+    "flt.refine": "Για βελτίωση στο γραφείο",
+    "w.trench": "στην τομή",
+    "w.desk": "στο γραφείο",
+    "w.both": "τομή + γραφείο",
+    "refine.title": "Υπαγορεύτηκε στην τομή",
+    "refine.note": "{w} λέξεις στην περιγραφή. Τομή και γραφείο μαζί δίνουν τις πληρέστερες περιγραφές: ολοκλήρωσέ την εδώ όσο θυμάσαι το στρώμα.",
+    "refine.go": "Βελτίωσε την περιγραφή",
+    "f.words": "{n} λέξεις",
+    "save.saved": "αποθηκεύτηκε στις {t}",
+    "save.queued": "{n} σε αναμονή · τίποτα δεν χάνεται",
+    "f.signout_guard": "{n} ακόμη για παράδοση: παράδωσε πριν αποσυνδεθείς, αλλιώς μένουν σε αυτό το τηλέφωνο.",
+    "f.full": "Πλήρης οθόνη",
+    "f.dictate_more": "Υπαγόρευσε τα υπόλοιπα",
+    "f.done": "Τέλος",
+    "flt.refine_note": "Γράφτηκε μόνο στην τομή, με λιγότερες από {n} λέξεις στην περιγραφή.",
+    "me.signout_anyway": "Αποσύνδεση ούτως ή άλλως: μένουν σε αυτή τη συσκευή",
+    "index.leftOut": "Εκτός λίστας: {n} κόμβοι τύπου μονάδας των οποίων το όνομα δηλώνει άλλο είδος ({list}).",
+    "index.byIdNote": "{n} μονάδες δεν έχουν αριθμό: ανοίγουν από το id τους, μόνο για ανάγνωση.",
+    "index.byId": "Άνοιξε από το id της: αυτή η μονάδα δεν έχει αριθμό για να γραφτεί, οπότε είναι μόνο για ανάγνωση.",
+    "lens.written": "γράφτηκε με",
+    "finds.none": "Δεν υπάρχουν ακόμη ευρήματα σε αυτόν τον χώρο",
+    "finds.none_note": "Αυτός ο κόμβος δεν προσφέρει δελτίο ευρημάτων (ICCD RA, TMA), οπότε εδώ δεν επινοείται κανένα. Τα ειδικά ευρήματα (SF) του χώρου εμφανίζονται σε αυτή τη λίστα όταν ο χώρος τα έχει.",
+    "finds.cannot": "Αυτός ο κόμβος δεν μπορεί ακόμη να συμπληρώσει δελτίο ευρημάτων: δεν προσφέρει τον ορισμό του.",
+    "photos.none": "Δεν υπάρχουν ακόμη φωτογραφίες σε αυτόν τον χώρο",
+    "photos.none_note": "Εδώ εμφανίζονται οι φωτογραφίες που συνδέονται με μια μονάδα και όσες περιμένουν σε αυτή τη συσκευή.",
+    "exc.none": "Δεν υπάρχουν ακόμη τόποι σε αυτόν τον χώρο",
+    "exc.cannot": "Αυτός ο κόμβος δεν μπορεί ακόμη να δημιουργήσει τόπο: το δέντρο διαβάζεται από τον γράφο.",
+    "exc.read_only": "Θέση, τομείς, τομές και τμήματα, από τον γράφο. Κάντε κλικ σε έναν τόπο για τις μονάδες του. Η δημιουργία από εδώ δεν είναι ακόμη δυνατή.",
+    "exc.units": "{n} μονάδες",
+    "insp.open_pick": "Άνοιξε ένα δελτίο ή έναν τόπο στον χάρτη για να το ανοίξεις στο PyArchInit.",
+    "unit.empty": "Για αυτή τη μονάδα δεν έχει γραφτεί ακόμη τίποτα.",
+    "f.stop": "Διακοπή",
+    "f.no_mic": "Αυτή η συσκευή δεν ακούει: πληκτρολόγησε τα υπόλοιπα.",
+    "tab.sheet": "Δελτίο",
+    "tab.photos": "Φωτό",
+    "tab.deliver": "Παράδοση",
+    "f.queue": "{n} προς παράδοση",
+    "f.last": "Τελευταία παράδοση",
+    "f.pending": "Σε αναμονή",
+    "f.need_net": "Χρειάζεται δίκτυο. Τα κρατάμε εδώ μέχρι να επανέλθει.",
+    "f.delivered": "Παραδόθηκαν {n}: το δωμάτιο τα έχει.",
+    "f.pull": "Λήψη από το δωμάτιο",
+    "f.pull_note": "Πριν κατεβείτε στην τομή: οι μονάδες και τα δελτία του δωματίου, για εργασία χωρίς δίκτυο.",
   },
   es: {
     "app.subtitle": "asistente de campo",
@@ -2342,6 +2569,51 @@ const STRINGS = {
     "col.complete": "Cumplimentación",
     "col.edited": "Última modificación",
     "col.class": "Clase",
+    "col.written": "Escrita",
+    "col.words": "Palabras",
+    "flt.refine": "Para afinar en el escritorio",
+    "w.trench": "en la trinchera",
+    "w.desk": "en el escritorio",
+    "w.both": "trinchera + escritorio",
+    "refine.title": "Dictada en la trinchera",
+    "refine.note": "{w} palabras en la descripción. Trinchera más escritorio dan las descripciones más completas: termínala aquí mientras recuerdas el depósito.",
+    "refine.go": "Afina la descripción",
+    "f.words": "{n} palabras",
+    "save.saved": "guardado a las {t}",
+    "save.queued": "{n} en cola · no se pierde nada",
+    "f.signout_guard": "{n} aún por entregar: entrega antes de salir, o se quedan en este teléfono.",
+    "f.full": "Pantalla completa",
+    "f.dictate_more": "Dicta el resto",
+    "f.done": "Hecho",
+    "flt.refine_note": "Escrita solo en la trinchera, con menos de {n} palabras en la descripción.",
+    "me.signout_anyway": "Salir de todos modos: se quedan en este dispositivo",
+    "index.leftOut": "Fuera de la lista: {n} nodos de tipo unidad cuyo nombre indica otro tipo ({list}).",
+    "index.byIdNote": "{n} unidades no tienen número: se abren desde su id, solo para lectura.",
+    "index.byId": "Abierta desde su id: esta unidad no tiene un número con el que escribirla, así que es solo para lectura.",
+    "lens.written": "escrita con",
+    "finds.none": "Todavía no hay hallazgos en esta sala",
+    "finds.none_note": "Este nodo no ofrece ficha de hallazgos (ICCD RA, TMA), así que aquí no se inventa ninguna. Los hallazgos especiales (SF) de la sala aparecen en esta lista cuando la sala los tiene.",
+    "finds.cannot": "Este nodo todavía no puede rellenar una ficha de hallazgos: no ofrece su definición.",
+    "photos.none": "Todavía no hay fotos en esta sala",
+    "photos.none_note": "Aquí aparecen las fotos vinculadas a una unidad y las que esperan en este dispositivo.",
+    "exc.none": "Todavía no hay lugares en esta sala",
+    "exc.cannot": "Este nodo todavía no puede crear un lugar: el árbol se lee del grafo.",
+    "exc.read_only": "Yacimiento, áreas, sondeos y sectores, leídos del grafo. Haz clic en un lugar para ver sus unidades. Crear uno desde aquí todavía no es posible.",
+    "exc.units": "{n} unidades",
+    "insp.open_pick": "Abre una ficha, o un lugar en el mapa, para abrirlo en PyArchInit.",
+    "unit.empty": "Todavía no se ha escrito nada de esta unidad.",
+    "f.stop": "Detener",
+    "f.no_mic": "Este dispositivo no escucha: escribe el resto.",
+    "tab.sheet": "Ficha",
+    "tab.photos": "Fotos",
+    "tab.deliver": "Entregar",
+    "f.queue": "{n} por entregar",
+    "f.last": "Última entrega",
+    "f.pending": "En espera",
+    "f.need_net": "Hace falta red. Las guardamos aquí hasta que vuelva.",
+    "f.delivered": "{n} entregadas: la sala las tiene.",
+    "f.pull": "Tomar de la sala",
+    "f.pull_note": "Antes de bajar a la trinchera: las unidades y fichas de la sala, para trabajar sin red.",
   },
   pl: {
     "app.subtitle": "asystent terenowy",
@@ -2593,6 +2865,51 @@ const STRINGS = {
     "col.complete": "Wypełnienie",
     "col.edited": "Ostatnia zmiana",
     "col.class": "Klasa",
+    "col.written": "Zapisano",
+    "col.words": "Słowa",
+    "flt.refine": "Do dopracowania przy biurku",
+    "w.trench": "w wykopie",
+    "w.desk": "przy biurku",
+    "w.both": "wykop + biurko",
+    "refine.title": "Podyktowano w wykopie",
+    "refine.note": "{w} słów w opisie. Wykop plus biurko dają najpełniejsze opisy: dokończ go tutaj, póki pamiętasz warstwę.",
+    "refine.go": "Dopracuj opis",
+    "f.words": "{n} słów",
+    "save.saved": "zapisano o {t}",
+    "save.queued": "{n} w kolejce · nic nie ginie",
+    "f.signout_guard": "{n} jeszcze do przekazania: przekaż przed wylogowaniem, inaczej zostaną na tym telefonie.",
+    "f.full": "Pełny ekran",
+    "f.dictate_more": "Podyktuj resztę",
+    "f.done": "Gotowe",
+    "flt.refine_note": "Zapisano tylko w wykopie, mniej niż {n} słów w opisie.",
+    "me.signout_anyway": "Wyloguj mimo to: zostaną na tym urządzeniu",
+    "index.leftOut": "Poza listą: {n} węzłów typu jednostka, których nazwa wskazuje inny rodzaj ({list}).",
+    "index.byIdNote": "{n} jednostek nie ma numeru: otwierają się po identyfikatorze, tylko do odczytu.",
+    "index.byId": "Otwarta po identyfikatorze: ta jednostka nie ma numeru, pod którym można by ją zapisać, więc jest tylko do odczytu.",
+    "lens.written": "zapisano za pomocą",
+    "finds.none": "W tym pokoju nie ma jeszcze zabytków",
+    "finds.none_note": "Ten węzeł nie udostępnia karty zabytku (ICCD RA, TMA), więc nie wymyśla się jej tutaj. Zabytki wydzielone (SF) pokoju pojawiają się na tej liście, gdy pokój je ma.",
+    "finds.cannot": "Ten węzeł nie potrafi jeszcze wypełnić karty zabytku: nie udostępnia jej definicji.",
+    "photos.none": "W tym pokoju nie ma jeszcze zdjęć",
+    "photos.none_note": "Tutaj pojawiają się zdjęcia powiązane z jednostką i te, które czekają na tym urządzeniu.",
+    "exc.none": "W tym pokoju nie ma jeszcze miejsc",
+    "exc.cannot": "Ten węzeł nie potrafi jeszcze utworzyć miejsca: drzewo jest odczytywane z grafu.",
+    "exc.read_only": "Stanowisko, obszary, wykopy i sektory, odczytane z grafu. Kliknij miejsce, aby zobaczyć jego jednostki. Utworzenie nowego stąd nie jest jeszcze możliwe.",
+    "exc.units": "{n} jednostek",
+    "insp.open_pick": "Otwórz kartę albo miejsce na mapie, aby otworzyć je w PyArchInit.",
+    "unit.empty": "Dla tej jednostki nic jeszcze nie zapisano.",
+    "f.stop": "Zatrzymaj",
+    "f.no_mic": "To urządzenie nie słucha: wpisz resztę.",
+    "tab.sheet": "Karta",
+    "tab.photos": "Zdjęcia",
+    "tab.deliver": "Przekaż",
+    "f.queue": "{n} do przekazania",
+    "f.last": "Ostatnie przekazanie",
+    "f.pending": "Oczekuje",
+    "f.need_net": "Potrzebna jest sieć. Trzymamy je tutaj, aż wróci.",
+    "f.delivered": "Przekazano {n}: pokój je ma.",
+    "f.pull": "Pobierz z pokoju",
+    "f.pull_note": "Przed zejściem do wykopu: jednostki i karty pokoju, by pracować bez sieci.",
   },
   // <<< ui_strings.py
 };
@@ -3124,6 +3441,8 @@ function paintStrings() {
   // paragrafo, e la barra delle schede li mostrerebbe.
   document.title = "StratiGraph · " + t("app.subtitle").replace(/[\u2066-\u2069]/g, "");
   paintCommandLanguage();
+  // LA PASTIGLIA NELLA LINGUA NUOVA, subito e non al controllo dopo
+  if (PILL_WHERE) { PILL_WHERE = t("pill.room"); paintSaveState(); }
   // I comandi della scheda (Vista, Facciate…) e le parole del Foglio sono
   // dipinti dal modulo: gli si dice che la lingua è cambiata.
   window.SGShell?.onLocale?.();
@@ -3145,8 +3464,22 @@ function paintCommandLanguage() {
   const language = NODE_COMMANDS.language || "";
   if (!line) return;
   line.textContent = (language && language !== LOCALE)
-    ? t("commands.in", { language: LOCALE_NAMES[language] || language })
+    ? t("commands.in", { language: languageNameIn(language, LOCALE) })
     : "";
+}
+
+/** IL NOME DI UNA LINGUA NELLA LINGUA DELL'INTERFACCIA (15 novembre): «This
+ *  node understands commands in Italiano» erano due lingue in una frase. Il
+ *  selettore scrive ogni lingua nella sua (chi non legge quella corrente deve
+ *  trovare la propria); una FRASE invece è tutta in una lingua: «Questo nodo
+ *  capisce i comandi in italiano», «… commands in Italian». Il nome lo dà il
+ *  browser (`Intl.DisplayNames`); senza, l'autonimo di prima. */
+function languageNameIn(code, ui) {
+  try {
+    const name = new Intl.DisplayNames([ui], { type: "language" }).of(code);
+    if (name && name !== code) return name;
+  } catch { /* un browser vecchio: l'autonimo */ }
+  return LOCALE_NAMES[code] || code;
 }
 
 function paintLanguagePicker() {
@@ -3455,7 +3788,14 @@ window.SG = {
   get savedAt() { return LAST_SAVED; },
   //: quante note di CHI FIRMA aspettano su questo dispositivo
   get pending() { return readQueue().filter((item) => isMine(item, WHO?.subject || "")).length; },
+  //: …e quali: ciò che la Consegna elenca (in campo). Copie, non la coda.
+  get queued() {
+    return readQueue().filter((item) => isMine(item, WHO?.subject || ""))
+      .map(({ describe, path, at, refused }) => ({ describe, path, at, refused }));
+  },
   flush: () => flush(),
+  //: la pastiglia ridetta (la conchiglia la chiama cambiando postura)
+  paintState: () => paintSaveState(),
   dictate: (lang) => dictate(lang),
   // the three every module must use instead of its own `fetch` + header: who
   // (renewed), where, and the retry on a lapsed token
@@ -3549,6 +3889,8 @@ function queueSentence(queue, subject) {
 }
 
 function renderQueue() {
+  // il numero sulla Consegna (in campo) e la Consegna stessa
+  window.SGShell?.onQueue?.();
   const host = $("queue");
   const queue = readQueue();
   host.textContent = queueSentence(queue, WHO?.subject || "");
@@ -3710,9 +4052,13 @@ async function ping() {
     // ottobre il nodo non ha un posto solo, e la sua configurazione può dire
     // «locale» mentre questa persona scrive in una stanza.
     const inRoom = Boolean(ACCESS && ACCESS.room) || health.writes_to.startsWith("room");
-    // LA PASTIGLIA DICE POCO (SF-04): la stanza è già scritta accanto, qui
-    // restano «in rete» o «locale» e l'ora; la frase lunga va nel suggerimento.
-    PILL_WHERE = t(inRoom ? "pill.room" : "pill.local");
+    // LA PASTIGLIA DICE POCO (SF-04), E UNA COSA SOLA (15 novembre): DOVE si
+    // scrive lo dice il nome della stanza accanto («container locale» o la
+    // stanza), che è anche la sua scelta; la pastiglia dice lo STATO — in rete,
+    // e l'ultimo salvataggio confermato. Prima diceva «locale» accanto a
+    // «container locale»: due elementi per la stessa notizia. La frase lunga
+    // (nodo · stanza/locale) resta nel suggerimento.
+    PILL_WHERE = t("pill.room");
     state.textContent = checkSays(PILL_WHERE);
     state.title = t(inRoom ? "node.room" : "node.local")
       + " · " + t("check.ok", { where: PILL_WHERE, time: hhmm(CHECK_AT || Date.now()) })
@@ -3730,7 +4076,7 @@ async function ping() {
     flush();
   } catch {
     state.className = "state off";
-    state.textContent = t("node.offline");
+    state.textContent = offlineSays(t("node.offline"));
     // Un nodo che non risponde non tiene nessuna sessione per nessuno.
     window.SGPosture?.(null);
     throw new Error("node");
@@ -3767,6 +4113,9 @@ function hhmm(when) {
 /** La riga dello stato: dove si scrive, quando si è controllato, cosa aspetta. */
 function checkSays(where) {
   const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
+  // IN CAMPO, come nel mockup: «REST · n da consegnare» — il dispositivo è un
+  // corrispondente, e il numero è ciò che conta in trincea
+  if (inField()) return window.SGField.stateLine({ online: true, pending: waiting, tr: t });
   // IL SALVATAGGIO, SEMPRE VISIBILE (14 novembre, CHNT). «salvato alle hh:mm»
   // è l'ora dell'ULTIMA CONFERMA VERA del nodo (`saved_at`), mai quella di un
   // controllo: prima la pastiglia diceva l'ora del battito, e un'ora accanto a
@@ -3795,15 +4144,26 @@ function noteSaved(answer) {
 /** La pastiglia, ridetta senza un nuovo battito: dopo una conferma, o una coda
  *  che cambia. Senza rete resta com'è (la ridice `check`). */
 let PILL_WHERE = "";
+/** In campo? (la conchiglia lo sa; prima che ci sia, no) */
+function inField() {
+  return Boolean(window.SGField && window.SGShell && window.SGShell.state
+                 && window.SGShell.state.mode !== "desktop");
+}
+/** La pastiglia SENZA RETE: in campo «offline · n da consegnare», alla
+ *  scrivania «n in coda · niente si perde», o quando si riprova. */
+function offlineSays(retry) {
+  const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
+  if (inField()) return window.SGField.stateLine({ online: false, pending: waiting, tr: t });
+  return waiting ? t("save.queued", { n: waiting }) : retry;
+}
 function paintSaveState() {
   if (!PILL_WHERE || state.classList.contains("off")) {
-    const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
-    if (waiting && state.classList.contains("off")) {
-      state.textContent = t("save.queued", { n: waiting });
-    }
+    if (state.classList.contains("off")) state.textContent = offlineSays(state.textContent);
+    window.SGShell?.onQueue?.();
     return;
   }
   state.textContent = checkSays(PILL_WHERE);
+  window.SGShell?.onQueue?.();
 }
 /** LA POSTURA DI CHI SCRIVE, dalla conchiglia («trench» in campo, «desk» alla
  *  scrivania); vuota se la conchiglia non c'è ancora. */
@@ -3839,9 +4199,7 @@ async function check() {
       state.className = "state off";
       // SENZA RETE, la coda e la promessa (14 novembre): «n in coda · niente
       // si perde». Senza coda, quando si riprova.
-      state.textContent = readQueue().length
-        ? t("save.queued", { n: readQueue().length })
-        : t("check.retry", { s: Math.round(wait / 1000) });
+      state.textContent = offlineSays(t("check.retry", { s: Math.round(wait / 1000) }));
       state.title = t("check.retry", { s: Math.round(wait / 1000) });
       scheduleCheck(wait);
     }

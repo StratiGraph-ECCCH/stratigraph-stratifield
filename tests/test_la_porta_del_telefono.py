@@ -366,7 +366,13 @@ def test_IL_RITORNO_STA_IN_BARRA_e_non_nella_colonna():
     pagina = (WEB / "index.html").read_text(encoding="utf-8")
     barra = sorgenti.dentro(pagina, '<div class="thumbbar"')
     assert 'id="tb-back"' in barra, "il ritorno non è nella barra dei pollici"
-    assert 'id="tb-nav"' in barra, "…e ☰ è ancora lì accanto"
+    # ☰ NON C'È PIÙ (15 novembre): in campo la colonna non esiste, e con lei la
+    # sua maniglia. La porta resta aperta da altre due parti, entrambe nella
+    # barra che si vede sempre: il ritorno (qui) e le iniziali, che aprono il
+    # foglio dove stanno le tre soglie (D5).
+    assert 'id="tb-nav"' not in barra
+    pagina_barra = sorgenti.dentro(pagina, '<header class="topbar">')
+    assert 'id="me"' in pagina_barra
 
 
 def test_UN_SOLO_POSTO_SCRIVE_LA_SCELTA():
