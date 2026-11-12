@@ -11,7 +11,7 @@
  */
 
 import {
-  definitionFor, effectiveMode, keyField, payloadFor, proposeMode,
+  datamodelNotice, definitionFor, effectiveMode, keyField, payloadFor, proposeMode,
   refreshCompleteness, rememberMode, render, save, stepTo, thumbbarPlan,
   trenchFields, otherFields, wayBack,
 } from "./scheda.js";
@@ -314,7 +314,11 @@ function placeControls(mode) {
     // LA LINGUA DELL'INTERFACCIA STA NELLA BARRA (14 novembre alla scrivania, 15
     // novembre anche in campo, mockup v7.2): la si cambia guardando lo schermo,
     // non aprendo un foglio — e un dispositivo che passa di mano la cambia lì
-    const target = id === "lang" && $("bar-lang") ? $("bar-lang") : home;
+    // …TRANNE SUL TELEFONO (MICRO il campo rifinito, 15 novembre): a 390 px la
+    // barra è una riga sola come nel mockup — marchio e stanza, il numero da
+    // consegnare, le iniziali — e il selettore non ci sta (misurato). Resta a
+    // un tocco: nel foglio delle iniziali, il primo controllo.
+    const target = id === "lang" && $("bar-lang") && mode !== "phone" ? $("bar-lang") : home;
     if (node.parentElement !== target) target.append(node);
   }
 }
@@ -877,20 +881,21 @@ function trenchToggle() {
   return box;
 }
 
-/** In campo l'elenco delle unità e la mappa non hanno una voce loro: si
- *  raggiungono dalla Scheda, che è la strada verso una scheda. */
-function fieldLinks() {
-  const box = document.createElement("div");
-  box.className = "fo-ctl fld-links";
-  box.dataset.ctl = "links";
-  for (const [key, go] of [["nav.units", () => showIndex()], ["nav.map", () => showMap()]]) {
-    const b = Object.assign(document.createElement("button"), {
-      type: "button", className: "fld-link", textContent: tr(key, key) });
-    b.dataset.go = key;
-    b.addEventListener("click", () => { void go(); });
-    box.append(b);
-  }
-  return box;
+/* «UNITÀ (US)» E «MAPPA» SOTTO LA STRISCIA non ci sono più in campo (MICRO il
+ * campo rifinito, 15 novembre): in campo non ci sono sezioni. A un'unità si
+ * arriva con ‹ › e «Vai alla US…», dall'elenco breve sul tablet, o dalla voce
+ * Scheda quando nessuna scheda è aperta (l'elenco delle unità). */
+
+/** «ALTRO», in campo: la lingua della scheda e la vista Foglio/Campi stanno in
+ *  un piccolo menu, non nella riga — il mockup del tablet non le disegna, ma
+ *  sono funzioni che ci sono e non si tolgono. */
+function moreMenu(make, t) {
+  const more = make("details", { className: "fo-ctl fld-more" });
+  more.dataset.ctl = "more";
+  more.append(make("summary", { textContent: t("f.more") }));
+  const inside = make("div", { className: "fld-more-body" });
+  more.append(inside);
+  return { more, inside };
 }
 
 function paintStrip() {
@@ -907,7 +912,7 @@ function paintStrip() {
   const t = (key) => (SG().t ? SG().t(key) : key);
   const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
 
-  const control = (labelKey, name, items, current, pick) => {
+  const control = (labelKey, name, items, current, pick, into = strip) => {
     const box = make("div", { className: "fo-ctl" });
     box.dataset.ctl = name;
     const label = make("span", { className: "fo-ctl-label", textContent: t(labelKey) });
@@ -924,7 +929,7 @@ function paintStrip() {
       seg.append(button);
     }
     box.append(label, seg);
-    strip.append(box);
+    into.append(box);
   };
 
   const def = state.def;
@@ -971,19 +976,28 @@ function paintStrip() {
       }
     });
     box.append(label, pick);
+    // L'AVVISO DEL DATAMODEL, IN CAMPO: una riga piccola sotto il menu
+    // «Scheda» (MICRO il campo rifinito), non la fascia sopra il foglio — che
+    // resta alla scrivania. Stessa funzione, stesse parole.
+    const notice = field ? datamodelNotice(def) : null;
+    if (notice) {
+      notice.classList.add("dm-line");
+      box.append(notice);
+    }
     strip.append(box);
   }
   if (phone) {
     // IL TELEFONO: un campo per volta; «Solo i campi da trincea» decide quali
     // (era «Tutti i campi» nella colonna: la stessa scelta, al contrario)
     strip.append(trenchToggle());
-    strip.append(fieldLinks());
     return;
   }
+  // IN CAMPO lingua della scheda e vista vanno in «Altro», in fondo alla riga
+  const { more, inside } = field ? moreMenu(make, t) : { more: null, inside: strip };
   if ((def.languages || []).length > 1) {
     control("ctl.cardlang", "cardlang",
       def.languages.map((l) => [l, l]), def.lang,
-      (l) => { if (l !== def.lang) void openScheda(def.id, null, l); });
+      (l) => { if (l !== def.lang) void openScheda(def.id, null, l); }, inside);
   }
   const views = [["sheet", t("view.sheet"), !hasSheet(def)], ["fields", t("view.fields")]];
   // la pagina dell'unità, alla scrivania: si legge un'unità che c'è
@@ -991,9 +1005,9 @@ function paintStrip() {
   const view = state.view === "unit" && state.mode === "desktop" && state.us && !state.create
     ? "unit" : (hasSheet(def) && state.view !== "fields" ? "sheet" : "fields");
   control("ctl.view", "view", views, view,
-    (v) => { state.view = v; draw(); });
+    (v) => { state.view = v; draw(); }, inside);
   if (!sheetActive() || view === "unit") {
-    if (field) strip.append(fieldLinks());
+    if (more) strip.append(more);
     return;
   }
 
@@ -1002,7 +1016,7 @@ function paintStrip() {
       [["recto", t("faces.recto")], ["verso", t("faces.verso")]],
       state.fieldSide, (v) => { state.fieldSide = v; draw(); });
     strip.append(trenchToggle());
-    if (field) strip.append(fieldLinks());
+    if (more) strip.append(more);
   } else {
     control("ctl.faces", "faces",
       [["both", t("faces.both")], ["recto", t("faces.recto")],

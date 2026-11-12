@@ -231,8 +231,10 @@ export function drawSheet(host, def, state, opts) {
   head.append(clear);
   root.append(head);
   // lo stesso avviso della vista «Campi», dalla stessa funzione
+  // …alla scrivania; in campo è una riga piccola sotto il menu «Scheda» della
+  // striscia (MICRO il campo rifinito, 15 novembre), non una fascia sul foglio
   const notice = datamodelNotice(def);
-  if (notice) root.append(notice);
+  if (notice && state.mode === "desktop") root.append(notice);
 
   const body = el("div", { class: "fo-body" });
   const desk = el("div", { class: "fo-desk" });

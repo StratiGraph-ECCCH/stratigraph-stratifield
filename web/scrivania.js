@@ -136,6 +136,15 @@ export function byNumber(units) {
   });
 }
 
+/** L'ELENCO BREVE IN CAMPO (MICRO il campo rifinito): da una parte le unità con
+ *  un numero, in ordine naturale; dall'altra quelle senza, per nome. Alla
+ *  scrivania (`split` falso) tutte insieme, per numero, come prima. Pura. */
+export function shortList(units, split = true) {
+  const all = byNumber(units);
+  if (!split) return { listed: all, apart: [] };
+  return { listed: all.filter((u) => u.number), apart: all.filter((u) => !u.number) };
+}
+
 /** Il perché di un bottone spento, in una riga grigia sotto (revisione C.4):
  *  il suggerimento al passaggio non c'è su un tablet, e chi non lo cerca non
  *  lo trova. */
@@ -278,7 +287,15 @@ export function mount(shell) {
       host.append(el("p", { class: "hint", text: room.read ? t("index.empty") : "…" }));
       return;
     }
-    for (const u of byNumber(units)) {
+    // IN CAMPO L'ELENCO È BREVE (MICRO il campo rifinito, 15 novembre): le
+    // unità con un numero, per numero; quelle senza (`1.1.US1`,
+    // `1.Combinar900`… importate, si aprono dal loro id in lettura) non si
+    // mescolano alle altre — una riga grigia le conta e, toccata, le mostra in
+    // fondo, in grigio, come la riga «senza numero» dell'elenco Unità della
+    // scrivania. Alla scrivania la colonna resta com'era.
+    const { listed, apart } = shortList(units, !isDesk());
+    let target = host;
+    const row = (u) => {
       const declared = u.scheda && u.scheda.template;
       const item = listing.find((x) => x.id === declared)
         || listing.find((x) => shell.state.def && x.id === shell.state.def.id)
@@ -292,7 +309,17 @@ export function mount(shell) {
         // in campo l'elenco breve dice solo l'unità, come nel mockup
         isDesk() ? el("span", { class: "count", text: total ? `${u.fields || 0}/${total}` : String(u.fields || 0) }) : null);
       b.addEventListener("click", () => shell.openUnit(u));
-      host.append(b);
+      target.append(b);
+    };
+    for (const u of listed) row(u);
+    if (apart.length) {
+      const more = el("details", { class: "inroom-apart" },
+        el("summary", { text: t("nav.unnumbered", { n: apart.length }) }));
+      // aperta quando l'unità davanti è una di loro: l'evidenziata si vede
+      more.open = shell.state.panel === "scheda" && apart.some((u) => shell.state.nodeId === u.id);
+      host.append(more);
+      target = more;
+      for (const u of apart) row(u);
     }
   }
 

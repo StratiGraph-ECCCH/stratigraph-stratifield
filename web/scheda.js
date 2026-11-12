@@ -713,8 +713,11 @@ export function render(container, def, state) {
   clear.addEventListener("click", () => state.onClear());
   head.append(clear);
   sheet.append(head);
+  // IN CAMPO l'avviso non è una fascia sopra il modulo (MICRO il campo
+  // rifinito, 15 novembre): è una riga piccola sotto il menu «Scheda», che la
+  // striscia disegna dalla stessa funzione (`shell.js::paintStrip`).
   const notice = datamodelNotice(def);
-  if (notice) sheet.append(notice);
+  if (notice && mode === "desktop") sheet.append(notice);
   const review = reviewBox(state);
   if (review) sheet.append(review);
 

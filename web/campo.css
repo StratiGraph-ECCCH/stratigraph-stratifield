@@ -120,12 +120,6 @@
 }
 #surface[data-sg-mode="phone"] #scheda-strip [data-ctl="card"] { flex: 1 1 100%; }
 #surface[data-sg-mode="phone"] #scheda-strip [data-ctl="card"] select.std { width: 100%; }
-.fld-links { display: inline-flex; gap: var(--sg-space-3); margin-inline-start: auto; }
-.fld-link {
-  width: auto; margin: 0; padding: 4px 0; border: 0; box-shadow: none; background: none;
-  color: var(--sg-text); font: inherit; font-size: var(--sg-text-sm); cursor: pointer;
-  text-decoration: underline dotted; text-underline-offset: 3px;
-}
 /* l'elenco breve a sinistra della scheda, sul tablet: «US n», niente conteggi */
 #surface[data-sg-mode="tablet"] .inroom h3 { margin: var(--sg-space-2) var(--sg-space-3) var(--sg-space-1); }
 #surface[data-sg-mode="tablet"] .inroom .navitem { padding: 9px var(--sg-space-3); font-size: var(--sg-text-sm); }
@@ -237,3 +231,117 @@
 #surface[data-sg-mode="tablet"] .fo-head { justify-content: flex-end; }
 /* nella Consegna la riga della coda ripeterebbe l'elenco che sta sopra */
 #surface:has(#deliver:not([hidden])) .queue { display: none; }
+
+/* ══ MICRO IL CAMPO RIFINITO (15 novembre 2026) ═══════════════════════════════
+ * Cinque distanze dal mockup v7.2 misurate da Cowork sugli affiancamenti.
+ * Solo ruoli del tema. */
+
+/* ── 5 · la testata del telefono: UNA riga come nel mockup ───────────────────
+ * [clessidra] StratiField          [n da consegnare] [PC]
+ *             la stanza (sito · saggio)
+ * La lingua, che a 390 px non ci sta (misurato), è nel foglio delle iniziali
+ * (`placeControls`), il primo controllo. */
+.mark-field { display: none; }
+#surface[data-sg-mode="phone"] .topbar {
+  display: grid; flex-wrap: nowrap;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "logo name state me" "logo room state me";
+  column-gap: var(--sg-space-2); row-gap: 0; align-items: center;
+}
+#surface[data-sg-mode="phone"] .topbar .mark,
+#surface[data-sg-mode="phone"] .topbar .whoroom { display: contents; }
+#surface[data-sg-mode="phone"] .topbar .mark img { grid-area: logo; }
+#surface[data-sg-mode="phone"] .topbar .mark-field {
+  display: block; grid-area: name; align-self: end;
+  font-family: var(--sg-font-display); font-weight: var(--sg-weight-headline);
+  font-size: var(--sg-text-lg); line-height: 1.15;
+}
+#surface[data-sg-mode="phone"] .topbar #room-name {
+  grid-area: room; align-self: start; justify-self: start; max-width: 100%;
+  padding: 0; font-size: var(--sg-text-sm); color: var(--sg-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#surface[data-sg-mode="phone"] .topbar #who-subject,
+#surface[data-sg-mode="phone"] .topbar .barlang,
+#surface[data-sg-mode="phone"] .topbar .topbar-controls,
+#surface[data-sg-mode="phone"] .topbar .postseg,
+#surface[data-sg-mode="phone"] .topbar .barvoice { display: none; }
+#surface[data-sg-mode="phone"] .topbar #state {
+  grid-area: state; flex: none; max-width: 11rem;
+  padding: 4px 10px; font-size: var(--sg-text-xs);
+}
+#surface[data-sg-mode="phone"] .topbar #me { grid-area: me; }
+/* la lingua, prima nel foglio delle iniziali */
+#me-controls #lang { order: -1; }
+#surface[data-sg-mode="phone"] .roompop { inset-block-start: 4.2rem; }
+
+/* ── 1 · «firmato come …», la riga del mockup, sopra la voce ─────────────────
+ * Solo sul telefono e solo in Detta: è la riga che si controlla prima di
+ * dettare. Il gesto «Esci» resta nel foglio delle iniziali (SF-05), uno solo. */
+#surface[data-sg-mode="phone"]:has(#work:not([hidden])) #signature:not([hidden]) {
+  display: flex !important;
+  margin: calc(-1 * var(--sg-space-3)) calc(-1 * var(--sg-space-3)) var(--sg-space-2);
+}
+#surface[data-sg-mode="phone"] #signature #signout { display: none; }
+
+/* ── 1 · gli esempi, «Cosa ci siamo detti» discreto, la casella come ripiego */
+#examples { margin: var(--sg-space-1) 0 0; color: var(--sg-text); font-size: var(--sg-text-sm); }
+#examples[hidden] { display: none; }
+#surface:not([data-sg-mode="phone"]) #examples { display: none; }
+#surface[data-sg-mode="phone"] #work > #chat-open {
+  justify-self: start; width: auto; min-height: 44px; margin: 0;
+  font-size: var(--sg-text-sm); color: var(--sg-muted);
+}
+#surface:not([data-sg-mode="phone"]) #work > #chat-open { width: auto; }
+#surface[data-sg-mode="phone"] #work > #hint {
+  margin: var(--sg-space-3) 0 0; padding-top: var(--sg-space-3);
+  border-top: 1px solid var(--sg-line); font-size: var(--sg-text-xs);
+}
+#surface[data-sg-mode="phone"] #work > #typed,
+#surface[data-sg-mode="phone"] #work > #send { margin: 0; }
+
+/* ── 2 · in campo niente ispettore della Scrivania ───────────────────────────
+ * «Dettata in trincea», «Questa scheda», «Da guardare» sono il riepilogo della
+ * scrivania. Sul tablet il pannello compare SOLO con una casella scelta, e
+ * allora è il suo widget — il modo di scrivere in quella casella, che senza
+ * pannello non ci sarebbe. Senza scelta il foglio prende tutta la larghezza. */
+#surface:not([data-sg-mode="desktop"]) .fo-body:not(:has(.fo-sel)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+#surface:not([data-sg-mode="desktop"]) .fo-body:not(:has(.fo-sel)) > .fo-insp { display: none; }
+#surface:not([data-sg-mode="desktop"]) .fo-insp .refine { display: none; }
+
+/* «Altro»: lingua della scheda e vista, in un piccolo menu in fondo alla riga */
+.fld-more { position: relative; margin-inline-start: auto; }
+.fld-more > summary {
+  list-style: none; cursor: pointer; padding: 6px 12px; min-height: 36px;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface); color: var(--sg-text); font-size: var(--sg-text-sm);
+}
+.fld-more > summary::-webkit-details-marker { display: none; }
+.fld-more > summary::after { content: "▾"; color: var(--sg-muted); font-size: var(--sg-text-xs); }
+.fld-more-body {
+  position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + 4px); z-index: 15;
+  display: grid; gap: var(--sg-space-3); min-width: 14rem;
+  padding: var(--sg-space-3); background: var(--sg-surface);
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius);
+  box-shadow: var(--sg-shadow-lifted);
+}
+.fld-more-body .fo-ctl { display: grid; gap: 4px; }
+
+/* ── 4 · l'avviso del datamodel in campo: una riga piccola sotto «Scheda» ── */
+#scheda-strip [data-ctl="card"]:has(.dm-line) { flex-wrap: wrap; }
+.dm-notice.dm-line {
+  flex-basis: 100%; margin: 4px 0 0; padding: 0; border: 0; background: none;
+  color: var(--sg-muted); font-size: var(--sg-text-xs); line-height: 1.35;
+}
+.dm-notice.dm-line b, .dm-notice.dm-line span { display: inline; font-weight: 400; color: inherit; }
+.dm-notice.dm-line span { margin-inline-start: .35em; }
+
+/* ── 3 · l'elenco breve: le unità senza numero contate in una riga grigia ── */
+.inroom-apart > summary {
+  cursor: pointer; padding: 8px var(--sg-space-3);
+  color: var(--sg-muted); font-size: var(--sg-text-xs); line-height: 1.35;
+}
+.inroom-apart .navitem { color: var(--sg-muted); }

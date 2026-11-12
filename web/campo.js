@@ -58,7 +58,10 @@ export function fieldTabOf(panel) {
 /** La riga dello stato IN CAMPO, come nel mockup: «REST · n da consegnare».
  *  Il dispositivo in campo è un corrispondente (REST): entra, consegna, esce.
  *  Senza rete la prima parola lo dice. Pura. */
-export function fieldStateLine({ online = true, pending = 0, tr = t } = {}) {
+export function fieldStateLine({ online = true, pending = 0, tr = t, short = false } = {}) {
+  // SUL TELEFONO, IN RETE, solo il numero («3 da consegnare», come il gettone
+  // del mockup): la barra è una riga sola. Senza rete la prima parola resta.
+  if (short && online) return tr("f.queue", { n: pending });
   const head = online ? "REST" : tr("node.offline");
   return `${head} · ${tr("f.queue", { n: pending })}`;
 }

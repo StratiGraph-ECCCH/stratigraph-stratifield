@@ -60,7 +60,13 @@ def test_chi_firma_sta_nelle_iniziali_e_la_fascia_non_si_vede_piu():
     assert "f.signout_guard" in out
 
 
-def test_il_microfono_scende_dove_arriva_il_pollice():
-    assert '#surface[data-sg-mode="phone"] #work > #rec { order: 6; }' in CSS
-    assert '#surface[data-sg-mode="phone"] #work > #typed { order: 7; grid-column: 1; }' in CSS
-    assert '#surface[data-sg-mode="phone"] #work > #send { order: 7; grid-column: 2; }' in CSS
+def test_il_microfono_sta_in_cima_come_nel_mockup():
+    """Dal 15 novembre (MICRO il campo rifinito) il grande bottone della voce
+    è il PRIMO di Detta, come nel mockup v7.2; la casella con «Manda» è
+    l'ultima, il ripiego. Prima (SF-11) il microfono stava in basso sotto i
+    secondari, con il vuoto sopra: misurato a 390×844, ora sta nella metà alta."""
+    assert '#surface[data-sg-mode="phone"] #work > #rec { order: 1; }' in CSS
+    assert '#surface[data-sg-mode="phone"] #work > .row { order: 2; }' in CSS
+    assert '#surface[data-sg-mode="phone"] #work > #typed { order: 10; grid-column: 1; }' in CSS
+    assert '#surface[data-sg-mode="phone"] #work > #send { order: 10; grid-column: 2; }' in CSS
+    assert "align-content: start;" in CSS and "align-content: end;" not in CSS

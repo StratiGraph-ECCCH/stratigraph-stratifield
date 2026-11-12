@@ -62,6 +62,10 @@
            (`set("app-subtitle", t("app.subtitle"))`): l'elemento resta col suo
            id, perche' togliergli l'id non lo rinomina, lo rompe. -->
       <span id="app-subtitle">field assistant</span>
+      <!-- SUL TELEFONO IN CAMPO il marchio è quello del mockup v7.2,
+           «StratiField», con sotto la stanza (MICRO il campo rifinito, 15 nov):
+           una riga sola invece di «container locale» e lo stato su due. -->
+      <span class="mark-field" aria-hidden="true">StratiField</span>
     </span>
     <span class="spacer"></span>
 
@@ -205,11 +209,17 @@
       <div class="row">
         <button id="shoot">📷 Photo</button>
         <button id="where">📍 Where am I</button>
-        <!-- DIETRO UN TOCCO: leggere cosa si sono detti gli altri è una cosa
-             che si fa quando ci si ferma, non tutto il giorno. -->
-        <button id="chat-open" aria-expanded="false"
-                aria-controls="chat">💬 What we said</button>
       </div>
+      <!-- GLI ESEMPI DEI COMANDI, frasi DEL NODO (`/v1/tools`), mai tradotte:
+           sotto i gesti, come nel mockup v7.2. -->
+      <p class="hint examples" id="examples"></p>
+      <!-- DIETRO UN TOCCO: leggere cosa si sono detti gli altri è una cosa
+           che si fa quando ci si ferma, non tutto il giorno. Dal 15 novembre
+           (MICRO il campo rifinito) un collegamento discreto sotto gli esempi,
+           non un terzo bottone grande accanto a Foto e Dove sono: il mockup
+           non lo disegna, e chi è in trincea non deve sceglierlo per sbaglio. -->
+      <button id="chat-open" class="linkish" aria-expanded="false"
+              aria-controls="chat">💬 What we said</button>
       <!-- LA CONVERSAZIONE. Vive nella STANZA e non qui: senza rete si può
            dire e non si può rileggere, e il pannello lo dice invece di
            sembrare vuoto. -->
@@ -764,6 +774,8 @@ const STRINGS = {
     "nav.by_number": "by number",
     "unit.left": "{n} empty boxes",
     "unit.open_sheet": "open the Sheet",
+    "f.more": "More",
+    "nav.unnumbered": "{n} more without a number · for reading",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -1129,6 +1141,8 @@ const STRINGS = {
     "nav.by_number": "per numero",
     "unit.left": "{n} caselle vuote",
     "unit.open_sheet": "apri il Foglio",
+    "f.more": "Altro",
+    "nav.unnumbered": "Altre {n} senza numero · in lettura",
   },
   // >>> ui_strings.py
   // GENERATO da scripts/ui_strings.py leggendo StratiGraph_UI_strings.xlsx
@@ -3459,6 +3473,12 @@ function paintStrings() {
 function paintCommandLanguage() {
   const typed = $("typed");
   const line = $("commands-in");
+  const examples = $("examples");
+  if (examples) {
+    const said = (NODE_COMMANDS && NODE_COMMANDS.examples) || [];
+    examples.textContent = said.map((x) => `«${x}…»`).join(" · ");
+    examples.hidden = !said.length;
+  }
   if (!NODE_COMMANDS) { if (typed) typed.placeholder = ""; return; }
   if (typed) typed.placeholder = NODE_COMMANDS.example || "";
   const language = NODE_COMMANDS.language || "";
@@ -3529,8 +3549,13 @@ async function loadNodeCommands() {
     const examples = Object.keys(intents)
       .filter((phrase) => intents[phrase] === "create_su")
       .sort((a, b) => b.length - a.length);
+    // …e, per gli ESEMPI sotto i gesti (mockup v7.2: «crea una nuova scheda…»
+    // · «questa foto è per la US…»), la prima frase che il registro dichiara
+    // per collegare una foto a un'unità. Frasi del nodo, mai tradotte.
+    const photo = Object.keys(intents).find((phrase) => intents[phrase] === "attach_photo_to_su");
     return { language: payload.command_language || "",
-             example: examples[0] || "" };
+             example: examples[0] || "",
+             examples: [examples[0], photo].filter(Boolean) };
   } catch { return null; }
 }
 
@@ -4115,7 +4140,10 @@ function checkSays(where) {
   const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
   // IN CAMPO, come nel mockup: «REST · n da consegnare» — il dispositivo è un
   // corrispondente, e il numero è ciò che conta in trincea
-  if (inField()) return window.SGField.stateLine({ online: true, pending: waiting, tr: t });
+  // (sul telefono senza «REST ·»: la barra è una riga sola, e il numero è la
+  // notizia — MICRO il campo rifinito)
+  if (inField()) return window.SGField.stateLine({ online: true, pending: waiting, tr: t,
+                                                   short: window.SGShell.state.mode === "phone" });
   // IL SALVATAGGIO, SEMPRE VISIBILE (14 novembre, CHNT). «salvato alle hh:mm»
   // è l'ora dell'ULTIMA CONFERMA VERA del nodo (`saved_at`), mai quella di un
   // controllo: prima la pastiglia diceva l'ora del battito, e un'ora accanto a

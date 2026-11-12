@@ -837,29 +837,37 @@
 #surface[data-sg-mode="phone"] .thumbbar[data-tabs="true"] #tb-nav svg,
 #surface[data-sg-mode="phone"] .thumbbar[data-tabs="true"] #tb-nav .tb-label { display: block; }
 
-/* DETTA SUL TELEFONO (SF-11): in alto quello che si è detto, in basso il
- * microfono e la casella con l'invio accanto — dove arriva il pollice. */
+/* DETTA SUL TELEFONO, NELL'ORDINE DEL MOCKUP v7.2 (MICRO il campo rifinito,
+ * 15 novembre 2026). Dall'alto: il grande bottone della voce, Foto e Dove
+ * sono, gli esempi dei comandi e le foto in attesa, ciò che si è detto, poi
+ * «Cosa ci siamo detti» come collegamento discreto e, in fondo, la casella con
+ * «Manda» — il ripiego quando il microfono non c'è. Prima (SF-11, 31 ottobre)
+ * il microfono stava in basso «dove arriva il pollice», sotto i secondari e con
+ * il vuoto sopra: il pollice ci arrivava, l'occhio no. Il mockup lo mette in
+ * cima, ed è il gesto di tutto il giorno: deve essere la prima cosa che si
+ * vede, e a 390×844 sta nella metà alta (misurato). */
 #surface[data-sg-mode="phone"] #work:not([hidden]) {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--sg-space-2);
-  align-content: end;
-  min-height: calc(100dvh - 210px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  align-content: start; row-gap: var(--sg-space-2);
 }
 #surface[data-sg-mode="phone"] #work > * { grid-column: 1 / -1; }
-#surface[data-sg-mode="phone"] #work > #said { order: 1; }
-#surface[data-sg-mode="phone"] #work > #photos { order: 2; }
-#surface[data-sg-mode="phone"] #work > #chat { order: 3; }
-#surface[data-sg-mode="phone"] #work > .row { order: 4; }
-#surface[data-sg-mode="phone"] #work > #hint { order: 5; }
-#surface[data-sg-mode="phone"] #work > #rec { order: 6; }
-#surface[data-sg-mode="phone"] #work > #typed { order: 7; grid-column: 1; }
-#surface[data-sg-mode="phone"] #work > #send { order: 7; grid-column: 2; }
-#surface[data-sg-mode="phone"] #work > #commands-in { order: 8; }
+#surface[data-sg-mode="phone"] #work > #rec { order: 1; }
+#surface[data-sg-mode="phone"] #work > .row { order: 2; }
+#surface[data-sg-mode="phone"] #work > #examples { order: 3; }
+#surface[data-sg-mode="phone"] #work > #commands-in { order: 4; }
+#surface[data-sg-mode="phone"] #work > #photos { order: 5; }
+#surface[data-sg-mode="phone"] #work > #said { order: 6; }
+#surface[data-sg-mode="phone"] #work > #chat-open { order: 7; }
+#surface[data-sg-mode="phone"] #work > #chat { order: 8; }
+#surface[data-sg-mode="phone"] #work > #hint { order: 9; }
+#surface[data-sg-mode="phone"] #work > #typed { order: 10; grid-column: 1; }
+#surface[data-sg-mode="phone"] #work > #send { order: 10; grid-column: 2; }
 #surface[data-sg-mode="phone"] #work > .row button {
-  padding: 10px 8px; font-size: var(--sg-text-sm); text-align: center; box-shadow: none;
+  padding: 14px 8px; font-size: var(--sg-text-base); text-align: center; box-shadow: none;
 }
 #surface[data-sg-mode="phone"] #work > #rec {
-  min-height: 104px; border-radius: 999px; text-align: center;
-  margin: var(--sg-space-3) 0;
+  min-height: 84px; border-radius: var(--sg-radius-lg); text-align: center;
+  margin: var(--sg-space-2) 0 0;
 }
 #surface[data-sg-mode="phone"] #work > #send {
   width: auto; padding: 0 18px; text-align: center;
@@ -872,7 +880,7 @@
 #surface[data-sg-mode="phone"] .work,
 #surface[data-sg-mode="phone"] .topbar { min-width: 0; }
 #surface[data-sg-mode="phone"] #work > .row {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sg-space-2);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sg-space-2);
 }
 #surface[data-sg-mode="phone"] #work > .row button { width: auto; min-width: 0; }
 

@@ -51,9 +51,12 @@ def _fn(src: str, head: str) -> str:
 
 # ── A · una sola cornice ──────────────────────────────────────────────────────
 
-def test_la_lingua_sta_nella_barra_in_ogni_modo():
+def test_la_lingua_sta_nella_barra_tranne_sul_telefono():
+    """Nella barra alla scrivania e sul tablet in campo; sul telefono, dal 15
+    novembre (MICRO il campo rifinito), nel foglio delle iniziali: a 390 px la
+    barra è una riga sola come nel mockup e il selettore non ci sta."""
     place = _fn(SHELL, "function placeControls")
-    assert 'id === "lang" && $("bar-lang")' in place
+    assert 'id === "lang" && $("bar-lang") && mode !== "phone"' in place
     assert 'mode === "desktop"' not in place
 
 
