@@ -683,6 +683,12 @@ class Answer(BaseModel):
     #: sarebbe un doppione; se no (la stanza ha rifiutato l'ATTO), la nota resta
     #: sul dispositivo.
     queued: bool = False
+    #: L'ORA DELLA CONFERMA (14 novembre): l'istante, sull'orologio del NODO,
+    #: in cui la scrittura è stata accettata — dalla stanza, o dal container
+    #: locale — e non è rimasta in coda né è stata rifiutata. `None` altrimenti.
+    #: È l'ora che la barra dice («salvato alle hh:mm»): mai un'ora inventata
+    #: dal browser.
+    saved_at: Optional[str] = None
 
 
 def _author(request: Request) -> Optional[str]:
@@ -731,7 +737,17 @@ def _told(result: ToolResult, scope: "Scope", prima: tuple,
         # stanza non c'era ancora (misurato in campo il 28 settembre)
         message = (f"{message} " + (in_coda or "La stanza non risponde: è in "
                                     "coda su questo nodo, e parte al ritorno."))
-    return {"refused": refused, "queued": queued, "message": message}
+    from .unita import wrote as _wrote
+    wrote = bool(result.ok and not refused and not queued and _wrote())
+    return {"refused": refused, "queued": queued, "message": message,
+            "saved_at": _node_now() if wrote else None}
+
+
+def _node_now() -> str:
+    """L'ora del nodo, al secondo, in UTC con la zona: il browser la mostra
+    nella sua (`hh:mm`)."""
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 
 
 #: Gli strumenti di cui dare una frase d'esempio, in quest'ordine: i gesti di
@@ -915,7 +931,7 @@ def _della(found: Any, number: str) -> str:
 
 @v1.get("/scheda/{scheda_id}/unita", tags=["scheda"])
 def read_scheda(scheda_id: str, request: Request, us: str = "",
-                lente: bool = False) -> Dict[str, Any]:
+                lente: bool = False, node: str = "") -> Dict[str, Any]:
     """IL RITORNO (audit B4): i valori di un'unità, riletti dal grafo.
 
     Dal nodo dell'unità nella sezione — la stanza, o il container locale —
@@ -942,7 +958,8 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
 
     scope = _scope(request)            # firma valida, o 401 dall'autenticatore
     number = (us or "").strip()
-    if not number:
+    by_id = (node or "").strip()
+    if not number and not by_id:
         raise HTTPException(status_code=400, detail="quale unità? manca `us`")
     asked = schede.find(scheda_id)
     if asked is None:
@@ -956,7 +973,18 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
         raise HTTPException(status_code=502,
                             detail=f"Non riesco a leggere il grafo: {chiusa}") from None
     from .operazioni import _Context, _find_unit
-    unit = _find_unit(_Context(section), number)
+    from .unita import is_unit
+    if by_id:
+        # DAL SUO ID (14 novembre): un'unità importata il cui id non porta un
+        # numero (`1.US5`, uuid di PyArchInit) si apre lo stesso. Si LEGGE:
+        # scriverla vorrebbe un numero, e un numero non si indovina.
+        unit = next((n for n in section.get("nodes") or []
+                     if str(n.get("id")) == by_id), None)
+        if unit is None or not is_unit(unit):
+            raise HTTPException(status_code=404,
+                                detail=f"nessuna unità «{by_id}» in questo grafo")
+    else:
+        unit = _find_unit(_Context(section), number)
     unit_id = str(unit["id"]) if unit else unit_id_for(number)
     declared = ((unit or {}).get("data") or {}).get(MARK) or {}
     read_with, note = asked, ""
@@ -980,7 +1008,17 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
     except OperazioniError as problem:
         raise HTTPException(status_code=404, detail=str(problem)) from None
     unread = read.pop("unread", [])
+    from .unita import origin_of, to_refine, words
+    told = words((unit or {}).get("description"))
+    where = origin_of(unit or {})
     out = {"us": number, "node_id": unit_id,
+           # aperta dal suo id, cioè senza un numero con cui riscriverla
+           "by_id": bool(by_id), "name": str((unit or {}).get("name") or ""),
+           # LA DESCRIZIONE: quale casella la scrive (la ricetta), dove è stata
+           # scritta e quante parole ha — il riquadro «Dettata in trincea»
+           "description_field": schede.description_field(read_with),
+           "written_in": where, "words": told,
+           "to_refine": to_refine(where, told),
            "read_with": read_with.ref, "declared": read.pop("declared"),
            "note": note, **read,
            "where": writer_describe(scope.writer)}
@@ -1136,8 +1174,14 @@ async def listen(request: Request,
                  us: Optional[str] = Form(default=None),
                  language: Optional[str] = Form(default=None),
                  photo: Optional[UploadFile] = File(default=None),
-                 photo_sha256: Optional[str] = Form(default=None)) -> Answer:
+                 photo_sha256: Optional[str] = Form(default=None),
+                 only: Optional[str] = Form(default=None)) -> Answer:
     """Audio in — transcribed on the node, then exactly as `/say`.
+
+    `only=text` (14 novembre, «Detta il resto»): trascrivi e basta. La voce
+    che AGGIUNGE a un testo lungo sul telefono passa per la stessa strada e
+    lo stesso motore, ma il suo esito è il testo, che la casella mette in coda
+    a ciò che c'era: niente comando, niente scrittura.
 
     A photo may ride along, because that is how the gesture actually happens:
     somebody takes a picture and says what it is of, in one act. Making them two
@@ -1163,6 +1207,9 @@ async def listen(request: Request,
         raise HTTPException(
             status_code=501,
             detail=f"this node cannot transcribe audio: {exc}") from None
+    if (only or "").strip() == "text":
+        _scope(request)                # firma valida, come ogni altra richiesta
+        return Answer(ok=bool(transcript.strip()), message="", said=transcript)
     slots: Dict[str, Any] = {}
     if us:
         slots["us"] = us
@@ -1294,10 +1341,19 @@ def _scope_of(who: Optional[str], bearer: str, server: str, room: str) -> Scope:
 
 
 def _scope(request: Request) -> Scope:
-    """Chi (dal token, verificato) e dove (dagli header, o dal nodo)."""
-    return _scope_of(_author(request), _bearer(request),
-                     (request.headers.get(HEADER_SERVER) or "").strip(),
-                     (request.headers.get(HEADER_ROOM) or "").strip())
+    """Chi (dal token, verificato) e dove (dagli header, o dal nodo).
+
+    …E DA DOVE (14 novembre): la postura di questa richiesta — dichiarata dal
+    dispositivo (`X-SG-Posture`), o dal trasporto — per il segno
+    `written_in.description` che il generatore scrive accanto alla descrizione
+    (`app/unita.py`)."""
+    from .unita import HEADER as POSTURE_HEADER, posture_from, set_posture
+
+    scope = _scope_of(_author(request), _bearer(request),
+                      (request.headers.get(HEADER_SERVER) or "").strip(),
+                      (request.headers.get(HEADER_ROOM) or "").strip())
+    set_posture(posture_from(request.headers.get(POSTURE_HEADER), scope.writer))
+    return scope
 
 
 def _refused(problem: Exception) -> HTTPException:
@@ -1644,8 +1700,38 @@ def room_units(request: Request) -> Dict[str, Any]:
         raise HTTPException(
             status_code=502,
             detail=f"Non riesco a leggere le unità: {chiusa}") from None
+    from .unita import REFINE_UNDER_WORDS, unit_types
+    labels = {t["class"]: t["label"] for t in unit_types()["others"]}
     return {"units": elenco, "total": len(elenco), "room": scope.room,
-            "where": writer_describe(scope.writer)}
+            "where": writer_describe(scope.writer),
+            # i nodi di tipo unità che il nome dice essere altro (documenti,
+            # estrattori, proprietà, continuità importati come US): FUORI
+            # dall'elenco, e contati, perché l'elenco lo dica una volta
+            "left_out": [{"class": k, "label": labels.get(k) or k, "count": n}
+                         for k, n in sorted((getattr(elenco, "left_out", {})
+                                             or {}).items())],
+            # la soglia di «da rifinire alla scrivania», UNA costante
+            "refine_under_words": REFINE_UNDER_WORDS}
+
+
+@v1.get("/room/places", tags=["room"])
+def room_places(request: Request) -> Dict[str, Any]:
+    """I LUOGHI DELLO SCAVO in albero (14 novembre, la sezione «Scavo» della
+    scrivania): sito, aree, saggi, settori — i `LocationNodeGroup` — con il
+    genitore e quante unità vi stanno. Una lettura (`app/unita.py`)."""
+    from .unita import places_tree
+    scope = _scope(request)
+    try:
+        section = scope.writer.section()
+    except RoomRefused as chiusa:
+        raise _refused(chiusa) from None
+    except Exception as chiusa:        # noqa: BLE001 — rete o porta chiusa
+        raise HTTPException(
+            status_code=502,
+            detail=f"Non riesco a leggere la stanza: {chiusa}") from None
+    return {"places": places_tree(section), "room": scope.room,
+            # creare un luogo da qui: non ancora (nessuno strumento lo fa)
+            "can_create": False}
 
 
 @v1.get("/room/choices", tags=["room"])

@@ -183,6 +183,12 @@ def _op_now() -> str:
     return now_op_iso()
 
 
+def _note_write() -> None:
+    """Questa richiesta ha scritto (`unita.wrote`): la barra dirà l'ora."""
+    from .unita import note_write
+    note_write()
+
+
 def _process_node(kind: str, author: Optional[str], about: str,
                   detail: str = "") -> Dict[str, Any]:
     """The `crmdig:D7` that records the act.
@@ -287,6 +293,7 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
     ops.append(api.make_op("add_node", id=process["id"], node=process, ts=stamp))
     fields_of.append("")
     outcomes = graph_writer.send(ops, author=author)
+    _note_write()
 
     landed, already, held = [], [], []
     for fid in made.written:
@@ -984,6 +991,7 @@ def make_validate_field(graph_writer) -> ToolDescriptor:
             f"US {number}: {len(marks)} campi validati da una persona")
         try:
             graph_writer.update(unit_id, marks, author=author, process=process)
+            _note_write()
         except Exception as exc:                                 # noqa: BLE001
             return ToolResult(ok=False, message=str(exc))
 
@@ -1119,6 +1127,7 @@ def make_attach_photo(graph_writer, asset_store) -> ToolDescriptor:
         delta = GraphDelta(nodes=[resource], edges=[edge], process=process,
                            author=author)
         graph_writer.apply(delta)
+        _note_write()
         return ToolResult(
             ok=True,
             message=f"Foto allegata alla US {number}.",
@@ -1499,6 +1508,7 @@ def make_translate_text(graph_writer, translator=None) -> ToolDescriptor:
                                             node=process, ts=stamp)]
         try:
             outcomes = graph_writer.send(ops, author=author)
+            _note_write()
         except Exception as exc:                                 # noqa: BLE001
             return ToolResult(ok=False, message=str(exc))
         data["queued"] = any(o.get("queued") for o in outcomes)
@@ -1561,6 +1571,7 @@ def make_verify_node(graph_writer) -> ToolDescriptor:
                                     **({"realign": V.REALIGN_ELSEWHERE} if realign else {})})
         try:
             outcomes = graph_writer.send(list(made.ops), author=author)
+            _note_write()
         except Exception as exc:                                 # noqa: BLE001
             return ToolResult(ok=False, message=str(exc))
         data = {"node_id": node_id, "validated_by": made.by, "validated_at": made.at,

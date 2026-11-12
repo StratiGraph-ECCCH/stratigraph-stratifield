@@ -891,3 +891,18 @@ def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
             "label": (doc.get("labels") or {}).get(lang), "lang": lang,
             "concepts": concepts}
 
+
+
+def description_field(scheda: Any) -> Optional[str]:
+    """LA CASELLA CHE SCRIVE LA DESCRIZIONE dell'unità, letta dalla ricetta:
+    quella il cui passo è `update_field` sull'unità, campo `description`.
+    `descrizione` nell'ICCD, `description` nel DAI; `None` per una scheda che
+    non ne ha (o senza ricetta). È dove porta «Rifinisci la descrizione»."""
+    fields = ((getattr(scheda, "recipe", None) or {}).get("fields") or {})
+    for fid, entry in fields.items():
+        for step in (entry or {}).get("steps") or []:
+            emit = (step or {}).get("emit") or {}
+            if (emit.get("op") == "update_field" and emit.get("node_id") == "$unit"
+                    and emit.get("field") == "description"):
+                return str(fid)
+    return None

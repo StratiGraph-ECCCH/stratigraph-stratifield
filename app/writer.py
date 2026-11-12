@@ -306,12 +306,23 @@ class GraphWriter(Protocol):
     def answer(self, question: str) -> str: ...
 
 
-_STRAT_PREFIXES = ("US", "USV", "USD", "SF", "VSF", "RSF", "ser", "TSU", "UL",
-                   "USN", "BR", "SE")
-
-
 def _is_unit(node: Dict[str, Any]) -> bool:
-    return str(node.get("node_type") or "").startswith(_STRAT_PREFIXES)
+    """UN'UNITÀ STRATIGRAFICA, con i tipi del datamodel di s3Dgraphy
+    (`app/unita.py`, 14 novembre). Prima era una tupla di prefissi scritta qui,
+    che prendeva per unità i nodi di continuità (`BR`) e gli eventi (`SE`), e
+    i documenti importati come US (`1.DOC4001`)."""
+    from .unita import is_unit
+
+    return is_unit(node)
+
+
+class Units(list):
+    """L'elenco delle unità, e accanto ciò che è RIMASTO FUORI (14 novembre):
+    i nodi di tipo unità che il nome dice essere altro (`unita.left_out`),
+    contati per classe del datamodel. Una lista come prima per chi la legge
+    come lista; `left_out` per l'elenco, che lo dice una volta."""
+
+    left_out: Dict[str, int]
 
 
 def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -333,6 +344,7 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
     tocca, più ciò che un'unità vecchia porta ancora in `data`.
     """
     from .conversazione import is_message
+    from .unita import origin_of, to_refine, words
 
     fuori: List[Dict[str, Any]] = []
     for section in (document.get("graphs") or {}).values():
@@ -341,6 +353,9 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
         #: arco `is_in_location` porta località, area e saggio.
         nomi = {str(n.get("id")): str(n.get("name") or "")
                 for n in section.get("nodes") or []}
+        livelli = {str(n.get("id")): str((n.get("data") or {}).get("level") or "")
+                   for n in section.get("nodes") or []
+                   if n.get("node_type") == "LocationNodeGroup"}
         luoghi: Dict[str, List[str]] = {}
         for e in section.get("edges") or []:
             if e.get("edge_type") == "is_in_location":
@@ -364,6 +379,7 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                               for k in data
                               if k not in _META and not k.startswith("_")
                               and not k.startswith("scheda_links.")
+                              and not k.startswith("written_in.")
                               and k not in ("scheda", "source_fields")})
             #: `description` sta sul NODO e non in `data` (misurato in
             #: `create_su`): contarlo lì e non qui direbbe che un'unità
@@ -400,7 +416,12 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                 #: letto all'indirizzo del CRDT
                 "definition": _definition_of(node),
                 #: le aree dal puntatore per ruolo, per i gettoni dei filtri
-                "area": [nomi[i] for i in _links(data, "area") if nomi.get(i)],
+                #: …e se l'unità non le dice per ruolo (un grafo importato), i
+                #: luoghi di livello AREA in cui sta (14 novembre, la colonna
+                #: «Area» della tabella)
+                "area": ([nomi[i] for i in _links(data, "area") if nomi.get(i)]
+                         or [nomi[i] for i in luoghi.get(str(node.get("id")), [])
+                             if livelli.get(i) == "area" and nomi.get(i)]),
                 #: I LUOGHI in cui l'unità sta (`is_in_location`: sito, area,
                 #: saggio), per l'elenco filtrato che un clic sulla mappa apre
                 #: (12 novembre): l'id, perché due luoghi possono chiamarsi «1»
@@ -409,9 +430,24 @@ def units_of(document: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "ai": sum(1 for k, v in data.items()
                           if k.startswith("authorship.") and isinstance(v, dict)
                           and v.get("by") == "ai" and not v.get("validated_by")),
+                # ── DOVE È STATA SCRITTA, e quanto (14 novembre, CHNT) ──────
+                #: `trench`, `desk`, `both`, o None se non si sa
+                #: (`app/unita.py`: la fonte e quanto è affidabile)
+                "written_in": origin_of(node),
+                #: le parole della descrizione, che sta sul nodo
+                "words": words(node.get("description")),
+                "to_refine": to_refine(origin_of(node),
+                                       words(node.get("description"))),
             })
     fuori.sort(key=lambda u: (u["node_type"], u["name"], u["id"]))
-    return fuori
+    from .unita import left_out
+
+    elenco = Units(fuori)
+    elenco.left_out = {}
+    for section in (document.get("graphs") or {}).values():
+        for klass, n in left_out(section.get("nodes") or []).items():
+            elenco.left_out[klass] = elenco.left_out.get(klass, 0) + n
+    return elenco
 
 
 def _links(data: Dict[str, Any], role: str) -> List[str]:

@@ -509,7 +509,8 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
          authored_by: Optional[Dict[str, str]] = None,
          model: Optional[str] = None, additive: bool = False,
          relations: Optional[List[Tuple[str, str, str]]] = None,
-         lang: Optional[str] = None) -> Plan:
+         lang: Optional[str] = None,
+         written_in: Optional[str] = None) -> Plan:
     """Valori + identità + ricetta → la lista di operazioni, in ordine.
 
     `lang` = la lingua IN CUI SI COMPILA (quella del modulo, o la lingua dei
@@ -743,6 +744,23 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
                                  authored_by, model=model)
     for key, mark in marks.items():
         op("update_field", node_id=unit_id, field=f"data.{key}", value=mark)
+
+    # ── 4 · DOVE È STATA SCRITTA LA DESCRIZIONE (14 novembre, CHNT) ─────────
+    # Accanto al valore, nella stessa lista, come l'autorialità: l'insieme
+    # delle posture da cui la descrizione dell'unità è stata scritta
+    # (`app/unita.py` dice la fonte e quanto vale). Solo se la descrizione è
+    # davvero cambiata: un salvataggio che la lascia com'era non la «scrive».
+    from .unita import WRITTEN_IN, current_posture, merged
+    posture = written_in or current_posture()
+    wrote_description = any(
+        o.get("op") == "update_field" and o.get("node_id") == unit_id
+        and o.get("field") == "description" and i not in out.noop
+        for i, o in enumerate(out.ops))
+    if posture and wrote_description:
+        before = ((ctx.nodes.get(unit_id) or {}).get("data") or {}).get(WRITTEN_IN)
+        current["field"] = "~written_in"
+        op("update_field", node_id=unit_id, field=f"data.{WRITTEN_IN}",
+           value=merged(before, posture))
     return out
 
 
