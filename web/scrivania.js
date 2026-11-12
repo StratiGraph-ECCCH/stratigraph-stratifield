@@ -23,7 +23,7 @@
  * (`room.units`, `/v1/room/choices`, `/v1/room/places`) e chiama la
  * conchiglia (`shell`) per aprire una scheda o una sezione. */
 
-import { room, unitLabel } from "./widgets.js";
+import { noNumberTag, room, unitLabel } from "./widgets.js";
 import { paint as paintPhotos } from "./photos.js";
 import { openIn } from "./mappa.js";
 
@@ -288,11 +288,11 @@ export function mount(shell) {
       return;
     }
     // IN CAMPO L'ELENCO È BREVE (MICRO il campo rifinito, 15 novembre): le
-    // unità con un numero, per numero; quelle senza (`1.1.US1`,
-    // `1.Combinar900`… importate, si aprono dal loro id in lettura) non si
-    // mescolano alle altre — una riga grigia le conta e, toccata, le mostra in
-    // fondo, in grigio, come la riga «senza numero» dell'elenco Unità della
-    // scrivania. Alla scrivania la colonna resta com'era.
+    // unità con un numero, per numero; quelle senza (`1.1.US1`, `1.US2`…
+    // importate) non si mescolano alle altre: stanno IN FONDO, sotto una riga
+    // grigia che le conta, col loro nome e il segno «senza numero» — si aprono
+    // e si scrivono dal loro id (MICRO senza numero si scrive). Alla scrivania
+    // tutte in una colonna, le senza numero in fondo (`byNumber`).
     const { listed, apart } = shortList(units, !isDesk());
     let target = host;
     const row = (u) => {
@@ -301,11 +301,14 @@ export function mount(shell) {
         || listing.find((x) => shell.state.def && x.id === shell.state.def.id)
         || listing[0];
       const total = item ? Number(item.fields) || 0 : 0;
+      // un'unità aperta DAL SUO ID è quella col suo id, non quella col numero
+      // che qualcuno sta scrivendo nella testata (15 novembre)
       const current = shell.state.panel === "scheda"
-        && ((u.number && u.number === shell.state.us) || (shell.state.nodeId === u.id));
+        && (shell.state.byId ? shell.state.nodeId === u.id
+                             : Boolean(u.number && u.number === shell.state.us));
       const b = el("button", { type: "button", class: "navitem", "data-unit": u.id,
                                "aria-current": String(Boolean(current)) },
-        el("span", { text: unitLabel(u, shell.prefix(u)) }),
+        el("span", { text: unitLabel(u, shell.prefix(u)) }, u.number ? null : noNumberTag(t)),
         // in campo l'elenco breve dice solo l'unità, come nel mockup
         isDesk() ? el("span", { class: "count", text: total ? `${u.fields || 0}/${total}` : String(u.fields || 0) }) : null);
       b.addEventListener("click", () => shell.openUnit(u));
@@ -313,10 +316,8 @@ export function mount(shell) {
     };
     for (const u of listed) row(u);
     if (apart.length) {
-      const more = el("details", { class: "inroom-apart" },
-        el("summary", { text: t("nav.unnumbered", { n: apart.length }) }));
-      // aperta quando l'unità davanti è una di loro: l'evidenziata si vede
-      more.open = shell.state.panel === "scheda" && apart.some((u) => shell.state.nodeId === u.id);
+      const more = el("div", { class: "inroom-apart" },
+        el("p", { class: "inroom-apart-head", text: t("nav.unnumbered", { n: apart.length }) }));
       host.append(more);
       target = more;
       for (const u of apart) row(u);
@@ -375,7 +376,8 @@ export function mount(shell) {
         el("p", { text: t("finds.none_note") })));
     } else {
       const rows = finds.map((u) => el("tr", { "data-unit": u.id, onclick: () => shell.openUnit(u) },
-        el("td", { class: "id", text: unitLabel(u, shell.prefix(u)) }),
+        el("td", { class: "id", text: unitLabel(u, shell.prefix(u)) },
+           u.number ? null : noNumberTag(t)),
         el("td", { text: u.node_type }),
         el("td", { text: u.definition || u.description || "" }),
         el("td", { text: (u.area || []).join(", ") })));

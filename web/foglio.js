@@ -671,9 +671,10 @@ export function paintInspector(insp, def, state) {
 function refineBox(state) {
   const info = state.unitInfo || {};
   if (info.written_in !== "trench" || !info.description_field) return null;
-  // in lettura (la lente, un'unità aperta dal suo id, un ruolo che legge) non
-  // si rifinisce niente: il riquadro non promette un gesto che non c'è
-  if (state.lens || state.byId || SG().readOnly) return null;
+  // in lettura (la lente, un'unità in conflitto aperta dal suo id, un ruolo
+  // che legge) non si rifinisce niente: il riquadro non promette un gesto che
+  // non c'è. Un'unità SENZA numero aperta dal suo id si scrive (15 novembre).
+  if (state.lens || (state.byId && state.idNumber) || SG().readOnly) return null;
   const box = el("section", { class: "refine", "data-refine": info.to_refine ? "short" : "ok" },
     el("p", { class: "fo-eyebrow", text: tr("refine.title") }),
     el("h2", { text: tr("f.words", { n: String(info.words || 0) }) }),

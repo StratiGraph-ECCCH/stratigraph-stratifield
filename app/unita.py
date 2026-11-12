@@ -160,6 +160,58 @@ def _other_type_named(word: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+# ── i codici pyArchInit che NON sono unità (15 novembre 2026) ─────────────
+#
+# `1.Combinar900` è un CombinerNode: `Combinar` è il codice che pyArchInit
+# scrive nel suo `unita_tipo` per un combiner, e la regola per nome qui sopra
+# non lo vedeva («combinar» non è l'inizio di «combiner»). Non si allarga la
+# somiglianza: si legge IL DATO. La tabella è quella di s3Dgraphy,
+# `sync/yed_import_pipeline._CLASSIFIED_KIND_TO_UNITA_TIPO` (DOC, Combinar,
+# Extractor, property), più `CON`, la riga di continuità del DB demo — la
+# stessa che `importer/unit_numbers.NOT_UNIT_CODES` tiene accanto al numero.
+# `s3dgraphy.sync` vuole SQLAlchemy, che questo servizio non installa; e
+# `unit_numbers` non è ancora in una release: si prende da là quando c'è,
+# altrimenti questa copia, tenuta uguale da un test che legge il sorgente.
+
+#: codice `unita_tipo` → classe del datamodel che nomina
+NOT_UNIT_CODES_PINNED: Dict[str, str] = {
+    "DOC": "DocumentNode",
+    "Combinar": "CombinerNode",
+    "Extractor": "ExtractorNode",
+    "property": "PropertyNode",
+    "CON": "ContinuityNode",
+}
+
+#: la chiave in cui l'importer scrive il codice (accanto a `data.us`)
+CODE_KEY = "unita_tipo"
+
+
+def not_unit_codes() -> Dict[str, str]:
+    try:
+        from s3dgraphy.importer.unit_numbers import NOT_UNIT_CODES
+        return dict(NOT_UNIT_CODES)
+    except Exception:                                   # noqa: BLE001
+        return dict(NOT_UNIT_CODES_PINNED)
+
+
+def _code_names_other(code: str) -> str:
+    """La classe che un codice pyArchInit dichiara se NON è un'unità, o `""`.
+    Uguale come pyArchInit lo scrive, o a meno delle maiuscole."""
+    code = str(code or "").strip()
+    if not code:
+        return ""
+    table = not_unit_codes()
+    if code in table:
+        return table[code]
+    low = {k.lower(): v for k, v in table.items()}
+    return low.get(code.lower(), "")
+
+
+#: il codice in fondo a un nome costruito col template dell'importer
+#: (`{area}.{settore}.{unita_tipo}{us}`): `1.Combinar900` → `Combinar`
+_TEMPLATE_CODE = re.compile(r"(?:^|\.)(?P<code>[^\W\d_]+)\d[^.]*$", re.UNICODE)
+
+
 def unit_verdict(node: Dict[str, Any]) -> Tuple[bool, str]:
     """`(è un'unità, perché no)`. Il perché è `""` per un'unità, o la classe del
     datamodel che il nodo (o il suo nome) dichiara."""
@@ -167,6 +219,22 @@ def unit_verdict(node: Dict[str, Any]) -> Tuple[bool, str]:
     units = unit_types()["units"]
     if kind not in units:
         return False, kind or "?"
+    # 1 · IL DATO DELL'IMPORTER: `data.unita_tipo`, se c'è, decide
+    data = node.get("data") if isinstance(node.get("data"), dict) else {}
+    declared = str(data.get(CODE_KEY) or "").strip()
+    if declared:
+        other = _code_names_other(declared)
+        if other:
+            return False, other
+        return True, ""
+    # 2 · UNA STANZA IMPORTATA PRIMA che l'importer scrivesse `unita_tipo`: il
+    # codice è nel nome, perché il template lo mette lì (`{unita_tipo}{us}`).
+    # Si confronta con la STESSA tabella, uguale — non una somiglianza.
+    m = _TEMPLATE_CODE.search(str(node.get("name") or "").strip())
+    if m:
+        other = _code_names_other(m.group("code"))
+        if other:
+            return False, other
     word = _name_word(node.get("name"))
     if word and word.upper() in _unit_codes():
         return True, ""

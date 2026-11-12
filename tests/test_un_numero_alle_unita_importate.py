@@ -53,6 +53,7 @@ ROOM = {"graphs": {"scavo": {"nodes": [
     imported("019f-c", "1.USM12", "12", "USM"),
     imported("019f-d", "1.SF300", "300", "SF"),
     imported("019f-e", "1.Combinar900"),                # non è un'unità: niente numero
+    imported("019f-f", "1.US5"),                        # un'unità ancora senza numero
 ], "edges": []}}}
 
 
@@ -69,7 +70,10 @@ def test_the_list_numbers_the_imported_units_and_keeps_their_name():
     assert units["019f-a"]["number"] == "1" and units["019f-a"]["name"] == "1.1.US1"
     assert units["019f-c"]["number"] == "12"
     assert units["019f-d"]["number"] == "300"
-    assert units["019f-e"]["number"] == ""
+    # `1.Combinar900` è un CombinerNode: fuori dall'elenco (MICRO senza numero
+    # si scrive); un'unità vera senza numero resta, senza numero
+    assert "019f-e" not in units
+    assert units["019f-f"]["number"] == ""
     assert all(u["conflict"] == 0 for u in units.values())
 
 
@@ -123,15 +127,15 @@ def test_go_to_unit_finds_by_original_name_and_says_a_conflict():
         "console.log(JSON.stringify(["
         " id(unitFor('12', '12', u)),"
         " id(unitFor('1.USM12', '1.USM12', u)),"
-        " id(unitFor('1.combinar900', '1.combinar900', u)),"
+        " id(unitFor('1.us5', '1.us5', u)),"
         " id(unitFor('2', '2', u)),"
         " id(unitFor('1.US2', '1.US2', u)),"
         " unitFor('77', '77', u),"
         " unitLabel(u.find((x) => x.id === '019f-b'), 'US '),"
         " unitLabel(u.find((x) => x.id === '019f-c'), 'US '),"
-        " unitLabel(u.find((x) => x.id === '019f-e'), 'US ')]));")
-    assert got == ["019f-c", "019f-c", "019f-e", ["019f-b", "019f-z"], "019f-b", None,
-                   "US 2 ⚠ 1.US2", "US 12", "1.Combinar900"]
+        " unitLabel(u.find((x) => x.id === '019f-f'), 'US ')]));")
+    assert got == ["019f-c", "019f-c", "019f-f", ["019f-b", "019f-z"], "019f-b", None,
+                   "US 2 ⚠ 1.US2", "US 12", "1.US5"]
 
 
 def test_the_conflict_is_said_in_the_interface_languages_of_the_page():

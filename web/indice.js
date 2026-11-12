@@ -21,7 +21,7 @@
  * Zero colori letterali: tutto dalle variabili del tema.
  */
 
-import { room, unitLabel } from "./widgets.js";
+import { noNumberTag, room, unitLabel } from "./widgets.js";
 
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
@@ -38,7 +38,7 @@ const SG = () => window.SG || {};
  * che si possono sbagliare in silenzio: un contatore giusto su un elenco
  * sbagliato sembra giusto. */
 export const filters = { q: "", area: null, ai: false, inc: false, place: null,
-                         refine: false };
+                         refine: false, nonum: false };
 
 /* IL LUOGO (12 novembre): un clic su un saggio della mappa apre l'elenco
  * filtrato su quel luogo — `{id, name}`, l'id perché due luoghi possono
@@ -64,8 +64,12 @@ export function standardName(item, lang) {
   return head ? head + year : String(item.id || "");
 }
 
-/** Le unità in ordine di NUMERO, non di testo: «US 2» prima di «US 10». */
+/** Le unità in ordine di NUMERO, non di testo: «US 2» prima di «US 10». Le
+ *  unità SENZA numero in fondo, per nome (15 novembre): l'ordine naturale è
+ *  quello dei numeri, e un nome come `1.1.US1` non ci si mescola. */
 export function byNumber(a, b) {
+  if (a.number && !b.number) return -1;
+  if (!a.number && b.number) return 1;
   return String(a.number || a.name || a.id || "")
     .localeCompare(String(b.number || b.name || b.id || ""), undefined, { numeric: true });
 }
@@ -101,6 +105,8 @@ export function matches(u, f, listing, fallback) {
   if (f.area && !(u.area || []).includes(f.area)) return false;
   if (f.place && !(u.places || []).includes(f.place.id)) return false;
   if (f.ai && !(Number(u.ai) > 0)) return false;
+  // «SENZA NUMERO» (15 novembre): le unità a cui il numero va ancora aggiunto
+  if (f.nonum && u.number) return false;
   // DA RIFINIRE ALLA SCRIVANIA (14 novembre, CHNT): scritta solo in trincea e
   // sotto la soglia di parole. Lo decide il NODO (`to_refine`, una costante sola
   // in `app/unita.py`); un'unità di cui non si sa dove è stata scritta non entra.
@@ -180,10 +186,14 @@ function line(u, t, onPick, listing, lang) {
     cosa.textContent = u.description;
     riga.append(cosa);
   }
-  //  UN'UNITÀ SENZA NUMERO SI APRE DAL SUO ID (14 novembre), in lettura: un
-  //  numero indovinato sarebbe lo stesso errore del numero mistypato, ma l'id
-  //  è l'unità. Lo dice UNA riga sopra l'elenco, non ogni riga.
-  if (!u.number) riga.dataset.byId = "true";
+  //  UN'UNITÀ SENZA NUMERO SI APRE DAL SUO ID (14 novembre) — e dal 15
+  //  novembre SI SCRIVE: un numero indovinato sarebbe lo stesso errore del
+  //  numero mistypato, ma l'id è l'unità. Il piccolo segno lo dice accanto al
+  //  nome; il numero si aggiunge nella scheda, quando si può.
+  if (!u.number) {
+    riga.dataset.byId = "true";
+    nome.after(noNumberTag(t));
+  }
   riga.addEventListener("click", () => onPick(u));
   return riga;
 }
@@ -209,7 +219,8 @@ function row(u, t, onPick, listing, fallback, prefix) {
     tr.append(c);
     return c;
   };
-  td(unitLabel(u, prefix), "id");
+  const id = td(unitLabel(u, prefix), "id");
+  if (!u.number) id.append(" ", noNumberTag(t));
   if (u.conflict > 1) tr.dataset.conflict = String(u.conflict);
   td(u.definition || u.description || "");
   const wr = document.createElement("span");
@@ -421,6 +432,10 @@ export function mount({ t, openScheda, schede, current = () => null,
     }
     chip(t("flt.ai"), filters.ai, () => { filters.ai = !filters.ai; }, "ai");
     chip(t("flt.incomplete"), filters.inc, () => { filters.inc = !filters.inc; }, "inc");
+    // «SENZA NUMERO» (15 novembre): solo se ce n'è, come le aree
+    if (unita.some((u) => !u.number) || filters.nonum) {
+      chip(t("flt.no_number"), filters.nonum, () => { filters.nonum = !filters.nonum; }, "nonum");
+    }
     const ref = chip(`✎ ${t("flt.refine")}`, filters.refine,
                      () => { filters.refine = !filters.refine; }, "refine");
     ref.classList.add("ref");
@@ -446,7 +461,7 @@ export function mount({ t, openScheda, schede, current = () => null,
         list: left.map((x) => `${x.label} ${x.count}`).join(", ") }));
     }
     const senza = unita.filter((u) => !u.number).length;
-    if (senza) said.push(t("index.byIdNote", { n: senza }));
+    if (senza) said.push(t("index.unnumberedNote", { n: senza }));
     // una frase per riga: due frasi in una riga, in ebraico con il ripiego
     // inglese, si mescolano (misurato)
     fuori.replaceChildren(...said.map((x) => Object.assign(document.createElement("span"),

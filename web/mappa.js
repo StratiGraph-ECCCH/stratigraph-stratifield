@@ -349,7 +349,10 @@ export const lastMap = () => last;
  *  numero dell'unità (`tests/test_il_foglio.py`). */
 export function openSection(state, mk, tr) {
   const number = state && state.us ? String(state.us) : "";
-  const unit = (room.units || []).find((u) => number && u.number === number);
+  // …o DAL SUO ID, un'unità senza numero (15 novembre): la stanza la ha già
+  const byId = state && state.byId && state.nodeId ? String(state.nodeId) : "";
+  const unit = (room.units || []).find((u) => (byId && u.id === byId)
+                                              || (!byId && number && u.number === number));
   // «ALTROVE» (14 novembre, mockup v7.2): EMStudio · Heriverse · PyArchInit,
   // nell'ordine del mockup e con la logica di sempre
   const sec = mk("section", { class: "fo-apri" },

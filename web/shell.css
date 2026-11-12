@@ -584,3 +584,25 @@ input[type="date"], input[type="number"], time {
 .mappa-apri { display: flex; flex-wrap: wrap; gap: var(--sg-space-2); align-items: center; }
 .mappa-apri .hint { flex-basis: 100%; }
 .app[dir="rtl"] .mappa-svg, [dir="rtl"] .mappa-svg { direction: ltr; }
+
+/* ── «senza numero» (15 novembre 2026): un piccolo segno accanto al nome di
+ * un'unità che non ha ancora un numero, e l'avviso nella testata della scheda,
+ * in forma positiva. Un'informazione, non un errore: niente colore d'allarme. */
+.nonum {
+  display: inline-block; margin-inline-start: .45em; padding: 0 .4em;
+  border: 1px solid var(--sg-line); border-radius: 999px;
+  color: var(--sg-muted); font-size: var(--sg-text-xs); font-weight: 400;
+  line-height: 1.5; white-space: nowrap; vertical-align: middle;
+}
+.nonum-note {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin: 6px 0; padding: 6px 10px; border-radius: 8px;
+  background: var(--sg-surface-sunk); color: var(--sg-muted);
+  font-size: var(--sg-text-sm, .9rem);
+}
+.nonum-note label { display: inline-flex; align-items: center; gap: 6px; color: var(--sg-text); }
+.nonum-note input { width: 7em; min-height: 0; height: auto; padding: 4px 8px; font-size: inherit; }
+.nonum-note .nonum-said { flex-basis: 100%; color: var(--sg-text); }
+/* nella colonna «In questa stanza» il segno sta SEMPRE sotto il nome: accanto,
+ * andava a capo solo per i nomi lunghi, e la colonna sembrava disordinata */
+.inroom .navitem .nonum { display: table; margin: 2px 0 0; }

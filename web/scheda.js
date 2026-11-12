@@ -910,6 +910,10 @@ export function payloadFor(def, state) {
   }
   return {
     us: String(state.us || "").trim(),
+    // SENZA NUMERO SI SCRIVE (15 novembre 2026): un'unità aperta dal suo id
+    // si scrive dal suo id; `us`, se qualcuno l'ha scritto, è il numero che le
+    // si aggiunge (il nodo rifiuta un numero che è già di un'altra unità)
+    ...(state.byId && state.nodeId ? { node: state.nodeId } : {}),
     values,
     authored_by: authored,
     model: state.model || "",
@@ -936,7 +940,7 @@ export async function save(def, state) {
     return false;
   }
   const body = payloadFor(def, state);
-  if (!body.us) {
+  if (!body.us && !body.node) {
     SG().show(false, "Una scheda è di un'unità: manca il numero.", def.id);
     return false;
   }

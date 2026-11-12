@@ -339,8 +339,9 @@
 .dm-notice.dm-line b, .dm-notice.dm-line span { display: inline; font-weight: 400; color: inherit; }
 .dm-notice.dm-line span { margin-inline-start: .35em; }
 
-/* ── 3 · l'elenco breve: le unità senza numero contate in una riga grigia ── */
-.inroom-apart > summary {
+/* ── 3 · l'elenco breve: le unità senza numero in fondo, sotto una riga grigia ── */
+.inroom-apart > .inroom-apart-head {
+  margin: 0;
   cursor: pointer; padding: 8px var(--sg-space-3);
   color: var(--sg-muted); font-size: var(--sg-text-xs); line-height: 1.35;
 }

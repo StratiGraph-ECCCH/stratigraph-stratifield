@@ -169,6 +169,17 @@ export function unitLabel(u, prefix = "") {
   return u.conflict > 1 ? `${base} ⚠ ${u.name || u.id}` : base;
 }
 
+/** IL PICCOLO SEGNO «SENZA NUMERO» (15 novembre 2026): un'unità senza numero
+ *  sta negli elenchi col suo nome e questo segno accanto — un'informazione,
+ *  non un divieto: si apre e si scrive dal suo id, e il numero si aggiunge
+ *  quando si può. Un elemento, perché sta accanto al nome in tre elenchi. */
+export function noNumberTag(t) {
+  const tag = document.createElement("span");
+  tag.className = "nonum";
+  tag.textContent = t("unit.no_number.tag");
+  return tag;
+}
+
 /** Un'unità nominata in un rapporto è «da compilare» se la stanza non la ha,
  *  o la ha soltanto come stub: è la regola già decisa (creata minima e
  *  segnata, operazioni.py decisione 1), mostrata invece che taciuta. */

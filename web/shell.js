@@ -13,7 +13,7 @@
 import {
   datamodelNotice, definitionFor, effectiveMode, keyField, payloadFor, proposeMode,
   refreshCompleteness, rememberMode, render, save, stepTo, thumbbarPlan,
-  trenchFields, otherFields, wayBack,
+  trenchFields, otherFields, wayBack, writeValue,
 } from "./scheda.js";
 import { drawSheet, hasSheet, optionsFor, paintInspector, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
@@ -119,10 +119,17 @@ const state = {
   // La casella selezionata sul Foglio: il pannello a destra la mostra.
   selected: null,
   // ── LA SCRIVANIA (14 novembre) ─────────────────────────────────────────────
-  // Un'unità aperta DAL SUO ID (importata, senza un numero con cui riscriverla):
-  // si legge (`reading()`), e l'indirizzo la dice con `nodo=`.
+  // Un'unità aperta DAL SUO ID (importata, senza numero): dal 15 novembre SI
+  // SCRIVE dal suo id (`payloadFor` manda `node`), e la testata dice che il
+  // numero manca, senza imporlo. L'indirizzo la dice con `nodo=`.
   nodeId: "",
   byId: false,
+  // il NOME di un'unità aperta dal suo id (`1.US2`): si mostra al posto di
+  // «US n»; `state.us` resta il numero, vuoto finché nessuno lo scrive
+  unitName: "",
+  // il numero che un'unità aperta dal suo id HA già: c'è solo se è anche di
+  // un'altra unità (un conflitto), e allora si legge
+  idNumber: "",
   // Ciò che il nodo dice della descrizione dell'unità aperta: dove è stata
   // scritta e quante parole ha (`/v1/scheda/…/unita`), per «Dettata in trincea».
   unitInfo: null,
@@ -136,7 +143,7 @@ const state = {
   dirty: false,
   // Dopo un salvataggio, mandato o in coda: la stanza ha un'unità in più, e
   // l'indirizzo impara il numero di una scheda nuova.
-  onSaved: (sent, body) => afterSave(body),
+  onSaved: (sent, body) => afterSave(body, sent),
   onChange: () => paintCompleteness(),
   // «1/25» non diceva cosa conta (SF-10): sono i campi, uno per volta
   onStep: (i, n) => {
@@ -577,6 +584,8 @@ async function openScheda(id, su = null, lang = null) {
       state.selected = null;
       state.nodeId = "";
       state.byId = false;
+      state.unitName = "";
+      state.idNumber = "";
       state.unitInfo = null;
       // …E UNA SCHEDA SENZA UNITÀ È NUOVA. Trovato il 22 ottobre: aperta la
       // US 3020 (esistente, `create` falso) e poi un'altra definizione vuota,
@@ -595,16 +604,21 @@ async function openScheda(id, su = null, lang = null) {
     // non c'è lo CREA, quindi un numero sbagliato diventerebbe una US nuova.
     if (su && su.node && !su.us) {
       // DAL SUO ID (14 novembre): un'unità importata senza un numero si apre lo
-      // stesso, e si LEGGE — riscriverla vorrebbe un numero, e un numero non si
-      // indovina. L'indirizzo la dice con `nodo=`.
+      // stesso, e dal 15 novembre SI SCRIVE dal suo id: il numero è buona
+      // pratica, non un obbligo, e non si indovina. La testata lo dice
+      // (`paintNoNumber`). Si LEGGE soltanto se il numero che ha è anche di
+      // un'altra unità: quello è un conflitto. L'indirizzo la dice con `nodo=`.
       state.create = false;
       const reread = await refill(def, "", Boolean(su.lens), su.node);
       if (reread && reread.other && !su.reread) {
         return openScheda(reread.other, { ...su, reread: true }, lang);
       }
-      const note = tr("index.byId", "Opened from its id: reading only.");
-      says.hidden = false;
-      says.textContent = reread && reread.note ? `${note} ${reread.note}` : note;
+      const note = state.idNumber ? tr("unit.conflict_read", "") : "";
+      const said = [note, reread && reread.note].filter(Boolean).join(" ");
+      if (said) {
+        says.hidden = false;
+        says.textContent = said;
+      }
     } else if (su && su.us) {
       state.us = String(su.us);
       state.create = false;
@@ -625,6 +639,8 @@ async function openScheda(id, su = null, lang = null) {
       state.lens = null;
       state.nodeId = "";
       state.byId = false;
+      state.unitName = "";
+      state.idNumber = "";
       state.unitInfo = null;
     }
     if (from === "cache") {
@@ -663,6 +679,8 @@ async function refill(def, us, lens = false, node = "") {
   state.lens = null;
   state.byId = Boolean(node && !us);
   state.nodeId = node || "";
+  state.unitName = "";
+  state.idNumber = "";
   state.unitInfo = null;
   state.values = {};
   state.authored = {};
@@ -700,7 +718,17 @@ async function refill(def, us, lens = false, node = "") {
   }
   for (const key of read.validated || []) state.validated.add(key);
   state.unitId = read.node_id || "";
-  if (state.byId) state.us = read.name || "";
+  if (state.byId) {
+    // IL NOME si mostra, IL NUMERO resta il numero: vuoto se l'unità non ne
+    // ha (la casella dell'identità non mostra il nome come se fosse un numero)
+    state.unitName = read.name || "";
+    state.idNumber = String(read.number || "");
+    state.us = state.idNumber;
+    if (state.keyField) {
+      state.values[state.keyField] = state.idNumber;
+      state.loaded.delete(state.keyField);
+    }
+  }
   // DOVE È STATA SCRITTA LA DESCRIZIONE, e quanto: il riquadro dell'ispettore
   state.unitInfo = { written_in: read.written_in || null, words: read.words || 0,
                      to_refine: Boolean(read.to_refine),
@@ -811,7 +839,9 @@ function paintLens(host) {
  * (`data-access="read"`). */
 /* …E LA LENTE LEGGE SOLTANTO: le caselle di uno standard non si riscrivono su
  * un'unità compilata con un altro. Stesso blocco, stessa ragione. */
-const reading = () => Boolean(SG().readOnly || state.lens || state.byId);
+const reading = () => Boolean(SG().readOnly || state.lens
+  // dal suo id si scrive (15 novembre); si legge solo un'unità in conflitto
+  || (state.byId && state.idNumber));
 
 function lockForReading(host) {
   if (!host || !reading()) return;
@@ -845,7 +875,7 @@ function watchReading() {
 function paintCompleteness() {
   if (!state.def) return;
   const here = document.querySelector("#scheda-unav .unav-here");
-  if (here) here.textContent = state.byId ? state.us
+  if (here) here.textContent = state.byId ? state.unitName
     : `${unitPrefix(state.def)}${state.us || "…"}`;
   if (sheetActive()) refreshSheet($("scheda-host"), state.def, state);
   else refreshCompleteness($("scheda-host"), state.def, state);
@@ -1108,6 +1138,7 @@ function paintUnav() {
   if (!bar) return;
   bar.hidden = !state.def || state.panel !== "scheda";
   bar.replaceChildren();
+  paintNoNumber();
   if (bar.hidden) return;
   const t = SG().t || ((k) => k);
   const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
@@ -1127,7 +1158,7 @@ function paintUnav() {
     return b;
   };
   const here = make("span", { className: "unav-here",
-                              textContent: state.byId ? state.us
+                              textContent: state.byId ? state.unitName
                                 : `${unitPrefix(state.def)}${state.us || "…"}` });
   const listId = "unav-units";
   const jump = make("input", { type: "text", placeholder: t("nav.jump"),
@@ -1165,6 +1196,49 @@ function paintUnav() {
   // LEGGI CON… — la lente — È IL MENU «SCHEDA» della striscia, in ogni modo
   // (14 novembre alla scrivania, 15 novembre sul tablet): la scheda con cui si
   // scrive e quella con cui si legge sono la stessa scelta, in un posto.
+}
+
+/* ── «QUESTA UNITÀ NON HA ANCORA UN NUMERO» (15 novembre 2026) ───────────────
+ *
+ * La regola di E.D. (12 novembre): i numeri non si cambiano né si inventano;
+ * quando un numero manca l'app LO DICE; numerare è buona pratica, non un
+ * obbligo. Nella testata della scheda, sotto ‹ unità ›, un avviso discreto in
+ * forma positiva e il campo del numero a portata di mano. È la STESSA casella
+ * dell'identità della scheda (`writeValue` sul `keyField`): un numero solo,
+ * in due posti dove si può scrivere. Salvare senza si può; salvato con il
+ * numero, il nodo lo aggiunge (`data.us`) se nessun'altra unità della stanza
+ * lo ha — altrimenti il conflitto, e niente si sovrascrive. */
+function paintNoNumber() {
+  const note = $("scheda-nonum");
+  if (!note) return;
+  const show = Boolean(state.def && state.panel === "scheda" && state.byId
+                       && !state.idNumber && !state.lens && !SG().readOnly
+                       && state.keyField);
+  note.hidden = !show;
+  if (!show) { note.replaceChildren(); return; }
+  const t = SG().t || ((k) => k);
+  const box = note.querySelector("input");
+  if (box && note.dataset.unit === state.nodeId) {   // non sotto le dita
+    if (document.activeElement !== box) box.value = state.us || "";
+    return;
+  }
+  const text = Object.assign(document.createElement("span"),
+                             { textContent: t("unit.no_number") });
+  const label = document.createElement("label");
+  const input = Object.assign(document.createElement("input"), {
+    type: "text", inputMode: "text", autocomplete: "off", value: state.us || "",
+    placeholder: t("unit.number_label") });
+  input.dataset.nonum = "number";
+  input.setAttribute("enterkeyhint", "done");
+  input.addEventListener("input", () => {
+    writeValue(state, state.keyField, input.value);
+  });
+  // la casella del numero nella scheda mostra lo stesso valore
+  input.addEventListener("change", () => { if (state.def) draw(); });
+  label.append(Object.assign(document.createElement("span"),
+                             { textContent: t("unit.number_label") }), input);
+  note.dataset.unit = state.nodeId;   // un'altra unità: avviso nuovo, senza rifiuti vecchi
+  note.replaceChildren(text, label);
 }
 
 /* ── L'UNITÀ NELL'INDIRIZZO ──────────────────────────────────────────────────
@@ -1256,7 +1330,35 @@ async function showMap(push = true) {
   });
 }
 
-function afterSave(body) {
+function afterSave(body, sent = true) {
+  // UN'UNITÀ SENZA NUMERO CHE ADESSO NE HA UNO (15 novembre): salvata dal suo
+  // id col numero accanto, e la stanza l'ha preso. Si riapre PER NUMERO —
+  // l'avviso sparisce perché il numero c'è, non perché lo si è nascosto. Se
+  // la stanza ha rifiutato (un numero che è già di un'altra unità: il
+  // conflitto) o la scheda è in coda, si resta dove si è, dal suo id.
+  if (body && body.node && state.byId && body.node === state.nodeId) {
+    if (sent && body.us && state.def) {
+      const def = state.def;
+      void loadRoom().then(() => openScheda(def.id, { us: body.us }, def.lang))
+        .then(() => { if (deskUI) deskUI.paint(); });
+    } else {
+      // IL RIFIUTO SI LEGGE DOVE SI È SCRITTO IL NUMERO: la frase della
+      // stanza (il conflitto) sta anche nella testata, non solo in fondo
+      const note = $("scheda-nonum");
+      const answer = $("answer");
+      if (note && body.us && answer && !answer.hidden && answer.classList.contains("bad")) {
+        let said = note.querySelector(".nonum-said");
+        if (!said) {
+          said = Object.assign(document.createElement("span"), { className: "nonum-said" });
+          note.append(said);
+        }
+        said.textContent = answer.textContent;
+      }
+      void loadRoom().then(() => { paintUnav(); if (deskUI) deskUI.paint(); });
+    }
+    void loadReview();
+    return;
+  }
   // La stanza ora ha l'unità (o la coda ce l'ha): il completamento e ‹ › la
   // devono vedere, e una scheda NUOVA diventa, nell'indirizzo, la sua unità.
   if (state.def && body && body.us) writeHash(state.def.id, body.us, true);
@@ -1499,7 +1601,7 @@ function drawUnitPage(host) {
     ? (v.label || v.name || "") : String(v || ""));
   const definition = Object.entries(state.values).find(([k, v]) =>
     byId.get(k) && byId.get(k).type === "term" && /defin/i.test(k) && filled(v));
-  const title = (state.byId ? state.us : `${unitPrefix(def)}${state.us}`)
+  const title = (state.byId ? state.unitName : `${unitPrefix(def)}${state.us}`)
     + (definition ? ` · ${text(definition[1])}` : "");
   const page = make("article", { className: "unitpage" },
     make("header", { className: "hero" }, make("h2", { textContent: title })));

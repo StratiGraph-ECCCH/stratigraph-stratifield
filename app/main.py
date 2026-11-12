@@ -813,6 +813,11 @@ class SchedaIn(BaseModel):
     #: caller's statement, and reading it out of a box would make a typo in that
     #: box silently address a different unit.
     us: str = ""
+    #: THE UNIT'S ID, for a unit that has no number (15 November 2026): an
+    #: imported unit (`1.US2`, a uuid) opens AND IS WRITTEN from its id. With
+    #: `node`, `us` is optional — and if it is given it is the number being
+    #: ADDED to a unit that had none (`data.us`), never a renumbering.
+    node: str = ""
     #: `{field id: value}`, with the ids the DEFINITION declares. Anything else
     #: is refused — a form is not a way to put arbitrary keys into the graph.
     #: A field sent as `null` is EMPTIED (its operations of removal); a field
@@ -866,10 +871,13 @@ def submit_scheda(scheda_id: str, request: Request,
             status_code=404,
             detail=(f"questo nodo non serve una scheda «{scheda_id}»"
                     + (f" nella versione {body.version}" if body.version else "")))
-    if not (body.us or "").strip():
+    node_id = (body.node or "").strip()
+    if not (body.us or "").strip() and not node_id:
+        # SENZA NUMERO SI SCRIVE (15 novembre): basta l'id dell'unità. Senza
+        # nessuno dei due non si sa di quale unità sia la scheda.
         raise HTTPException(
             status_code=400,
-            detail="una scheda è di un'unità: manca il numero")
+            detail="una scheda è di un'unità: manca il numero, o il suo id")
     unknown = sorted(k for k in body.values if k not in found._by_id)
     if unknown:
         raise HTTPException(
@@ -897,9 +905,23 @@ def submit_scheda(scheda_id: str, request: Request,
                              # declared even when empty: the form said which
                              # language it speaks, or that it does not know
                              "lang": lang}
+    if node_id:
+        slots["node"] = node_id
     if body.model:
         slots["model"] = body.model
     prima = (_refusals(scope), _queued(scope))
+    if not values and node_id:
+        # un'unità dal suo id che riceve SOLO il numero (o niente): è
+        # `update_su` lo stesso — numerarla è scrivere `data.us`
+        slots["fields"] = {}
+        result = invoke(registry.get("update_su"), slots, author, registry=registry)
+        label = slots["us"] or str((result.data or {}).get("name") or node_id)
+        return Answer(ok=result.ok, tool="update_su",
+                      slots={"us": slots["us"], "node": node_id, "fields": []},
+                      data=result.data,
+                      **_told(result, scope, prima,
+                              in_coda=f"La scheda di «{label}» è sul nodo: la "
+                                      f"consegno appena la stanza risponde."))
     if not values:
         # una scheda che dice solo il numero: crearla è l'atto intero
         if not body.create:
@@ -912,10 +934,11 @@ def submit_scheda(scheda_id: str, request: Request,
         registry=registry)
     return Answer(ok=result.ok,
                   tool="update_su" if values else "create_su",
-                  slots={"us": slots["us"], "fields": sorted(values)},
+                  slots={"us": slots["us"], "fields": sorted(values),
+                         **({"node": node_id} if node_id else {})},
                   data=result.data,
                   **_told(result, scope, prima,
-                          in_coda=(f"La scheda {_della(found, slots['us'])} è "
+                          in_coda=(f"La scheda {_della(found, slots['us'] or node_id)} è "
                                    f"sul nodo: la consegno appena la stanza "
                                    f"risponde.")))
 
@@ -973,11 +996,13 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
         raise HTTPException(status_code=502,
                             detail=f"Non riesco a leggere il grafo: {chiusa}") from None
     from .operazioni import UnitConflict, _Context, _find_unit
+    from .tools import number_of_node
     from .unita import is_unit
     if by_id:
         # DAL SUO ID (14 novembre): un'unità importata il cui id non porta un
-        # numero (`1.US5`, uuid di PyArchInit) si apre lo stesso. Si LEGGE:
-        # scriverla vorrebbe un numero, e un numero non si indovina.
+        # numero (`1.US5`, uuid di PyArchInit) si apre lo stesso — e dal 15
+        # novembre SI SCRIVE dal suo id (`POST /v1/scheda` con `node`): il
+        # numero è buona pratica, non un obbligo, e non si indovina.
         unit = next((n for n in section.get("nodes") or []
                      if str(n.get("id")) == by_id), None)
         if unit is None or not is_unit(unit):
@@ -1017,6 +1042,10 @@ def read_scheda(scheda_id: str, request: Request, us: str = "",
     out = {"us": number, "node_id": unit_id,
            # aperta dal suo id, cioè senza un numero con cui riscriverla
            "by_id": bool(by_id), "name": str((unit or {}).get("name") or ""),
+           # IL NUMERO CHE L'UNITÀ HA (15 novembre), anche aperta dal suo id:
+           # `""` = non ne ha ancora uno, e la scheda lo dice e si scrive lo
+           # stesso; un numero qui con `by_id` = un conflitto, e si legge
+           "number": number_of_node(unit) if unit else number,
            # LA DESCRIZIONE: quale casella la scrive (la ricetta), dove è stata
            # scritta e quante parole ha — il riquadro «Dettata in trincea»
            "description_field": schede.description_field(read_with),

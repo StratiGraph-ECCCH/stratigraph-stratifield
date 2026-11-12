@@ -166,6 +166,11 @@ class Plan:
     #: le unità (o i reperti) creati minimi perché un rapporto li nominava
     stubs: List[Dict[str, Any]] = dc_field(default_factory=list)
     notes: List[str] = dc_field(default_factory=list)
+    #: il nome dell'unità, per dirla quando non ha un numero (15 novembre)
+    name: str = ""
+    #: vero se questo piano AGGIUNGE il numero a un'unità che non lo aveva
+    #: (`data.us`, aperta dal suo id): mai un numero che ne sostituisce un altro
+    numbered: bool = False
     #: la lingua in cui si compila (`lang` di `plan`), scritta come `data.lang`
     #: sui nodi che questo piano CREA — mai su quelli che già c'erano
     lang: str = ""
@@ -258,10 +263,20 @@ class UnitConflict(OperazioniError):
     coniata qui e una importata, o due importate da aree diverse. Si DICE —
     scrivere su una delle due sceglierebbe al posto di chi scava."""
 
-    def __init__(self, number: str, nodes: List[Dict[str, Any]]) -> None:
+    def __init__(self, number: str, nodes: List[Dict[str, Any]],
+                 adding: Optional[Dict[str, Any]] = None) -> None:
         self.number = number
-        self.nodes = nodes
+        self.nodes = nodes + ([adding] if adding is not None else [])
         names = ", ".join(f"«{n.get('name') or n.get('id')}»" for n in nodes)
+        if adding is not None:
+            # IL NUMERO SCRITTO SU UN'UNITÀ CHE NON NE AVEVA, e che un'altra
+            # ha già (15 novembre): lo stesso conflitto, detto per chi scrive
+            OperazioniError.__init__(
+                self,
+                f"Il numero {number} è già di {names} in questa stanza: non lo "
+                f"do anche a «{adding.get('name') or adding.get('id')}», e non "
+                f"sovrascrivo niente. È un conflitto: scegline un altro.")
+            return
         super().__init__(
             f"Il numero {number} è di {len(nodes)} unità in questa stanza "
             f"({names}): è un conflitto, non lo risolvo scegliendone una. "
@@ -288,6 +303,51 @@ def _find_unit(ctx: _Context, number: str) -> Optional[Dict[str, Any]]:
     if len(found) > 1:
         raise UnitConflict(number, found)
     return found[0] if found else None
+
+
+class NumberNotChanged(OperazioniError):
+    """Un numero che sostituirebbe quello che l'unità ha già: i numeri non si
+    cambiano (E.D., 12 novembre 2026)."""
+
+
+def _unit_by_id(ctx: _Context, node_id: str,
+                number: str) -> Tuple[Dict[str, Any], str, str]:
+    """L'unità DAL SUO ID (15 novembre 2026), e il numero: `(unità, numero con
+    cui dirla, numero da aggiungere)`.
+
+    * l'unità c'è ed è un'unità, o si rifiuta (dal suo id non si crea niente);
+    * senza `number`: si scrive com'è, col numero che ha, o senza;
+    * con `number` e un'unità che ha già QUEL numero: niente da aggiungere;
+    * con `number` e un'unità che ne ha UN ALTRO: rifiuto, il numero non si
+      cambia (`NumberNotChanged`);
+    * con `number` e un'unità senza: il numero si aggiunge, se nessun'altra
+      unità della stanza lo ha già — altrimenti è il conflitto che c'è già
+      (`UnitConflict`, con le unità coinvolte), e niente si sovrascrive.
+    """
+    from .tools import number_of_node
+
+    unit = ctx.nodes.get(node_id)
+    data = (unit or {}).get("data") if isinstance((unit or {}).get("data"), dict) else {}
+    if unit is None or not _is_unit(unit) or data.get("removed"):
+        raise OperazioniError(
+            f"L'unità «{node_id}» non è in questo grafo: dal suo id si scrive "
+            f"un'unità che c'è, non se ne crea una.")
+    own = number_of_node(unit)
+    if not number:
+        return unit, own, ""
+    if own:
+        if own != number:
+            raise NumberNotChanged(
+                f"«{unit.get('name') or node_id}» ha già il numero {own}: un "
+                f"numero non si cambia, e {number} non lo sostituisce.")
+        return unit, own, ""
+    try:
+        other = _find_unit(ctx, number)
+    except UnitConflict as doppio:
+        raise UnitConflict(number, doppio.nodes, adding=unit) from None
+    if other is not None and str(other.get("id")) != node_id:
+        raise UnitConflict(number, [other], adding=unit)
+    return unit, number, number
 
 
 # ── i valori, nella forma che la ricetta si aspetta ─────────────────────────
@@ -532,7 +592,7 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
          model: Optional[str] = None, additive: bool = False,
          relations: Optional[List[Tuple[str, str, str]]] = None,
          lang: Optional[str] = None,
-         written_in: Optional[str] = None) -> Plan:
+         written_in: Optional[str] = None, node_id: str = "") -> Plan:
     """Valori + identità + ricetta → la lista di operazioni, in ordine.
 
     `lang` = la lingua IN CUI SI COMPILA (quella del modulo, o la lingua dei
@@ -564,7 +624,8 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
     from .tools import unit_id_for
 
     number = str(number or "").strip()
-    if not number:
+    node_id = str(node_id or "").strip()
+    if not number and not node_id:
         raise OperazioniError("una scheda è di un'unità: manca il numero")
     recipe = scheda.recipe
     if recipe is None:
@@ -585,9 +646,14 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
     template_id = scheda.id
 
     # ── 1 · l'unità ─────────────────────────────────────────────────────────
-    existing = _find_unit(ctx, number)
+    adding = ""
+    if node_id:
+        existing, number, adding = _unit_by_id(ctx, node_id, number)
+    else:
+        existing = _find_unit(ctx, number)
     unit_id = str(existing["id"]) if existing else unit_id_for(number)
-    out = Plan(unit_id=unit_id, number=number, lang=str(lang or "").strip())
+    out = Plan(unit_id=unit_id, number=number, lang=str(lang or "").strip(),
+               name=str((existing or {}).get("name") or ""))
     current = {"field": ""}
     #: le rimozioni si RACCOLGONO e si mandano in fondo (decisione 9)
     removals: List[Tuple[str, str, Dict[str, Any]]] = []
@@ -670,6 +736,15 @@ def plan(scheda: Scheda, values: Dict[str, Any], *, number: str,
 
     # quale definizione e quale versione l'ha compilata (audit B5b)
     op("update_field", node_id=unit_id, field=f"data.{MARK}", value=scheda.ref)
+
+    # IL NUMERO AGGIUNTO (15 novembre): un'unità aperta dal suo id che riceve
+    # adesso il suo numero. La chiave è quella dell'importer (`data.us`,
+    # `tools.IMPORTED_NUMBER`): il nome e l'id non cambiano.
+    if adding:
+        from .tools import IMPORTED_NUMBER
+        op("update_field", node_id=unit_id, field=f"data.{IMPORTED_NUMBER}",
+           value=adding)
+        out.numbered = True
 
     # ── 2 · i campi ─────────────────────────────────────────────────────────
     field_props: Dict[str, str] = {}

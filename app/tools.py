@@ -265,7 +265,7 @@ def reference_scheda():
 
 
 def scheda_for(graph_writer, number: str, *, scheda_id: str = "",
-               version: str = ""):
+               version: str = "", node_id: str = ""):
     """Con quale definizione si compila questa unità.
 
     Chiesta esplicitamente (la scheda aperta nel modulo) vince; altrimenti
@@ -277,7 +277,8 @@ def scheda_for(graph_writer, number: str, *, scheda_id: str = "",
 
     if scheda_id:
         return schede.find(scheda_id, version=version or None), "chiesta"
-    node = graph_writer.node(unit_id_for(number)) if number else None
+    node = (graph_writer.node(node_id) if node_id
+            else graph_writer.node(unit_id_for(number)) if number else None)
     declared = ((node or {}).get("data") or {}).get(MARK) or {}
     if isinstance(declared, dict) and declared.get("template") and not declared.get("stub"):
         found = schede.find(str(declared["template"]),
@@ -294,7 +295,7 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
                         model: Optional[str] = None, additive: bool = False,
                         extra_ops: Optional[List[Dict[str, Any]]] = None,
                         relations: Optional[List[Tuple[str, str, str]]] = None,
-                        lang: Optional[str] = None):
+                        lang: Optional[str] = None, node_id: str = ""):
     """Valori → operazioni → stanza, e l'esito per campo. Una sola via.
 
     Il D7 dell'atto va IN CODA alla lista, per la ragione che `LocalWriter.update`
@@ -309,7 +310,7 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
     made = make_plan(scheda, values, number=number,
                      section=graph_writer.section(), ts=stamp, create=create,
                      authored_by=authored_by, model=model, additive=additive,
-                     relations=relations, lang=lang)
+                     relations=relations, lang=lang, node_id=node_id)
     process = _process_node(kind, author, made.unit_id, detail)
     ops = list(made.ops) + list(extra_ops or [])
     fields_of = list(made.op_fields) + [""] * len(extra_ops or [])
@@ -333,7 +334,10 @@ def _through_the_recipe(graph_writer, scheda, values: Dict[str, Any], *,
 
 def _what_happened(made, landed, already, held, number: str) -> str:
     """La frase, per chi ha salvato: che cosa è entrato, che cosa no, e perché."""
-    said = f"US {number}: {len(landed)} campi aggiornati."
+    said = (f"US {number}: " if number else f"«{made.name or made.unit_id}»: ") \
+        + f"{len(landed)} campi aggiornati."
+    if made.numbered:
+        said += f" Ha ora il numero {made.number}."
     if made.created:
         said += f" Creata come {made.node_type}."
     if already:
@@ -563,14 +567,19 @@ def make_update_su(graph_writer) -> ToolDescriptor:
         from .operazioni import OperazioniError
 
         number = str(slots.get("us") or "").strip()
-        if not number:
+        #: SENZA NUMERO SI SCRIVE (15 novembre 2026): un'unità importata senza
+        #: numero si indirizza dal suo id. `us`, se c'è, è il numero che le si
+        #: AGGIUNGE (`operazioni.plan`), mai uno che ne sostituisce un altro.
+        node_id = str(slots.get("node") or "").strip()
+        if not number and not node_id:
             return ToolResult(ok=False, message="Mi manca il numero dell'unità.")
+        label = f"US {number}" if number else f"«{node_id}»"
 
         fields = slots.get("fields")
-        if not isinstance(fields, dict) or not fields:
+        if not isinstance(fields, dict) or (not fields and not (node_id and number)):
             return ToolResult(
                 ok=False,
-                message=f"Non mi hai detto che cosa cambiare sulla US {number}.")
+                message=f"Non mi hai detto che cosa cambiare sulla {label}.")
 
         refused = sorted(k for k in fields if str(k).strip() in _NOT_UPDATABLE)
         if refused:
@@ -589,7 +598,8 @@ def make_update_su(graph_writer) -> ToolDescriptor:
         # riferimento del nodo (la voce).
         scheda, why = scheda_for(graph_writer, number,
                                  scheda_id=str(slots.get("scheda") or ""),
-                                 version=str(slots.get("version") or ""))
+                                 version=str(slots.get("version") or ""),
+                                 node_id=node_id)
         if scheda is None:
             return ToolResult(
                 ok=False,
@@ -617,24 +627,31 @@ def make_update_su(graph_writer) -> ToolDescriptor:
                 graph_writer, scheda, dict(fields), number=number,
                 create=bool(slots.get("create")), author=author,
                 kind="update_su",
-                detail=f"US {number}: {len(fields)} campi · {scheda.id} "
+                detail=f"{label}: {len(fields)} campi · {scheda.id} "
                        f"{scheda.version}",
                 authored_by=slots.get("authored_by"), model=slots.get("model"),
-                lang=slots.get("lang"))
+                lang=slots.get("lang"), node_id=node_id)
         except OperazioniError as wrong:
             return ToolResult(ok=False, message=str(wrong),
-                              data={"us": number, "node_id": unit_id_for(number)})
+                              data={"us": number,
+                                    "node_id": node_id or unit_id_for(number),
+                                    **({"conflict": [str(n.get("id")) for n in wrong.nodes]}
+                                       if hasattr(wrong, "nodes") else {})})
         except Exception as exc:                                 # noqa: BLE001
             # `RoomRefused` («non puoi scrivere») arriva qui, e porta già una
             # frase per una persona: la si passa invece di sostituirla.
             return ToolResult(ok=False, message=str(exc),
-                              data={"us": number, "node_id": unit_id_for(number)})
+                              data={"us": number,
+                                    "node_id": node_id or unit_id_for(number)})
 
         data = _plan_data(made, outcomes, landed, already, held)
+        data["name"] = made.name
+        data["number"] = made.number
+        data["numbered"] = made.numbered
         data["scheda"] = {**scheda.ref, "why": why}
         return ToolResult(
             ok=True,
-            message=_what_happened(made, landed, already, held, number),
+            message=_what_happened(made, landed, already, held, made.number),
             # The delta carries the ACT; the operations went on the wire.
             delta=GraphDelta(process=process, author=author),
             data=data)
@@ -650,7 +667,15 @@ def make_update_su(graph_writer) -> ToolDescriptor:
                  + [phrase for phrases in SPOKEN_FIELDS.values()
                     for phrase in phrases]),
         input_schema=[
-            Slot("us", "string", True, "il numero dell'unità da aggiornare"),
+            # NON RICHIESTO dal contratto (15 novembre 2026): un'unità senza
+            # numero si scrive dal suo id (`node`). Senza né l'uno né l'altro
+            # lo dice il gestore («Mi manca il numero dell'unità»).
+            Slot("us", "string", False,
+                 "il numero dell'unità da aggiornare — o, con `node`, il numero "
+                 "da aggiungere a un'unità che non lo aveva"),
+            Slot("node", "id", False,
+                 "l'id dell'unità, per un'unità senza numero (importata): si "
+                 "scrive com'è, e non se ne crea una"),
             Slot("fields", "id", True,
                  "i campi da cambiare, per nome — quelli della definizione "
                  "della scheda; un valore nullo svuota la casella"),
