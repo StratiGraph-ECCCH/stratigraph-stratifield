@@ -15,7 +15,7 @@ import {
   refreshCompleteness, rememberMode, render, save, stepTo, thumbbarPlan,
   trenchFields, otherFields, wayBack,
 } from "./scheda.js";
-import { drawSheet, hasSheet, optionsFor, refreshSheet } from "./foglio.js";
+import { drawSheet, hasSheet, optionsFor, paintInspector, refreshSheet } from "./foglio.js";
 import { mount as mountPhotos } from "./photos.js";
 import { mount as mountRoom, point as pointRoom, postureOf, roomOf } from "./room.js";
 import { filters as indexFilters, isAsking as indexAsking, mount as mountIndex, standardName } from "./indice.js";
@@ -23,6 +23,8 @@ import { openIn, paintMap } from "./mappa.js";
 import { arrivalPlan, readArrival } from "./arrivo.js";
 import { loadRoom, numberOf, orderedUnits, unitPrefix } from "./widgets.js";
 import { mount as mountChat } from "./chat.js";
+import { mount as mountDesk, sectionOf } from "./scrivania.js";
+import { valueView } from "./widgets.js";
 
 const $ = (id) => document.getElementById(id);
 const SG = () => window.SG || {};
@@ -115,6 +117,18 @@ const state = {
   postureForced: null,
   // La casella selezionata sul Foglio: il pannello a destra la mostra.
   selected: null,
+  // ── LA SCRIVANIA (14 novembre) ─────────────────────────────────────────────
+  // Un'unità aperta DAL SUO ID (importata, senza un numero con cui riscriverla):
+  // si legge (`reading()`), e l'indirizzo la dice con `nodo=`.
+  nodeId: "",
+  byId: false,
+  // Ciò che il nodo dice della descrizione dell'unità aperta: dove è stata
+  // scritta e quante parole ha (`/v1/scheda/…/unita`), per «Dettata in trincea».
+  unitInfo: null,
+  // Dove il Foglio disegna il suo ispettore alla scrivania (la colonna di
+  // destra della pagina); `null` altrove, e il pannello sta accanto al piano.
+  inspHost: null,
+  onRefine: (fieldId) => refine(fieldId),
   // QUALCOSA SCRITTO E NON ANCORA MANDATO (22 ottobre). Lo accende
   // `writeValue`, lo spegne `save()`: è ciò che decide se cambiare unità deve
   // salvare prima.
@@ -152,7 +166,11 @@ const state = {
 
 /* LA POSTURA CHE VALE: quella forzata, se qualcuno la sta provando, altrimenti
  * quella letta dal nodo. */
-const posture = () => state.postureForced || state.posture;
+const posture = () => state.postureForced
+  // ALLA SCRIVANIA LA POSTURA È LA SCRIVANIA (14 novembre): l'interruttore della
+  // barra è una dichiarazione, e «Scrivania» vuol dire fronte e retro. In campo
+  // (telefono, tablet) resta quella letta dal nodo, come prima.
+  || (state.mode === "desktop" ? "desk" : state.posture);
 
 /** Il battito di `ping()` porta la salute; cambia la postura solo se cambia, e
  *  ridisegna solo se la scheda è a schermo sul foglio. */
@@ -175,6 +193,32 @@ function takePosture(health) {
     return;
   }
   draw();
+}
+
+/* ── QUALE PANNELLO È DAVANTI, in un posto (14 novembre) ─────────────────────
+ *
+ * Prima ogni funzione nascondeva gli altri per conto suo — `openScheda`,
+ * `showIndex`, `showMap`, «Detta» — e una sezione nuova voleva dire quattro
+ * righe in quattro posti. Adesso le sezioni sono sette e la riga è una. */
+const PANELS = ["work", "scheda", "index", "map", "finds", "photos-sec", "excavation"];
+
+function only(panel) {
+  for (const id of PANELS) {
+    const node = $(id);
+    if (!node) continue;
+    // la voce («work») resta alla porta della firma: decide `render()` nella
+    // pagina, che sa chi è firmato
+    if (id === "work") node.hidden = panel !== "work" || !SG().signed;
+    else node.hidden = id !== panel;
+  }
+  state.panel = panel === "work" ? "voice" : panel;
+  if (panel === "work") $("nav-voice").setAttribute("aria-current", "true");
+  else $("nav-voice").removeAttribute("aria-current");
+  for (const [id, p] of [["nav-units", "index"], ["nav-map", "map"]]) {
+    if (state.panel === p) $(id).setAttribute("aria-current", "true");
+    else $(id).removeAttribute("aria-current");
+  }
+  placeDesk();
 }
 
 /* ── il modo ─────────────────────────────────────────────────────────────── */
@@ -227,9 +271,65 @@ function placeControls(mode) {
   for (const id of MOVABLE) {
     const node = $(id);
     if (!node) continue;
-    if (node.parentElement !== home) home.append(node);
+    // LA LINGUA DELL'INTERFACCIA, ALLA SCRIVANIA, STA NELLA BARRA (14 novembre,
+    // mockup v7.2): la si cambia guardando lo schermo, non aprendo un foglio
+    const target = id === "lang" && mode === "desktop" && $("bar-lang") ? $("bar-lang") : home;
+    if (node.parentElement !== target) target.append(node);
   }
 }
+
+/* ── LA SCRIVANIA: i nodi che vi si SPOSTANO (14 novembre) ────────────────────
+ *
+ * Alla scrivania la striscia sotto le sezioni tiene l'unità ‹ › e i comandi
+ * della scheda; la scelta della stanza sta sotto il nome della stanza nella
+ * barra. Sono gli STESSI nodi della colonna e della scheda, spostati (come
+ * `placeControls`): due copie sarebbero due stati. In campo tornano dov'erano. */
+function placeDesk() {
+  const desk = state.mode === "desktop";
+  const move = (id, there) => {
+    const node = $(id);
+    if (node && there && node.parentElement !== there) there.append(node);
+  };
+  if (desk) {
+    move("scheda-unav", $("desk-strip-sheet"));
+    move("scheda-strip", $("desk-strip-sheet"));
+    move("nav-room", $("room-pop-host"));
+  } else {
+    const scheda = $("scheda");
+    if (scheda && $("scheda-unav") && $("scheda-unav").parentElement !== scheda) {
+      scheda.prepend($("scheda-unav"), $("scheda-strip"));
+    }
+    const title = $("nav-room-title");
+    if (title && $("nav-room") && $("nav-room").parentElement !== title.parentElement) {
+      title.after($("nav-room"));
+    }
+    if ($("room-pop")) $("room-pop").hidden = true;
+  }
+  state.inspHost = desk && state.panel === "scheda" ? $("desk-insp") : null;
+  $("surface").dataset.desk = desk ? "true" : "false";
+  if (deskUI) deskUI.paint();
+}
+
+/** LA POSTURA DI CHI SCRIVE, per il segno accanto alla descrizione: l'interruttore
+ *  della barra. «Scrivania» è il modo da scrivania; telefono e tablet sono «In
+ *  campo». È una dichiarazione, e il referto dice quanto vale. */
+function writingPosture() {
+  return state.mode === "desktop" ? "desk" : "trench";
+}
+
+/** SCRIVANIA / IN CAMPO dalla barra: una scelta come quella dei chip, scritta
+ *  con la finestra su cui è fatta (`rememberMode`). In campo è il modo che la
+ *  finestra propone fra telefono e tablet — su uno schermo da scrivania, il
+ *  tablet. */
+function choosePlace(place) {
+  const width = viewWidth();
+  const proposed = proposeMode(width);
+  const mode = place === "desk" ? "desktop" : (proposed === "desktop" ? "tablet" : proposed);
+  rememberMode(mode, width);
+  setMode(mode);
+}
+
+let deskUI = null;
 
 /* L'UNICO posto che decide se la barra dei pollici c'è. Prima erano quattro
  * righe sparse in quattro funzioni, e la porta murata è nata da lì: `setMode`,
@@ -309,6 +409,7 @@ function setMode(mode) {
   state.mode = mode;
   $("surface").dataset.sgMode = mode;
   placeControls(mode);
+  placeDesk();
   paintThumbbar();
   setNavOpen(false);
   $("nav-onepage").hidden = mode !== "desktop";
@@ -396,11 +497,7 @@ async function openScheda(id, su = null, lang = null) {
   // completamento delle unità, «da compilare» e ‹ › guardano quello che c'è
   // ADESSO, non quello che c'era quando la pagina è partita.
   const reading = loadRoom();
-  state.panel = "scheda";
-  $("scheda").hidden = false;
-  $("work").hidden = true;
-  $("index").hidden = true;
-  $("map").hidden = true;
+  only("scheda");
   says.hidden = true;
   markNav(id);
   try {
@@ -421,6 +518,9 @@ async function openScheda(id, su = null, lang = null) {
       state.us = "";
       state.model = "";
       state.selected = null;
+      state.nodeId = "";
+      state.byId = false;
+      state.unitInfo = null;
       // …E UNA SCHEDA SENZA UNITÀ È NUOVA. Trovato il 22 ottobre: aperta la
       // US 3020 (esistente, `create` falso) e poi un'altra definizione vuota,
       // `create` restava falso e il primo salvataggio tornava «non posso
@@ -436,7 +536,19 @@ async function openScheda(id, su = null, lang = null) {
     // `create` è falso perché l'atto è correggere e non inventare. È la
     // differenza che `update_su` esiste per tenere: un `add_node` su un id che
     // non c'è lo CREA, quindi un numero sbagliato diventerebbe una US nuova.
-    if (su && su.us) {
+    if (su && su.node && !su.us) {
+      // DAL SUO ID (14 novembre): un'unità importata senza un numero si apre lo
+      // stesso, e si LEGGE — riscriverla vorrebbe un numero, e un numero non si
+      // indovina. L'indirizzo la dice con `nodo=`.
+      state.create = false;
+      const reread = await refill(def, "", Boolean(su.lens), su.node);
+      if (reread && reread.other && !su.reread) {
+        return openScheda(reread.other, { ...su, reread: true }, lang);
+      }
+      const note = tr("index.byId", "Opened from its id: reading only.");
+      says.hidden = false;
+      says.textContent = reread && reread.note ? `${note} ${reread.note}` : note;
+    } else if (su && su.us) {
       state.us = String(su.us);
       state.create = false;
       // IL RITORNO (19 ottobre): i valori si RILEGGONO dal grafo, attraverso
@@ -454,6 +566,9 @@ async function openScheda(id, su = null, lang = null) {
       }
     } else {
       state.lens = null;
+      state.nodeId = "";
+      state.byId = false;
+      state.unitInfo = null;
     }
     if (from === "cache") {
       says.hidden = false;
@@ -462,7 +577,8 @@ async function openScheda(id, su = null, lang = null) {
     }
     await reading;
     draw();
-    writeHash(def.id, state.us, false, Boolean(state.lens));
+    if (deskUI) deskUI.paint();
+    writeHash(def.id, state.us, false, Boolean(state.lens), state.byId ? state.nodeId : "");
   } catch (err) {
     // LA DEFINIZIONE CHE IL TELEFONO NON HA MAI VISTO E NON PUÒ SCARICARE **SI
     // DICE**. Improvvisare un modulo per una scheda di cui non si conoscono le
@@ -485,9 +601,12 @@ async function openScheda(id, su = null, lang = null) {
  *  Torna `{other}` se l'unità dichiara un'altra definizione, `{note}` se c'è
  *  qualcosa da dire, `null` se il nodo non risponde (e allora la scheda si
  *  apre col solo numero, e lo si dice). */
-async function refill(def, us, lens = false) {
+async function refill(def, us, lens = false, node = "") {
   const seam = SG();
   state.lens = null;
+  state.byId = Boolean(node && !us);
+  state.nodeId = node || "";
+  state.unitInfo = null;
   state.values = {};
   state.authored = {};
   state.validated = new Set();
@@ -495,7 +614,8 @@ async function refill(def, us, lens = false) {
   if (state.keyField) state.values[state.keyField] = us;
   let read;
   try {
-    const path = `/v1/scheda/${encodeURIComponent(def.id)}/unita?us=${encodeURIComponent(us)}`
+    const path = `/v1/scheda/${encodeURIComponent(def.id)}/unita?`
+      + (us ? `us=${encodeURIComponent(us)}` : `node=${encodeURIComponent(node)}`)
       + (lens ? "&lente=1" : "");
     // chi E DOVE, col token rinnovato (`SG.request`); il ripiego è per un
     // modulo caricato senza la pagina
@@ -523,6 +643,11 @@ async function refill(def, us, lens = false) {
   }
   for (const key of read.validated || []) state.validated.add(key);
   state.unitId = read.node_id || "";
+  if (state.byId) state.us = read.name || "";
+  // DOVE È STATA SCRITTA LA DESCRIZIONE, e quanto: il riquadro dell'ispettore
+  state.unitInfo = { written_in: read.written_in || null, words: read.words || 0,
+                     to_refine: Boolean(read.to_refine),
+                     description_field: read.description_field || null };
   void loadReview();
   return read.note ? { note: read.note } : {};
 }
@@ -547,8 +672,14 @@ const sheetOptions = () => optionsFor(posture(), {
 
 function draw() {
   const host = $("scheda-host");
+  state.inspHost = state.mode === "desktop" && state.panel === "scheda" ? $("desk-insp") : null;
   paintStrip();
-  if (sheetActive()) {
+  if (state.mode === "desktop" && state.view === "unit") {
+    // LA VISTA «UNITÀ» (14 novembre, mockup v7.2): la pagina dell'unità, in
+    // lettura — ciò che il grafo dice, senza le caselle vuote
+    drawUnitPage(host);
+    paintDeskInspector();
+  } else if (sheetActive()) {
     drawSheet(host, state.def, state, sheetOptions());
   } else {
     render(host, state.def, state);
@@ -561,6 +692,7 @@ function draw() {
       note.textContent = SG().t ? SG().t("view.sheet.none") : "";
       host.prepend(note);
     }
+    paintDeskInspector();
   }
   paintLens(host);
   paintThumbbar();
@@ -622,7 +754,7 @@ function paintLens(host) {
  * (`data-access="read"`). */
 /* …E LA LENTE LEGGE SOLTANTO: le caselle di uno standard non si riscrivono su
  * un'unità compilata con un altro. Stesso blocco, stessa ragione. */
-const reading = () => Boolean(SG().readOnly || state.lens);
+const reading = () => Boolean(SG().readOnly || state.lens || state.byId);
 
 function lockForReading(host) {
   if (!host || !reading()) return;
@@ -656,7 +788,8 @@ function watchReading() {
 function paintCompleteness() {
   if (!state.def) return;
   const here = document.querySelector("#scheda-unav .unav-here");
-  if (here) here.textContent = `${unitPrefix(state.def)}${state.us || "…"}`;
+  if (here) here.textContent = state.byId ? state.us
+    : `${unitPrefix(state.def)}${state.us || "…"}`;
   if (sheetActive()) refreshSheet($("scheda-host"), state.def, state);
   else refreshCompleteness($("scheda-host"), state.def, state);
 }
@@ -701,16 +834,57 @@ function paintStrip() {
   };
 
   const def = state.def;
+  // «SCHEDA» (14 novembre, mockup v7.2): le definizioni che il nodo serve —
+  // quelle che prima stavano nella colonna come se fossero luoghi — in un menu
+  // della striscia, le demo marcate. È ANCHE la lente: su un'unità che esiste,
+  // scegliere una definizione diversa da quella con cui è stata scritta la
+  // legge con quella, e la lente lo dice; scegliere quella di compilazione la
+  // chiude. Su una scheda nuova cambia la definizione con cui si compila.
+  if (state.mode === "desktop") {
+    const box = make("div", { className: "fo-ctl" });
+    box.dataset.ctl = "card";
+    const label = make("label", { className: "fo-ctl-label", textContent: t("ctl.card") });
+    label.htmlFor = "ctl-card-pick";
+    const pick = make("select", { className: "std", id: "ctl-card-pick" });
+    const written = state.lens && state.lens.written_with
+      ? state.lens.written_with.template : def.id;
+    for (const item of listing()) {
+      const demo = item.standard && item.standard.invented;
+      const o = make("option", { value: item.id,
+        textContent: standardName(item, SG().locale) + (demo ? " · demo" : "")
+          + (state.lens && item.id === written ? ` · ${t("lens.written")}` : "") });
+      o.selected = item.id === def.id;
+      pick.append(o);
+    }
+    pick.addEventListener("change", () => {
+      const chosen = pick.value;
+      if (!chosen || chosen === def.id) return;
+      const node = state.byId ? state.nodeId : "";
+      if ((state.us || node) && !state.create) {
+        window.location.hash = hashFor(chosen, state.us, chosen !== written, node);
+      } else {
+        clearScheda();
+        state.us = "";
+        state.create = true;
+        window.location.hash = hashFor(chosen, "");
+      }
+    });
+    box.append(label, pick);
+    strip.append(box);
+  }
   if ((def.languages || []).length > 1) {
     control("ctl.cardlang", "cardlang",
       def.languages.map((l) => [l, l]), def.lang,
       (l) => { if (l !== def.lang) void openScheda(def.id, null, l); });
   }
-  control("ctl.view", "view",
-    [["sheet", t("view.sheet"), !hasSheet(def)], ["fields", t("view.fields")]],
-    hasSheet(def) ? state.view : "fields",
+  const views = [["sheet", t("view.sheet"), !hasSheet(def)], ["fields", t("view.fields")]];
+  // la pagina dell'unità, alla scrivania: si legge un'unità che c'è
+  if (state.mode === "desktop") views.push(["unit", t("view.unit"), !(state.us && !state.create)]);
+  const view = state.view === "unit" && state.mode === "desktop" && state.us && !state.create
+    ? "unit" : (hasSheet(def) && state.view !== "fields" ? "sheet" : "fields");
+  control("ctl.view", "view", views, view,
     (v) => { state.view = v; draw(); });
-  if (!sheetActive()) return;
+  if (!sheetActive() || view === "unit") return;
 
   if (posture() === "field") {
     control("f.side", "side",
@@ -835,7 +1009,8 @@ function paintUnav() {
     return b;
   };
   const here = make("span", { className: "unav-here",
-                              textContent: `${unitPrefix(state.def)}${state.us || "…"}` });
+                              textContent: state.byId ? state.us
+                                : `${unitPrefix(state.def)}${state.us || "…"}` });
   const listId = "unav-units";
   const jump = make("input", { type: "text", placeholder: t("nav.jump"),
                                autocomplete: "off" });
@@ -872,7 +1047,9 @@ function paintUnav() {
   // LEGGI CON… — la lente. Solo su un'unità che esiste, e solo alla scrivania
   // o sul tablet: in trincea si compila, non si confrontano standard. Le schede
   // sono quelle della colonna, cioè quelle che il NODO dichiara.
-  if (state.us && !state.create && state.mode !== "phone") {
+  // ALLA SCRIVANIA LA LENTE È IL MENU «SCHEDA» della striscia (14 novembre):
+  // la scheda con cui si scrive e quella con cui si legge sono la stessa scelta.
+  if (state.us && !state.create && state.mode === "tablet") {
     const pick = make("select", { className: "unav-lens" });
     pick.setAttribute("aria-label", t("lens.pick"));
     pick.title = t("lens.pick");
@@ -889,8 +1066,8 @@ function paintUnav() {
       if (!pick.value) return;
       window.location.hash = pick.value === "-"
         ? hashFor(state.lens.written_with ? state.lens.written_with.template : state.def.id,
-                  state.us)
-        : hashFor(pick.value, state.us, true);
+                  state.us, false, state.byId ? state.nodeId : "")
+        : hashFor(pick.value, state.us, true, state.byId ? state.nodeId : "");
     });
     bar.append(pick);
   }
@@ -903,16 +1080,17 @@ function paintUnav() {
  * query: la query è del link della stanza (`?server=…&room=…`, `arrivo.js`),
  * e cambiarla ricaricherebbe la pagina. Un numero, non un nome: un link non
  * porta mai il valore di una casella. */
-function hashFor(id, number, lens = false) {
+function hashFor(id, number, lens = false, node = "") {
   const p = new URLSearchParams();
   p.set("scheda", id);
-  if (number) p.set("us", number);
-  if (number && lens) p.set("lente", "1");
+  if (node) p.set("nodo", node);
+  else if (number) p.set("us", number);
+  if ((number || node) && lens) p.set("lente", "1");
   return `#${p.toString()}`;
 }
 
-function writeHash(id, number, replace = false, lens = false) {
-  const want = hashFor(id, number, lens);
+function writeHash(id, number, replace = false, lens = false, node = "") {
+  const want = hashFor(id, number, lens, node);
   if (window.location.hash === want) return;
   if (replace) history.replaceState(null, "", want);
   else history.pushState(null, "", want);
@@ -922,18 +1100,25 @@ function readHash() {
   const raw = window.location.hash.replace(/^#/, "");
   if (raw === "unita") return { index: true };
   if (raw === "mappa") return { map: true };
+  // le tre sezioni nuove della scrivania (14 novembre)
+  if (raw === "materiali") return { section: "finds" };
+  if (raw === "foto") return { section: "photos" };
+  if (raw === "scavo") return { section: "excavation" };
   const p = new URLSearchParams(raw);
   return { scheda: p.get("scheda") || "", us: p.get("us") || "",
-           lens: p.get("lente") === "1" };
+           node: p.get("nodo") || "", lens: p.get("lente") === "1" };
 }
 
 async function followHash() {
   const asked = readHash();
   if (asked.index) { await showIndex(false); return; }
   if (asked.map) { await showMap(false); return; }
+  if (asked.section) { await showSection(asked.section, false); return; }
   if (!asked.scheda) return;
   const same = state.def && state.def.id === asked.scheda
-    && state.panel === "scheda" && (state.us || "") === asked.us
+    && state.panel === "scheda"
+    && (asked.node ? state.byId && state.nodeId === asked.node
+                   : !state.byId && (state.us || "") === asked.us)
     && Boolean(state.lens) === asked.lens;
   if (same) return;
   if (!(await leaveUnit())) return;
@@ -944,20 +1129,15 @@ async function followHash() {
     state.us = "";
     state.create = true;
   }
-  await openScheda(asked.scheda, asked.us ? { us: asked.us, lens: asked.lens } : null);
+  await openScheda(asked.scheda,
+    asked.node ? { node: asked.node, lens: asked.lens }
+      : asked.us ? { us: asked.us, lens: asked.lens } : null);
 }
 
 /** L'ELENCO, con i filtri com'erano (vivono in `indice.js`). */
 async function showIndex(push = true) {
-  state.panel = "index";
-  $("work").hidden = true;
-  $("scheda").hidden = true;
-  $("map").hidden = true;
-  $("index").hidden = false;
+  only("index");
   markNav("");
-  $("nav-voice").removeAttribute("aria-current");
-  $("nav-map").removeAttribute("aria-current");
-  $("nav-units").setAttribute("aria-current", "true");
   paintThumbbar();
   if (push && window.location.hash !== "#unita") history.pushState(null, "", "#unita");
   await repaintIndex();
@@ -966,15 +1146,8 @@ async function showIndex(push = true) {
 /** LA MAPPA (12 novembre): i luoghi e i tagli con la loro impronta
  *  (`mappa.js`). Un clic su un saggio apre l'elenco filtrato su quel luogo. */
 async function showMap(push = true) {
-  state.panel = "map";
-  $("work").hidden = true;
-  $("scheda").hidden = true;
-  $("index").hidden = true;
-  $("map").hidden = false;
+  only("map");
   markNav("");
-  $("nav-voice").removeAttribute("aria-current");
-  $("nav-units").removeAttribute("aria-current");
-  $("nav-map").setAttribute("aria-current", "true");
   paintThumbbar();
   if (push && window.location.hash !== "#mappa") history.pushState(null, "", "#mappa");
   const title = $("map-title");
@@ -992,7 +1165,7 @@ function afterSave(body) {
   // La stanza ora ha l'unità (o la coda ce l'ha): il completamento e ‹ › la
   // devono vedere, e una scheda NUOVA diventa, nell'indirizzo, la sua unità.
   if (state.def && body && body.us) writeHash(state.def.id, body.us, true);
-  void loadRoom().then(() => paintUnav());
+  void loadRoom().then(() => { paintUnav(); if (deskUI) deskUI.paint(); });
   void loadReview();
 }
 
@@ -1092,29 +1265,180 @@ function wireThumbbar() {
   });
 }
 
+/* ── LA SCRIVANIA (14 novembre): le sezioni e ciò che la conchiglia fa per loro ─ */
+
+/** Le definizioni che il nodo serve, dalla lista tenuta sul dispositivo. */
+function listing() {
+  try {
+    return (JSON.parse(localStorage.getItem("sg.schede.v1") || "null") || {}).schede || [];
+  } catch { return []; }
+}
+
+/** Il prefisso con cui si scrive un'unità: «US » — dalla definizione con cui è
+ *  stata compilata se il nodo la serve, dalla aperta altrimenti. */
+function prefixOf(u) {
+  const declared = u && u.scheda && u.scheda.template;
+  if (state.def && (!declared || declared === state.def.id)) return unitPrefix(state.def);
+  return "US ";
+}
+
+/** Aprire un'unità dall'elenco, dalla colonna o da un reperto: con la
+ *  definizione che dichiara, se il nodo la serve; con quella aperta o la prima
+ *  altrimenti. Un'unità senza numero si apre dal suo id. */
+async function openUnit(u) {
+  if (!u) return;
+  const declared = u.scheda && u.scheda.template;
+  const items = listing();
+  const def = (declared && items.some((x) => x.id === declared) && declared)
+    || (state.def && state.def.id) || (items[0] && items[0].id);
+  if (!def) { SG().show(false, tr("index.noSchede", "")); return; }
+  if (!(await leaveUnit())) return;
+  window.location.hash = u.number ? hashFor(def, u.number) : hashFor(def, "", false, u.id);
+}
+
+/** «Nuova US»: la stessa porta dell'elenco (`#index-new`). */
+function newUnit() {
+  const go = () => { const b = $("index-new"); if (b) b.click(); };
+  if (state.panel === "index") { go(); return; }
+  void showIndex().then(go);
+}
+
+/** Un luogo dello Scavo → l'elenco filtrato su di lui, come un saggio della
+ *  mappa. */
+function unitsIn(place) {
+  indexFilters.place = { id: place.id, name: place.name };
+  void showIndex();
+}
+
+/** UNA SEZIONE DELLA SCRIVANIA, dal suo nome. La Scheda torna all'ultima unità
+ *  aperta; se non ce n'è, apre quella su cui si è lavorato per ultimi, o una
+ *  scheda nuova con la definizione che la stanza usa di più. */
+async function showSection(key, push = true) {
+  if (key === "units") { await showIndex(push); return; }
+  if (key === "map") { await showMap(push); return; }
+  if (key === "sheet") {
+    if (state.def) {
+      only("scheda");
+      draw();
+      writeHash(state.def.id, state.us, false, Boolean(state.lens), state.byId ? state.nodeId : "");
+      return;
+    }
+    const units = ((await loadRoom()) || {}).units || [];
+    const recent = units.slice().sort((a, b) =>
+      String(b.modified_at || "").localeCompare(String(a.modified_at || "")));
+    if (recent.length) { await openUnit(recent[0]); return; }
+    const first = listing()[0];
+    if (first) window.location.hash = hashFor(first.id, "");
+    return;
+  }
+  const panel = { finds: "finds", photos: "photos-sec", excavation: "excavation" }[key];
+  if (!panel) return;
+  only(panel);
+  markNav("");
+  paintThumbbar();
+  const tag = { finds: "#materiali", photos: "#foto", excavation: "#scavo" }[key];
+  if (push && window.location.hash !== tag) history.pushState(null, "", tag);
+  if (deskUI) await deskUI.paintPanel(panel);
+}
+
+/** «Rifinisci la descrizione»: porta al campo. Sul Foglio lo sceglie (l'ispettore
+ *  mostra la scrittura), nei Campi lo mette a fuoco. */
+function refine(fieldId) {
+  if (!fieldId) return;
+  if (state.view === "unit") { state.view = "sheet"; draw(); }
+  const host = $("scheda-host");
+  const box = host.querySelector(`.fo-f[data-field="${CSS.escape(fieldId)}"]`)
+    || host.querySelector(`[data-field="${CSS.escape(fieldId)}"]`);
+  if (!box) return;
+  box.scrollIntoView({ block: "center", behavior: "smooth" });
+  box.click();
+  const pad = $("fo-insp-write") || box.querySelector("textarea, input, [contenteditable='true']");
+  if (pad) { pad.focus(); if (pad.setSelectionRange) pad.setSelectionRange(pad.value.length, pad.value.length); }
+}
+
+/** L'ispettore della scrivania per le viste che non sono il Foglio (Campi,
+ *  Unità): lo stesso pannello del Foglio, senza un campo scelto. */
+function paintDeskInspector() {
+  const insp = $("desk-insp");
+  if (!insp || state.mode !== "desktop" || state.panel !== "scheda" || !state.def) return;
+  insp.replaceChildren();
+  const box = document.createElement("div");
+  insp.append(box);
+  paintInspector(box, state.def, state);
+}
+
+/** LA PAGINA DELL'UNITÀ (vista «Unità»): il titolo, poi ciò che il grafo dice
+ *  dell'unità, paragrafo per paragrafo, senza le caselle vuote. Una lettura;
+ *  scrivere è il Foglio o i Campi. */
+function drawUnitPage(host) {
+  const def = state.def;
+  const make = (tag, props = {}, ...kids) => {
+    const n = Object.assign(document.createElement(tag), props);
+    for (const k of kids) if (k) n.append(k);
+    return n;
+  };
+  const filled = (v) => !(v === undefined || v === null || v === ""
+    || (Array.isArray(v) && !v.length));
+  const byId = new Map((def.fields || []).map((f) => [f.id, f]));
+  const text = (v) => (v && typeof v === "object" && !Array.isArray(v)
+    ? (v.label || v.name || "") : String(v || ""));
+  const definition = Object.entries(state.values).find(([k, v]) =>
+    byId.get(k) && byId.get(k).type === "term" && /defin/i.test(k) && filled(v));
+  const title = (state.byId ? state.us : `${unitPrefix(def)}${state.us}`)
+    + (definition ? ` · ${text(definition[1])}` : "");
+  const page = make("article", { className: "unitpage" },
+    make("header", { className: "hero" }, make("h2", { textContent: title })));
+  for (const para of def.paragraphs || []) {
+    const rows = (para.fields || []).map((id) => byId.get(id))
+      .filter((f) => f && f.id !== state.keyField && filled(state.values[f.id]));
+    if (!rows.length) continue;
+    const sec = make("section", { className: "card" }, make("h3", { textContent: para.label }));
+    for (const f of rows) {
+      const value = make("div", { className: "up-v" });
+      value.append(valueView(f, state.values[f.id], def));
+      sec.append(make("div", { className: "up-row" },
+        make("span", { className: "up-l", textContent: f.label }), value));
+    }
+    page.append(sec);
+  }
+  if (page.childElementCount === 1) {
+    page.append(make("p", { className: "hint", textContent: tr("unit.empty", "") }));
+  }
+  host.replaceChildren(page);
+}
+
 /* ── avvio ───────────────────────────────────────────────────────────────── */
 
 function wireShell() {
   applyTheme(savedTheme());
+  // LA STANZA NELLA BARRA: alla scrivania un clic apre la scelta (`#room-pop`,
+  // dove sta «Dove scrivo»); altrove apre la colonna, dove «Dove scrivo» è.
+  $("room-name")?.addEventListener("click", () => {
+    if (state.mode !== "desktop") { setNavOpen(true); return; }
+    const pop = $("room-pop");
+    pop.hidden = !pop.hidden;
+    $("room-name").setAttribute("aria-expanded", String(!pop.hidden));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && $("room-pop") && !$("room-pop").hidden) {
+      $("room-pop").hidden = true;
+      $("room-name").setAttribute("aria-expanded", "false");
+    }
+  });
+  $("bar-voice")?.addEventListener("click", () => $("nav-voice").click());
   $("theme").addEventListener("click", () => {
     const now = savedTheme();
     applyTheme(THEMES[(THEMES.indexOf(now) + 1) % THEMES.length]);
   });
 
   $("nav-voice").addEventListener("click", () => {
-    state.panel = "voice";
-    $("scheda").hidden = true;
-    $("index").hidden = true;
-    $("map").hidden = true;
-    $("nav-map").removeAttribute("aria-current");
     // LA DETTATURA SOLO A CHI FIRMA (31 ottobre, dal telefono vero): con la
     // voce «Detta» in barra il pannello si apriva anche senza firma, e una
     // dettatura finiva in coda come «nota senza firma». Senza firma resta la
-    // porta: decide `render()` nella pagina, che sa chi è firmato.
-    $("work").hidden = !SG().signed;
+    // porta: decide `render()` nella pagina, che sa chi è firmato (`only`).
+    only("work");
     paintThumbbar();
     markNav("");
-    $("nav-voice").setAttribute("aria-current", "true");
   });
 
   $("nav-units").addEventListener("click", () => { void showIndex(); });
@@ -1179,6 +1503,10 @@ function wireShell() {
     // la definizione aperta: su quanti campi si misura «meno della metà» per
     // un'unità che non dichiara con quale è stata compilata
     current: () => (state.def ? state.def.id : null),
+    // alla scrivania: la tabella, la colonna e i conteggi delle sezioni
+    isDesk: () => state.mode === "desktop",
+    prefix: (u) => prefixOf(u),
+    onRead: () => { if (deskUI) deskUI.paint(); },
     schede: () => {
       try { return (JSON.parse(localStorage.getItem("sg.schede.v1") || "null")
                     || {}).schede || []; } catch { return []; }
@@ -1188,6 +1516,12 @@ function wireShell() {
   //  conosce altro. `t` e `show` vengono da lì, come per ogni altra superficie.
   window.SGChat = mountChat({ t: (k, v) => SG().t(k, v),
                               toast: (m) => SG().show(true, m) });
+
+  // LA SCRIVANIA (14 novembre): la cornice delle sezioni, che chiama la
+  // conchiglia per aprire e legge quello che la stanza ha già detto
+  deskUI = mountDesk({ state, choosePlace, showSection, newUnit, openUnit, unitsIn,
+                       listing, prefix: prefixOf });
+  void deskUI.warm();
 
   // Il modo si RIPROPONE quando la finestra cambia, ma non sovrascrive una
   // scelta: `effectiveMode` guarda prima cosa è stato scelto.
@@ -1281,6 +1615,8 @@ void land().then(() => schedeLoaded).then(() => followHash());
 // Esposto per la verifica dal browser: è quello che una cattura non può
 // dimostrare (dove stanno i bersagli, quale modo è attivo, quanti campi).
 window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
+                   writingPosture, choosePlace,
+                   showSection: (k) => showSection(k),
                    payloadFor, paintThumbbar, thumbbarPlan, land,
                    // FORZARE LA POSTURA, per provarla: «desk», «field», o null
                    // per tornare a quella che il nodo dice. Non si ricorda.
@@ -1293,6 +1629,13 @@ window.SGShell = { state, openScheda, setMode, draw, trenchFields, otherFields,
                      $("nav-units").textContent = SG().t("nav.units");
                      $("nav-map").textContent = SG().t("nav.map");
                      if (state.panel === "map") void showMap(false);
+                     if (deskUI) {
+                       deskUI.paint();
+                       const sec = sectionOf(state.panel);
+                       if (["finds", "photos", "excavation"].includes(sec)) {
+                         void deskUI.paintPanel(state.panel);
+                       }
+                     }
                      paintModes();
                      paintWayBack();
                      if (state.def) draw();

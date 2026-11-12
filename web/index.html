@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="./shell.css">
 <link rel="stylesheet" href="./scheda.css">
 <link rel="stylesheet" href="./foglio.css">
+<link rel="stylesheet" href="./scrivania.css">
 </head>
 <body>
 <!-- ══ LA CONCHIGLIA ═══════════════════════════════════════════════════════
@@ -63,6 +64,17 @@
     </span>
     <span class="spacer"></span>
 
+    <!-- SCRIVANIA / IN CAMPO (14 novembre, come nel mockup v7.2). Due posti di
+         lavoro, non tre larghezze: «Scrivania» è il modo da scrivania, «In
+         campo» quello che la finestra propone fra telefono e tablet (le tre
+         soglie restano, nel foglio «Tu e l'aspetto»). La dipinge
+         `scrivania.js`; la postura che il nodo scrive accanto alla
+         descrizione (`X-SG-Posture`) è questa. -->
+    <span class="postseg" id="posture-seg" role="group"></span>
+    <!-- DETTA, sempre a un tocco (alla scrivania non è una sezione: è la voce).
+         Fa ciò che fa «Detta» nella colonna, e niente di più. -->
+    <button type="button" class="barvoice" id="bar-voice" hidden></button>
+
     <!-- Il selettore delle tre soglie. Il modo si PROPONE dalla larghezza e si
          puo' forzare: il puntino su un chip dice «questo te l'ho proposto io»,
          perche' proporre e scegliere non sono la stessa cosa e la seconda
@@ -85,11 +97,19 @@
 
     <!-- CHI SEI e DOVE SEI: in una stanza condivisa sono le due cose che
          decidono se quello che scrivi conta. -->
+    <!-- LO STATO DELLA CONNESSIONE CON IL SALVATAGGIO (14 novembre): «in linea
+         · salvato alle hh:mm» dopo una scrittura che il nodo ha confermato
+         (`saved_at`), «n in coda · niente si perde» senza rete. -->
+    <span class="state" id="state">…</span>
+    <!-- la lingua dell'interfaccia, alla scrivania: qui (vedi `placeControls`) -->
+    <span class="barlang" id="bar-lang"></span>
     <span class="whoroom">
       <span class="orcid" id="who-subject"></span>
-      <span class="room" id="room-name"></span>
+      <!-- LA STANZA IN CUI SI SCRIVE: un clic apre la scelta della stanza e
+           «un'altra stanza o un link» (alla scrivania; altrove la colonna) -->
+      <button type="button" class="room" id="room-name" aria-haspopup="dialog"
+              aria-controls="room-pop" aria-expanded="false"></button>
     </span>
-    <span class="state" id="state">…</span>
     <!-- CHI FIRMA, in due lettere (SF-05, D5 — 31 ottobre 2026). Toccandole si
          apre il foglio «Tu e l'aspetto»: nome, ORCID, skin, tema, lingua, soglia,
          Esci. Prima erano otto controlli nella barra e una fascia ripetuta in
@@ -98,11 +118,36 @@
             aria-controls="me-sheet" aria-expanded="false"></button>
   </header>
 
+  <!-- LA SCELTA DELLA STANZA, alla scrivania: ci si SPOSTA «Dove scrivo»
+       della colonna (`#nav-room`), non se ne fa una copia. -->
+  <div class="roompop" id="room-pop" hidden role="dialog" aria-labelledby="room-pop-title">
+    <h3 id="room-pop-title" data-t="nav.where">Where I write</h3>
+    <div id="room-pop-host"></div>
+  </div>
+
+  <!-- LE SEZIONI DELLA SCRIVANIA, sotto la barra: Scheda · Unità · Materiali ·
+       Foto · Scavo · Mappa, ciascuna col suo conteggio. Solo alla scrivania;
+       in campo la colonna resta com'era. `scrivania.js`. -->
+  <nav class="desktabs" id="desk-tabs" aria-label="StratiField" hidden></nav>
+  <!-- LA STRISCIA sotto le sezioni: nella Scheda l'unità ‹ › e i comandi della
+       scheda (ci si spostano `#scheda-unav` e `#scheda-strip`), nelle altre il
+       titolo e l'azione principale. -->
+  <div class="deskstrip" id="desk-strip" hidden>
+    <div class="deskstrip-sec" id="desk-strip-sec"></div>
+    <div class="deskstrip-sheet" id="desk-strip-sheet"></div>
+  </div>
+
   <!-- IL VELO dietro il cassetto, solo sul telefono: toccarlo chiude
        (31 ottobre, iPhone vero: il cassetto non si chiudeva più). -->
   <div class="navscrim" id="nav-scrim" hidden></div>
   <nav class="sidenav" id="sidenav" aria-label="Navigation" data-t-aria="aria.nav">
     <div class="navgrab"><button type="button" id="nav-close" data-t="nav.close">Close</button></div>
+    <!-- IN QUESTA STANZA (alla scrivania la colonna è solo questo): l'elenco
+         breve delle unità con la loro compilazione; un clic apre la scheda. -->
+    <div class="inroom" id="nav-inroom-box" hidden>
+      <h3 data-t="nav.inroom">In this room</h3>
+      <div id="nav-inroom"></div>
+    </div>
     <h3 data-t="nav.room">Room</h3>
     <button class="navitem" type="button" id="nav-voice" aria-current="true" data-t="tab.dictate">Dictate</button>
     <!-- L'ELENCO DELLE UNITÀ, raggiungibile anche da chi non è arrivato da un
@@ -204,6 +249,13 @@
       <div id="map-host"></div>
     </section>
 
+    <!-- LE TRE SEZIONI NUOVE DELLA SCRIVANIA (14 novembre), dipinte da
+         `scrivania.js` con ciò che la stanza ha: i reperti, le foto, i luoghi.
+         Uno stato vuoto le dice quando non c'è niente — non si inventa. -->
+    <section id="finds" class="deskpanel" hidden></section>
+    <section id="photos-sec" class="deskpanel" hidden></section>
+    <section id="excavation" class="deskpanel" hidden></section>
+
     <!-- Dove il modulo si disegna. Vuoto finche' non si apre una scheda: un
          nodo che non serve definizioni e' l'assistente che e' sempre stato. -->
     <section id="scheda" hidden>
@@ -224,6 +276,11 @@
     <div class="answer" id="answer" hidden></div>
     <div class="queue" id="queue"></div>
   </main>
+
+  <!-- IL PANNELLO DI DESTRA, alla scrivania: l'ispettore. Nella Scheda ci si
+       disegna quello del Foglio («Questa scheda», «Da guardare», «Altrove», il
+       widget del campo scelto); nelle altre sezioni «Altrove». -->
+  <aside class="deskinsp" id="desk-insp" aria-live="polite" hidden></aside>
 
   <!-- LA BARRA DEI POLLICI, solo sul telefono. Dentro ci sono SOLO azioni non
        distruttive: apri la colonna, indietro, avanti, salva. L'azione che
@@ -262,6 +319,13 @@
     <h3 class="me-h" data-t="me.look">Look</h3>
     <div class="me-controls" id="me-controls"></div>
     <button type="button" class="me-out" id="me-signout" data-t="me.signout">Sign out of this device</button>
+    <!-- PRIMA DI USCIRE, con consegne in sospeso (14 novembre, CHNT): l'avviso e
+         le due strade — consegnare ora, o uscire sapendo che restano qui. -->
+    <div class="me-guard" id="me-guard" hidden role="alert">
+      <p id="me-guard-says"></p>
+      <button type="button" class="primary" id="me-guard-deliver" data-t="f.deliver_now">Deliver now</button>
+      <button type="button" class="me-out" id="me-guard-out" data-t="me.signout_anyway">Sign out anyway</button>
+    </div>
   </div>
 </div>
 
@@ -612,6 +676,63 @@ const STRINGS = {
     "room.delivered": "Delivered to the room: {n} operations, at {at}.",
     "f.deliver_now": "Deliver now",
     "f.delivering": "Delivering…",
+    // ── la scrivania come nel mockup (14 novembre): stesse CHIAVI del mockup
+    //    v7.2 e dell'xlsx dove ci sono; le nuove nel referto, per Cowork.
+    "mode.label": "Workstation",
+    "mode.field": "In the field",
+    "nav.sheet": "Sheet",
+    "nav.finds": "Finds",
+    "nav.photos": "Photos",
+    "nav.excavation": "Excavation",
+    "nav.inroom": "In this room",
+    "ctl.card": "Sheet",
+    "view.unit": "Unit page",
+    "insp.elsewhere": "Elsewhere",
+    "act.new_unit": "New unit",
+    "act.new_find": "New finds sheet",
+    "act.add_photos": "Add photos",
+    "act.new_area": "New area",
+    "col.unit": "Unit",
+    "col.definition": "Definition",
+    "col.area": "Area",
+    "col.complete": "Filled in",
+    "col.edited": "Last edit",
+    "col.class": "Class",
+    "col.written": "Written",
+    "col.words": "Words",
+    "flt.refine": "To refine at the desk",
+    "w.trench": "in the trench",
+    "w.desk": "at the desk",
+    "w.both": "trench + desk",
+    "refine.title": "Dictated in the trench",
+    "refine.note": "{w} words in the description. Trench plus desk gives the fullest descriptions: finish it here while you remember the deposit.",
+    "refine.go": "Refine the description",
+    "f.words": "{n} words",
+    "save.saved": "saved at {t}",
+    "save.queued": "{n} queued · nothing is lost",
+    "f.signout_guard": "{n} still to deliver: deliver before signing out, or they stay on this phone.",
+    "f.full": "Full screen",
+    "f.dictate_more": "Dictate the rest",
+    "f.done": "Done",
+    "flt.refine_note": "Written only in the trench, with fewer than {n} words in the description.",
+    "me.signout_anyway": "Sign out anyway: they stay on this device",
+    "index.leftOut": "Left out of the list: {n} nodes typed as units whose name says another kind ({list}).",
+    "index.byIdNote": "{n} units have no number: they open from their id, for reading.",
+    "index.byId": "Opened from its id: this unit has no number to write it under, so it is for reading.",
+    "lens.written": "written with",
+    "finds.none": "No finds in this room yet",
+    "finds.none_note": "This node serves no finds sheet (ICCD RA, TMA), so none is invented here. The special finds (SF) of the room appear in this list when the room has them.",
+    "finds.cannot": "This node cannot record a finds sheet yet: it serves no definition for one.",
+    "photos.none": "No photos in this room yet",
+    "photos.none_note": "The photos linked to a unit, and those waiting on this device, appear here.",
+    "exc.none": "No places in this room yet",
+    "exc.cannot": "This node cannot create a place yet: the tree is read from the graph.",
+    "exc.read_only": "Site, areas, trenches and sectors, read from the graph. Click a place for its units. Creating one is not possible from here yet.",
+    "exc.units": "{n} units",
+    "insp.open_pick": "Open a sheet or a place on the map to open it in PyArchInit.",
+    "unit.empty": "Nothing has been written for this unit yet.",
+    "f.stop": "Stop",
+    "f.no_mic": "This device does not listen: type the rest.",
   },
   it: {
     "app.subtitle": "assistente di campo",
@@ -904,6 +1025,63 @@ const STRINGS = {
     "room.delivered": "Consegnate alla stanza: {n} operazioni, alle {at}.",
     "f.deliver_now": "Consegna ora",
     "f.delivering": "Consegno…",
+    // ── la scrivania come nel mockup (14 novembre): stesse CHIAVI del mockup
+    //    v7.2 e dell'xlsx dove ci sono; le nuove nel referto, per Cowork.
+    "mode.label": "Postazione",
+    "mode.field": "In campo",
+    "nav.sheet": "Scheda",
+    "nav.finds": "Materiali",
+    "nav.photos": "Foto",
+    "nav.excavation": "Scavo",
+    "nav.inroom": "In questa stanza",
+    "ctl.card": "Scheda",
+    "view.unit": "Unità",
+    "insp.elsewhere": "Altrove",
+    "act.new_unit": "Nuova US",
+    "act.new_find": "Nuova scheda materiali",
+    "act.add_photos": "Aggiungi foto",
+    "act.new_area": "Nuova area",
+    "col.unit": "Unità",
+    "col.definition": "Definizione",
+    "col.area": "Area",
+    "col.complete": "Compilazione",
+    "col.edited": "Ultima modifica",
+    "col.class": "Classe",
+    "col.written": "Scritta",
+    "col.words": "Parole",
+    "flt.refine": "Da rifinire alla scrivania",
+    "w.trench": "in trincea",
+    "w.desk": "alla scrivania",
+    "w.both": "trincea + scrivania",
+    "refine.title": "Dettata in trincea",
+    "refine.note": "{w} parole nella descrizione. Trincea più scrivania dà le descrizioni più complete: finiscila qui finché il deposito è nella memoria.",
+    "refine.go": "Rifinisci la descrizione",
+    "f.words": "{n} parole",
+    "save.saved": "salvato alle {t}",
+    "save.queued": "{n} in coda · niente si perde",
+    "f.signout_guard": "{n} ancora da consegnare: consegna prima di uscire, o restano su questo telefono.",
+    "f.full": "A tutto schermo",
+    "f.dictate_more": "Detta il resto",
+    "f.done": "Fatto",
+    "flt.refine_note": "Scritta solo in trincea, con meno di {n} parole nella descrizione.",
+    "me.signout_anyway": "Esci lo stesso: restano su questo dispositivo",
+    "index.leftOut": "Fuori dall'elenco: {n} nodi di tipo unità il cui nome dice un altro tipo ({list}).",
+    "index.byIdNote": "{n} unità non hanno un numero: si aprono dal loro id, in lettura.",
+    "index.byId": "Aperta dal suo id: questa unità non ha un numero sotto cui scriverla, quindi si legge.",
+    "lens.written": "scritta con",
+    "finds.none": "Nessun reperto in questa stanza",
+    "finds.none_note": "Questo nodo non serve una scheda dei materiali (ICCD RA, TMA), e qui non se ne inventa una. I reperti speciali (SF) della stanza compaiono in questo elenco quando la stanza ne ha.",
+    "finds.cannot": "Questo nodo non sa ancora compilare una scheda materiali: non ne serve la definizione.",
+    "photos.none": "Nessuna foto in questa stanza",
+    "photos.none_note": "Qui compaiono le foto legate a un'unità e quelle che aspettano su questo dispositivo.",
+    "exc.none": "Nessun luogo in questa stanza",
+    "exc.cannot": "Questo nodo non sa ancora creare un luogo: l'albero si legge dal grafo.",
+    "exc.read_only": "Sito, aree, saggi e settori, letti dal grafo. Un clic su un luogo per le sue unità. Crearne uno da qui non si può ancora.",
+    "exc.units": "{n} unità",
+    "insp.open_pick": "Apri una scheda, o un luogo sulla mappa, per aprirlo in PyArchInit.",
+    "unit.empty": "Di questa unità non è ancora scritto niente.",
+    "f.stop": "Fermati",
+    "f.no_mic": "Questo dispositivo non ascolta: scrivi il resto.",
   },
   // >>> ui_strings.py
   // GENERATO da scripts/ui_strings.py leggendo StratiGraph_UI_strings.xlsx
@@ -1028,6 +1206,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · לאישור",
     "insp.ai_ok": "AI · אושר",
     "insp.empty": "תיבות ריקות",
+    "insp.open": "פתח ב…",
+    "insp.open_unsaved": "שמור קודם את היחידה: עדיין אין אותה בחדר.",
     "insp.write": "כתיבה",
     "act.confirm": "אני מאשר את הטקסט הזה",
     "f.side": "צד",
@@ -1055,9 +1235,35 @@ const STRINGS = {
     "lvl.trench": "חתך",
     "lvl.sector": "גזרה",
     "lvl.square": "ריבוע",
+    "lvl.place": "מקום",
     "act.open_room_em": "פתח את החדר ב-EMStudio",
     "act.open_em_unit": "פתח ב-EMStudio, ממורכז על היחידה הזו",
     "act.open_hv": "פתח את החפירה ב-Heriverse",
+    "map.title": "מפת החדר",
+    "map.reading": "קורא את המקומות של החדר…",
+    "map.layers": "שכבות",
+    "map.l.places": "אתר, שטחים, ריבועים",
+    "map.l.cuts": "חתכים (יחידות שליליות)",
+    "map.l.base": "מפת בסיס",
+    "map.l.me": "איפה אני",
+    "map.online_only": "מקוון בלבד",
+    "map.base_off": "מפת ההקשר כבויה",
+    "map.base_cache": "אריחים מהמטמון",
+    "map.footprints": "טביעות מהגרף, במטמון במכשיר הזה",
+    "map.footprints_cached": "טביעות מהעותק של המכשיר הזה (ללא צומת)",
+    "map.native": "משורטט ב-{crs}: ללא הטלה מחדש אין מפת בסיס ואין מיקום",
+    "map.none": "לאף מקום בחדר הזה עדיין אין טביעה.",
+    "map.no_footprint": "ללא טביעה: {list}",
+    "map.cut": "חתך",
+    "map.where": "📍 איפה אני",
+    "map.where_no": "המיקום אינו זמין במכשיר הזה.",
+    "map.pick_place": "לחץ על ריבוע כדי לראות את היחידות שלו.",
+    "map.place_filter": "מקום: {place}",
+    "map.gis_note": "שרטוט, תוכניות ואורתופוטו נעשים ב-PyArchInit וב-EMStudio.",
+    "map.heriverse_none": "עדיין לא נבדקה כתובת לפתיחת Heriverse על חדר.",
+    "map.open_noroom": "הצומת הזה כותב למכל מקומי: אין חדר לפתוח.",
+    "map.pyarchinit_file": "קובץ ההחלפה נשמר: עדיין אי אפשר לפתוח את PyArchInit מבחוץ.",
+    "act.open_pyarchinit": "פתח ב-PyArchInit",
     "nav.prev_unit": "היחידה הקודמת",
     "nav.next_unit": "היחידה הבאה",
     "nav.jump": "עבור ליחידה…",
@@ -1112,6 +1318,26 @@ const STRINGS = {
     "room.pending.many": "{n} פעולות שלך ממתינות בצומת עבור החדר הזה.",
     "f.deliver_now": "מסור עכשיו",
     "f.delivering": "מוסר…",
+    "mode.label": "עמדת עבודה",
+    "mode.field": "בשטח",
+    "nav.sheet": "גיליון",
+    "nav.finds": "ממצאים",
+    "nav.photos": "תצלומים",
+    "nav.excavation": "חפירה",
+    "nav.inroom": "בחדר הזה",
+    "ctl.card": "גיליון",
+    "view.unit": "דף היחידה",
+    "insp.elsewhere": "במקום אחר",
+    "act.new_unit": "יחידה חדשה",
+    "act.new_find": "גיליון ממצאים חדש",
+    "act.add_photos": "הוסף תצלומים",
+    "act.new_area": "שטח חדש",
+    "col.unit": "יחידה",
+    "col.definition": "הגדרה",
+    "col.area": "שטח",
+    "col.complete": "מולא",
+    "col.edited": "עריכה אחרונה",
+    "col.class": "סוג",
   },
   de: {
     "app.subtitle": "Feldassistent",
@@ -1231,6 +1457,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · zu bestätigen",
     "insp.ai_ok": "AI · bestätigt",
     "insp.empty": "Leere Felder",
+    "insp.open": "Öffnen in…",
+    "insp.open_unsaved": "Speichere zuerst die Einheit: der Raum hat sie noch nicht.",
     "insp.write": "Schreiben",
     "act.confirm": "Ich bestätige diesen Text",
     "f.side": "Seite",
@@ -1258,9 +1486,35 @@ const STRINGS = {
     "lvl.trench": "Schnitt",
     "lvl.sector": "Sektor",
     "lvl.square": "Quadrant",
+    "lvl.place": "Ort",
     "act.open_room_em": "Den Raum in EMStudio öffnen",
     "act.open_em_unit": "In EMStudio öffnen, auf diese Einheit zentriert",
     "act.open_hv": "Die Grabung in Heriverse öffnen",
+    "map.title": "Karte des Raums",
+    "map.reading": "Lese die Orte des Raums…",
+    "map.layers": "Ebenen",
+    "map.l.places": "Fundplatz, Flächen, Schnitte",
+    "map.l.cuts": "Eingriffe (negative Einheiten)",
+    "map.l.base": "Grundkarte",
+    "map.l.me": "Wo ich bin",
+    "map.online_only": "nur online",
+    "map.base_off": "Kontextkarte aus",
+    "map.base_cache": "Kacheln aus dem Cache",
+    "map.footprints": "Umrisse aus dem Graphen, auf diesem Gerät zwischengespeichert",
+    "map.footprints_cached": "Umrisse aus der Kopie dieses Geräts (kein Knoten)",
+    "map.native": "Gezeichnet in {crs}: ohne Umprojektion keine Grundkarte und keine Position",
+    "map.none": "Kein Ort dieses Raums hat bisher einen Umriss.",
+    "map.no_footprint": "Ohne Umriss: {list}",
+    "map.cut": "Eingriff",
+    "map.where": "📍 Wo bin ich",
+    "map.where_no": "Die Position ist auf diesem Gerät nicht verfügbar.",
+    "map.pick_place": "Klicke auf einen Schnitt, um seine Einheiten zu sehen.",
+    "map.place_filter": "Ort: {place}",
+    "map.gis_note": "Aufnahme, Pläne und Orthofotos entstehen in PyArchInit und EMStudio.",
+    "map.heriverse_none": "Es gibt noch keine geprüfte Adresse, um Heriverse für einen Raum zu öffnen.",
+    "map.open_noroom": "Dieser Knoten schreibt in einen lokalen Container: es gibt keinen Raum zum Öffnen.",
+    "map.pyarchinit_file": "Austauschdatei gespeichert: PyArchInit lässt sich noch nicht von außen öffnen.",
+    "act.open_pyarchinit": "In PyArchInit öffnen",
     "nav.prev_unit": "Vorherige Einheit",
     "nav.next_unit": "Nächste Einheit",
     "nav.jump": "Zu Einheit…",
@@ -1315,6 +1569,26 @@ const STRINGS = {
     "room.pending.many": "{n} Operationen von dir warten auf dem Knoten für diesen Raum.",
     "f.deliver_now": "Jetzt übergeben",
     "f.delivering": "Wird übergeben…",
+    "mode.label": "Arbeitsplatz",
+    "mode.field": "Im Feld",
+    "nav.sheet": "Blatt",
+    "nav.finds": "Funde",
+    "nav.photos": "Fotos",
+    "nav.excavation": "Grabung",
+    "nav.inroom": "In diesem Raum",
+    "ctl.card": "Blatt",
+    "view.unit": "Seite der Einheit",
+    "insp.elsewhere": "Anderswo",
+    "act.new_unit": "Neue Einheit",
+    "act.new_find": "Neues Fundblatt",
+    "act.add_photos": "Fotos hinzufügen",
+    "act.new_area": "Neue Fläche",
+    "col.unit": "Einheit",
+    "col.definition": "Ansprache",
+    "col.area": "Fläche",
+    "col.complete": "Ausgefüllt",
+    "col.edited": "Zuletzt bearbeitet",
+    "col.class": "Klasse",
   },
   ro: {
     "app.subtitle": "asistent de teren",
@@ -1434,6 +1708,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · de confirmat",
     "insp.ai_ok": "AI · confirmat",
     "insp.empty": "Căsuțe goale",
+    "insp.open": "Deschide în…",
+    "insp.open_unsaved": "Salvați mai întâi unitatea: camera nu o are încă.",
     "insp.write": "Scrie",
     "act.confirm": "Confirm textul",
     "f.side": "Față",
@@ -1461,9 +1737,35 @@ const STRINGS = {
     "lvl.trench": "Secțiune",
     "lvl.sector": "Sector",
     "lvl.square": "Carou",
+    "lvl.place": "Loc",
     "act.open_room_em": "Deschide camera în EMStudio",
     "act.open_em_unit": "Deschide în EMStudio, centrat pe această unitate",
     "act.open_hv": "Deschide săpătura în Heriverse",
+    "map.title": "Harta camerei",
+    "map.reading": "Citesc locurile camerei…",
+    "map.layers": "Straturi",
+    "map.l.places": "Sit, zone, secțiuni",
+    "map.l.cuts": "Tăieri (unități negative)",
+    "map.l.base": "Hartă de bază",
+    "map.l.me": "Unde sunt",
+    "map.online_only": "doar online",
+    "map.base_off": "Harta de context oprită",
+    "map.base_cache": "plăci din cache",
+    "map.footprints": "Amprente din graf, în cache pe acest dispozitiv",
+    "map.footprints_cached": "Amprente din copia acestui dispozitiv (fără nod)",
+    "map.native": "Desenată în {crs}: fără reproiecție nu există hartă de bază și nici poziție",
+    "map.none": "Niciun loc din această cameră nu are încă o amprentă.",
+    "map.no_footprint": "Fără amprentă: {list}",
+    "map.cut": "tăiere",
+    "map.where": "📍 Unde sunt",
+    "map.where_no": "Poziția nu este disponibilă pe acest dispozitiv.",
+    "map.pick_place": "Faceți clic pe o secțiune pentru a-i vedea unitățile.",
+    "map.place_filter": "Loc: {place}",
+    "map.gis_note": "Releveul, planurile și ortofotografiile se fac în PyArchInit și EMStudio.",
+    "map.heriverse_none": "Încă nu există o adresă verificată pentru a deschide Heriverse pe o cameră.",
+    "map.open_noroom": "Acest nod scrie într-un container local: nu există o cameră de deschis.",
+    "map.pyarchinit_file": "Fișier de schimb salvat: PyArchInit nu poate fi încă deschis din exterior.",
+    "act.open_pyarchinit": "Deschide în PyArchInit",
     "nav.prev_unit": "Unitatea precedentă",
     "nav.next_unit": "Unitatea următoare",
     "nav.jump": "Mergi la unitatea…",
@@ -1518,6 +1820,26 @@ const STRINGS = {
     "room.pending.many": "{n} operații ale dumneavoastră așteaptă pe nod pentru această cameră.",
     "f.deliver_now": "Predă acum",
     "f.delivering": "Se predă…",
+    "mode.label": "Post de lucru",
+    "mode.field": "Pe teren",
+    "nav.sheet": "Fișă",
+    "nav.finds": "Materiale",
+    "nav.photos": "Fotografii",
+    "nav.excavation": "Săpătură",
+    "nav.inroom": "În această cameră",
+    "ctl.card": "Fișă",
+    "view.unit": "Pagina unității",
+    "insp.elsewhere": "În altă parte",
+    "act.new_unit": "Unitate nouă",
+    "act.new_find": "Fișă de materiale nouă",
+    "act.add_photos": "Adaugă fotografii",
+    "act.new_area": "Zonă nouă",
+    "col.unit": "Unitate",
+    "col.definition": "Definiție",
+    "col.area": "Zonă",
+    "col.complete": "Completare",
+    "col.edited": "Ultima modificare",
+    "col.class": "Clasă",
   },
   el: {
     "app.subtitle": "βοηθός πεδίου",
@@ -1637,6 +1959,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · προς επιβεβαίωση",
     "insp.ai_ok": "AI · επιβεβαιωμένο",
     "insp.empty": "Κενά πεδία",
+    "insp.open": "Άνοιγμα σε…",
+    "insp.open_unsaved": "Αποθηκεύστε πρώτα τη μονάδα: ο χώρος δεν την έχει ακόμη.",
     "insp.write": "Γράψτε",
     "act.confirm": "Επιβεβαιώνω το κείμενο",
     "f.side": "Όψη",
@@ -1664,9 +1988,35 @@ const STRINGS = {
     "lvl.trench": "Τομή",
     "lvl.sector": "Τομέας",
     "lvl.square": "Τετράγωνο",
+    "lvl.place": "Τόπος",
     "act.open_room_em": "Άνοιγμα του δωματίου στο EMStudio",
     "act.open_em_unit": "Άνοιγμα στο EMStudio, με κέντρο αυτή τη μονάδα",
     "act.open_hv": "Άνοιγμα της ανασκαφής στο Heriverse",
+    "map.title": "Χάρτης του χώρου",
+    "map.reading": "Διαβάζω τους τόπους του χώρου…",
+    "map.layers": "Επίπεδα",
+    "map.l.places": "Θέση, τομείς, τομές",
+    "map.l.cuts": "Τομές (αρνητικές μονάδες)",
+    "map.l.base": "Υπόβαθρο",
+    "map.l.me": "Πού είμαι",
+    "map.online_only": "μόνο online",
+    "map.base_off": "Υπόβαθρο πλαισίου ανενεργό",
+    "map.base_cache": "πλακίδια από την προσωρινή μνήμη",
+    "map.footprints": "Αποτυπώματα από τον γράφο, στην προσωρινή μνήμη αυτής της συσκευής",
+    "map.footprints_cached": "Αποτυπώματα από το αντίγραφο αυτής της συσκευής (χωρίς κόμβο)",
+    "map.native": "Σχεδιασμένο σε {crs}: χωρίς αναπροβολή δεν υπάρχει υπόβαθρο ούτε θέση",
+    "map.none": "Κανένας τόπος αυτού του χώρου δεν έχει ακόμη αποτύπωμα.",
+    "map.no_footprint": "Χωρίς αποτύπωμα: {list}",
+    "map.cut": "τομή",
+    "map.where": "📍 Πού είμαι",
+    "map.where_no": "Η θέση δεν είναι διαθέσιμη σε αυτή τη συσκευή.",
+    "map.pick_place": "Κάντε κλικ σε μια τομή για να δείτε τις μονάδες της.",
+    "map.place_filter": "Τόπος: {place}",
+    "map.gis_note": "Αποτύπωση, κατόψεις και ορθοφωτογραφίες γίνονται στο PyArchInit και στο EMStudio.",
+    "map.heriverse_none": "Δεν έχει ακόμη επαληθευτεί διεύθυνση για άνοιγμα του Heriverse σε έναν χώρο.",
+    "map.open_noroom": "Αυτός ο κόμβος γράφει σε τοπικό container: δεν υπάρχει χώρος για άνοιγμα.",
+    "map.pyarchinit_file": "Το αρχείο ανταλλαγής αποθηκεύτηκε: το PyArchInit δεν ανοίγει ακόμη εξωτερικά.",
+    "act.open_pyarchinit": "Άνοιγμα στο PyArchInit",
     "nav.prev_unit": "Προηγούμενη μονάδα",
     "nav.next_unit": "Επόμενη μονάδα",
     "nav.jump": "Μετάβαση στη μονάδα…",
@@ -1721,6 +2071,26 @@ const STRINGS = {
     "room.pending.many": "{n} λειτουργίες σας περιμένουν στον κόμβο για αυτόν τον χώρο.",
     "f.deliver_now": "Παράδοση τώρα",
     "f.delivering": "Παράδοση…",
+    "mode.label": "Θέση εργασίας",
+    "mode.field": "Στο πεδίο",
+    "nav.sheet": "Δελτίο",
+    "nav.finds": "Ευρήματα",
+    "nav.photos": "Φωτογραφίες",
+    "nav.excavation": "Ανασκαφή",
+    "nav.inroom": "Σε αυτό το δωμάτιο",
+    "ctl.card": "Δελτίο",
+    "view.unit": "Σελίδα μονάδας",
+    "insp.elsewhere": "Αλλού",
+    "act.new_unit": "Νέα μονάδα",
+    "act.new_find": "Νέο δελτίο ευρημάτων",
+    "act.add_photos": "Προσθήκη φωτογραφιών",
+    "act.new_area": "Νέα περιοχή",
+    "col.unit": "Μονάδα",
+    "col.definition": "Ορισμός",
+    "col.area": "Περιοχή",
+    "col.complete": "Συμπλήρωση",
+    "col.edited": "Τελευταία αλλαγή",
+    "col.class": "Κατηγορία",
   },
   es: {
     "app.subtitle": "asistente de campo",
@@ -1840,6 +2210,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · por confirmar",
     "insp.ai_ok": "AI · confirmado",
     "insp.empty": "Casillas vacías",
+    "insp.open": "Abrir en…",
+    "insp.open_unsaved": "Guarda primero la unidad: la sala todavía no la tiene.",
     "insp.write": "Escribir",
     "act.confirm": "Confirmo el texto",
     "f.side": "Cara",
@@ -1867,9 +2239,35 @@ const STRINGS = {
     "lvl.trench": "Sondeo",
     "lvl.sector": "Sector",
     "lvl.square": "Cuadro",
+    "lvl.place": "Lugar",
     "act.open_room_em": "Abrir la sala en EMStudio",
     "act.open_em_unit": "Abrir en EMStudio, centrado en esta unidad",
     "act.open_hv": "Abrir la excavación en Heriverse",
+    "map.title": "Mapa de la sala",
+    "map.reading": "Leyendo los lugares de la sala…",
+    "map.layers": "Capas",
+    "map.l.places": "Yacimiento, áreas, sondeos",
+    "map.l.cuts": "Cortes (unidades negativas)",
+    "map.l.base": "Mapa base",
+    "map.l.me": "Dónde estoy",
+    "map.online_only": "solo en línea",
+    "map.base_off": "Mapa de contexto apagado",
+    "map.base_cache": "teselas de la caché",
+    "map.footprints": "Huellas del grafo, en caché en este dispositivo",
+    "map.footprints_cached": "Huellas de la copia de este dispositivo (sin nodo)",
+    "map.native": "Dibujada en {crs}: sin reproyección no hay mapa base ni posición",
+    "map.none": "Ningún lugar de esta sala tiene todavía huella.",
+    "map.no_footprint": "Sin huella: {list}",
+    "map.cut": "corte",
+    "map.where": "📍 Dónde estoy",
+    "map.where_no": "La posición no está disponible en este dispositivo.",
+    "map.pick_place": "Haz clic en un sondeo para ver sus unidades.",
+    "map.place_filter": "Lugar: {place}",
+    "map.gis_note": "El levantamiento, las plantas y las ortofotos se hacen en PyArchInit y EMStudio.",
+    "map.heriverse_none": "Todavía no hay una dirección comprobada para abrir Heriverse en una sala.",
+    "map.open_noroom": "Este nodo escribe en un contenedor local: no hay sala que abrir.",
+    "map.pyarchinit_file": "Archivo de intercambio guardado: PyArchInit todavía no se abre desde fuera.",
+    "act.open_pyarchinit": "Abrir en PyArchInit",
     "nav.prev_unit": "Unidad anterior",
     "nav.next_unit": "Unidad siguiente",
     "nav.jump": "Ir a la unidad…",
@@ -1924,6 +2322,26 @@ const STRINGS = {
     "room.pending.many": "{n} operaciones tuyas esperan en el nodo para esta sala.",
     "f.deliver_now": "Entregar ahora",
     "f.delivering": "Entregando…",
+    "mode.label": "Puesto",
+    "mode.field": "En campo",
+    "nav.sheet": "Ficha",
+    "nav.finds": "Materiales",
+    "nav.photos": "Fotos",
+    "nav.excavation": "Excavación",
+    "nav.inroom": "En esta sala",
+    "ctl.card": "Ficha",
+    "view.unit": "Página de la unidad",
+    "insp.elsewhere": "En otro lugar",
+    "act.new_unit": "Nueva unidad",
+    "act.new_find": "Nueva ficha de materiales",
+    "act.add_photos": "Añadir fotos",
+    "act.new_area": "Nueva área",
+    "col.unit": "Unidad",
+    "col.definition": "Definición",
+    "col.area": "Área",
+    "col.complete": "Cumplimentación",
+    "col.edited": "Última modificación",
+    "col.class": "Clase",
   },
   pl: {
     "app.subtitle": "asystent terenowy",
@@ -2043,6 +2461,8 @@ const STRINGS = {
     "insp.ai_todo": "AI · do potwierdzenia",
     "insp.ai_ok": "AI · potwierdzone",
     "insp.empty": "Puste pola",
+    "insp.open": "Otwórz w…",
+    "insp.open_unsaved": "Najpierw zapisz jednostkę: pokój jeszcze jej nie ma.",
     "insp.write": "Pisz",
     "act.confirm": "Potwierdzam tekst",
     "f.side": "Strona",
@@ -2070,9 +2490,35 @@ const STRINGS = {
     "lvl.trench": "Wykop",
     "lvl.sector": "Sektor",
     "lvl.square": "Ar",
+    "lvl.place": "Miejsce",
     "act.open_room_em": "Otwórz pokój w EMStudio",
     "act.open_em_unit": "Otwórz w EMStudio, na tej jednostce",
     "act.open_hv": "Otwórz wykopalisko w Heriverse",
+    "map.title": "Mapa pokoju",
+    "map.reading": "Odczytuję miejsca pokoju…",
+    "map.layers": "Warstwy",
+    "map.l.places": "Stanowisko, obszary, wykopy",
+    "map.l.cuts": "Wkopy (jednostki negatywne)",
+    "map.l.base": "Mapa bazowa",
+    "map.l.me": "Gdzie jestem",
+    "map.online_only": "tylko online",
+    "map.base_off": "Mapa kontekstowa wyłączona",
+    "map.base_cache": "kafelki z pamięci podręcznej",
+    "map.footprints": "Obrysy z grafu, w pamięci podręcznej tego urządzenia",
+    "map.footprints_cached": "Obrysy z kopii tego urządzenia (bez węzła)",
+    "map.native": "Narysowana w {crs}: bez reprojekcji nie ma mapy bazowej ani pozycji",
+    "map.none": "Żadne miejsce w tym pokoju nie ma jeszcze obrysu.",
+    "map.no_footprint": "Bez obrysu: {list}",
+    "map.cut": "wkop",
+    "map.where": "📍 Gdzie jestem",
+    "map.where_no": "Pozycja nie jest dostępna na tym urządzeniu.",
+    "map.pick_place": "Kliknij wykop, aby zobaczyć jego jednostki.",
+    "map.place_filter": "Miejsce: {place}",
+    "map.gis_note": "Pomiary, plany i ortofotomapy wykonuje się w PyArchInit i EMStudio.",
+    "map.heriverse_none": "Nie ma jeszcze sprawdzonego adresu do otwarcia Heriverse w pokoju.",
+    "map.open_noroom": "Ten węzeł zapisuje do lokalnego kontenera: nie ma pokoju do otwarcia.",
+    "map.pyarchinit_file": "Zapisano plik wymiany: PyArchInit nie da się jeszcze otworzyć z zewnątrz.",
+    "act.open_pyarchinit": "Otwórz w PyArchInit",
     "nav.prev_unit": "Poprzednia jednostka",
     "nav.next_unit": "Następna jednostka",
     "nav.jump": "Przejdź do jednostki…",
@@ -2127,6 +2573,26 @@ const STRINGS = {
     "room.pending.many": "{n} twoich operacji czeka na węźle dla tego pokoju.",
     "f.deliver_now": "Przekaż teraz",
     "f.delivering": "Przekazywanie…",
+    "mode.label": "Stanowisko",
+    "mode.field": "W terenie",
+    "nav.sheet": "Karta",
+    "nav.finds": "Zabytki",
+    "nav.photos": "Zdjęcia",
+    "nav.excavation": "Wykopalisko",
+    "nav.inroom": "W tym pokoju",
+    "ctl.card": "Karta",
+    "view.unit": "Strona jednostki",
+    "insp.elsewhere": "Gdzie indziej",
+    "act.new_unit": "Nowa jednostka",
+    "act.new_find": "Nowa karta zabytków",
+    "act.add_photos": "Dodaj zdjęcia",
+    "act.new_area": "Nowy obszar",
+    "col.unit": "Jednostka",
+    "col.definition": "Definicja",
+    "col.area": "Obszar",
+    "col.complete": "Wypełnienie",
+    "col.edited": "Ostatnia zmiana",
+    "col.class": "Klasa",
   },
   // <<< ui_strings.py
 };
@@ -2489,9 +2955,15 @@ function setWhere(where) {
 
 /** Who and where, as headers. `where` defaults to the current one; a queued
  *  note passes the one it was dictated for. */
-function signed(extra, where) {
+function signed(extra, where, posture) {
   const headers = { ...(extra || {}) };
   if (TOKEN) headers.Authorization = "Bearer " + TOKEN;
+  // DA DOVE SI SCRIVE (14 novembre): «trench» in campo, «desk» alla
+  // scrivania — l'interruttore della barra, o la postura che una nota in coda
+  // aveva quando è stata detta. Il nodo la scrive accanto alla descrizione
+  // (`app/unita.py`). Non è un permesso e non è un posto: è un luogo di lavoro.
+  const p = posture === undefined ? writingPosture() : posture;
+  if (p) headers["X-SG-Posture"] = p;
   const w = where === undefined ? readWhere() : where;
   if (w && w.room) {
     headers["X-StratiGraph-Room"] = w.room;
@@ -2502,10 +2974,10 @@ function signed(extra, where) {
 
 /** A request to the node, signed, renewed and — on a 401 — renewed once more
  *  and retried: the token may have lapsed between the check and the answer. */
-async function request(path, init, where) {
+async function request(path, init, where, posture) {
   await freshToken();
   const go = () => fetch(NODE + path, { ...init,
-                                         headers: signed(init && init.headers, where) });
+                                         headers: signed(init && init.headers, where, posture) });
   let res = await go();
   if (res.status === 401 && REFRESH && await renew()) res = await go();
   return res;
@@ -2535,7 +3007,31 @@ function openMe(open) {
 $("me").addEventListener("click", () => openMe($("me-sheet").hidden));
 $("me-sheet").addEventListener("click", (e) => { if (e.target.id === "me-sheet") openMe(false); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") openMe(false); });
-$("me-signout").addEventListener("click", () => { openMe(false); $("signout").click(); });
+// PRIMA DI USCIRE, CON CONSEGNE IN SOSPESO (14 novembre, CHNT): sul telefono e
+// sul tablet — «In campo» — l'uscita si ferma e dice quante note di chi firma
+// aspettano ancora, con le due strade. Alla scrivania si esce come prima: la
+// coda resta lì, ed è il caso in cui chi esce se ne accorge da sé.
+$("me-signout").addEventListener("click", () => {
+  const mode = document.getElementById("surface")?.dataset.sgMode || "";
+  const waiting = window.SG ? window.SG.pending : 0;
+  if (waiting && mode !== "desktop" && $("me-guard").hidden) {
+    $("me-guard-says").textContent = t("f.signout_guard", { n: waiting });
+    $("me-guard").hidden = false;
+    return;
+  }
+  $("me-guard").hidden = true;
+  openMe(false); $("signout").click();
+});
+$("me-guard-deliver").addEventListener("click", async () => {
+  await flush();
+  const waiting = window.SG ? window.SG.pending : 0;
+  if (!waiting) { $("me-guard").hidden = true; return; }
+  $("me-guard-says").textContent = t("f.signout_guard", { n: waiting });
+});
+$("me-guard-out").addEventListener("click", () => {
+  $("me-guard").hidden = true;
+  openMe(false); $("signout").click();
+});
 
 /** Show an answer, and read it out loud — the person hearing it has their hands
  *  in the soil.
@@ -2951,6 +3447,12 @@ window.SG = {
   get access() { return ACCESS; },
   get readOnly() { return Boolean(ACCESS && ACCESS.member && !ACCESS.can_write); },
   send, post, show, t, scriptDir,
+  //: l'ora dell'ultima conferma vera del nodo (ms), o 0
+  get savedAt() { return LAST_SAVED; },
+  //: quante note di CHI FIRMA aspettano su questo dispositivo
+  get pending() { return readQueue().filter((item) => isMine(item, WHO?.subject || "")).length; },
+  flush: () => flush(),
+  dictate: (lang) => dictate(lang),
   // the three every module must use instead of its own `fetch` + header: who
   // (renewed), where, and the retry on a lapsed token
   headers: (extra) => signed(extra), request, freshToken,
@@ -3098,12 +3600,12 @@ function failure(kind, detail) {
   return Object.assign(new Error(kind), { kind, detail: detail || "" });
 }
 
-async function post(path, body, where) {
+async function post(path, body, where, posture) {
   let res;
   try {
     res = await request(path, { method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(body) }, where);
+                                body: JSON.stringify(body) }, where, posture);
   } catch { throw failure("network"); }
   if (res.status === 401) throw failure("unsigned");
   if (res.status === 403) {
@@ -3122,6 +3624,7 @@ async function send(path, body, describe) {
     // chi scrive (ruolo, revoca). La si dice con la frase della stanza, e la
     // nota non va in coda come se mancasse la rete.
     show(answer.ok, answer.message, answer.tool || "");
+    noteSaved(answer);
     return Boolean(answer.ok);
   } catch (err) {
     if (err.kind === "refused") {
@@ -3130,9 +3633,12 @@ async function send(path, body, describe) {
     }
     const queue = readQueue();
     queue.push({ path, body, at: Date.now(), describe, where,
+                 // la postura di QUANDO è stata detta, non di quando parte
+                 posture: writingPosture(),
                  subject: WHO?.subject || "", by: WHO?.name || "" });
     writeQueue(queue);
     renderQueue();
+    paintSaveState();
     show(false, err.kind === "unsigned" ? t("signin.expired") : t("queue.kept"),
          describe, LOCALE);
     return false;
@@ -3157,7 +3663,8 @@ async function flush() {
     try {
       // …to the room it was DICTATED for, not the one this page is in now
       const answer = await post(item.path, item.body,
-                                item.where === undefined ? null : item.where);
+                                item.where === undefined ? null : item.where,
+                                item.posture === undefined ? "" : item.posture);
       if (answer.refused && !answer.queued) {
         // IL RUOLO È STATO TOLTO nel frattempo: la nota RESTA su questo
         // dispositivo, con la frase della stanza accanto, e la riga sotto i
@@ -3170,6 +3677,7 @@ async function flush() {
       // coda del nodo la mostra la colonna («Consegna ora»).
       if (answer.refused) { handed++; why = answer.message; continue; }
       delete item.refused;
+      noteSaved(answer);
       sent++;
     } catch (err) {
       if (err.kind === "refused") {
@@ -3182,6 +3690,7 @@ async function flush() {
   }
   writeQueue(left);
   renderQueue();
+  paintSaveState();
   if (handed) show(false, why, "", LOCALE);
   else if (sent) show(true, t("queue.sent" + (sent === 1 ? ".one" : ".many"),
                              { n: sent }), "", LOCALE);
@@ -3199,8 +3708,11 @@ async function ping() {
     const inRoom = Boolean(ACCESS && ACCESS.room) || health.writes_to.startsWith("room");
     // LA PASTIGLIA DICE POCO (SF-04): la stanza è già scritta accanto, qui
     // restano «in rete» o «locale» e l'ora; la frase lunga va nel suggerimento.
-    state.textContent = checkSays(t(inRoom ? "pill.room" : "pill.local"));
-    state.title = t(inRoom ? "node.room" : "node.local") + " · " + t("check.title");
+    PILL_WHERE = t(inRoom ? "pill.room" : "pill.local");
+    state.textContent = checkSays(PILL_WHERE);
+    state.title = t(inRoom ? "node.room" : "node.local")
+      + " · " + t("check.ok", { where: PILL_WHERE, time: hhmm(CHECK_AT || Date.now()) })
+      + " · " + t("check.title");
     // Which speech road, from what the node SAYS it has — asked every time, so a
     // node that gains (or loses) a model is followed rather than remembered.
     chooseSpeechRoad(health);
@@ -3251,8 +3763,49 @@ function hhmm(when) {
 /** La riga dello stato: dove si scrive, quando si è controllato, cosa aspetta. */
 function checkSays(where) {
   const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
-  return t("check.ok", { where, time: hhmm(CHECK_AT || Date.now()) })
-    + (waiting ? t("check.queue", { n: waiting }) : "");
+  // IL SALVATAGGIO, SEMPRE VISIBILE (14 novembre, CHNT). «salvato alle hh:mm»
+  // è l'ora dell'ULTIMA CONFERMA VERA del nodo (`saved_at`), mai quella di un
+  // controllo: prima la pastiglia diceva l'ora del battito, e un'ora accanto a
+  // «in rete» si legge come «salvato». Con qualcosa in coda dice la coda.
+  if (waiting) return `${where} · ${t("save.queued", { n: waiting })}`;
+  if (LAST_SAVED) return `${where} · ${t("save.saved", { t: hhmm(LAST_SAVED) })}`;
+  return where;
+}
+
+/* L'ORA DELL'ULTIMA CONFERMA, quella che il nodo ha scritto nella risposta
+ * (`Answer.saved_at`: accettata dalla stanza o dal container, non in coda, non
+ * rifiutata). Sul dispositivo, perché ricaricare la pagina non la cancelli: è
+ * un fatto passato, non uno stato. */
+const SAVED_KEY = "sg.saved.v1";
+let LAST_SAVED = (() => {
+  try { return Date.parse(localStorage.getItem(SAVED_KEY) || "") || 0; } catch { return 0; }
+})();
+function noteSaved(answer) {
+  if (!answer || !answer.ok || answer.queued || answer.refused || !answer.saved_at) return;
+  const at = Date.parse(answer.saved_at);
+  if (!at) return;
+  LAST_SAVED = at;
+  try { localStorage.setItem(SAVED_KEY, answer.saved_at); } catch { /* full */ }
+  paintSaveState();
+}
+/** La pastiglia, ridetta senza un nuovo battito: dopo una conferma, o una coda
+ *  che cambia. Senza rete resta com'è (la ridice `check`). */
+let PILL_WHERE = "";
+function paintSaveState() {
+  if (!PILL_WHERE || state.classList.contains("off")) {
+    const waiting = readQueue().filter((item) => isMine(item, WHO?.subject || "")).length;
+    if (waiting && state.classList.contains("off")) {
+      state.textContent = t("save.queued", { n: waiting });
+    }
+    return;
+  }
+  state.textContent = checkSays(PILL_WHERE);
+}
+/** LA POSTURA DI CHI SCRIVE, dalla conchiglia («trench» in campo, «desk» alla
+ *  scrivania); vuota se la conchiglia non c'è ancora. */
+function writingPosture() {
+  try { return (window.SGShell && window.SGShell.writingPosture
+                && window.SGShell.writingPosture()) || ""; } catch { return ""; }
 }
 function scheduleCheck(wait) {
   clearTimeout(CHECK_TIMER);
@@ -3280,8 +3833,12 @@ async function check() {
       const wait = CHECK_BACKOFF[Math.min(CHECK_FAILS, CHECK_BACKOFF.length - 1)];
       CHECK_FAILS += 1;
       state.className = "state off";
-      state.textContent = t("check.retry", { s: Math.round(wait / 1000) })
-        + (readQueue().length ? t("check.queue", { n: readQueue().length }) : "");
+      // SENZA RETE, la coda e la promessa (14 novembre): «n in coda · niente
+      // si perde». Senza coda, quando si riprova.
+      state.textContent = readQueue().length
+        ? t("save.queued", { n: readQueue().length })
+        : t("check.retry", { s: Math.round(wait / 1000) });
+      state.title = t("check.retry", { s: Math.round(wait / 1000) });
       scheduleCheck(wait);
     }
   })();
@@ -3476,6 +4033,67 @@ async function sendRecording(blob) {
     show(false, t("queue.kept"), "", LOCALE);
   }
 }
+
+// ── DETTA IL RESTO (14 novembre, CHNT): la voce che AGGIUNGE a un testo ─────
+//
+// La stessa strada della dettatura di oggi — il riconoscitore del browser, o
+// la registrazione che il nodo trascrive (`/v1/listen`) — ma l'esito è il
+// TESTO, non un comando: `only=text` chiede al nodo di trascrivere e basta.
+// Sulla strada del nodo si tocca per cominciare e si tocca per finire
+// (`dictateStop`): tenere premuto un bottone dentro una casella a tutto schermo
+// è il gesto che iOS trasforma in una selezione. Senza microfono: `null`, e il
+// bottone lo dice prima (`SG.canDictate`).
+let DICTATING = null;
+function dictate(lang) {
+  if (DICTATING) return DICTATING.promise;
+  const said = lang || nodeLanguage();
+  if (SPEECH_ROAD === "browser" && SR) {
+    const once = new SR();
+    once.interimResults = false;
+    once.lang = said;
+    const promise = new Promise((resolve) => {
+      once.onresult = (e) => resolve(e.results[0][0].transcript || "");
+      once.onerror = () => resolve(null);
+      once.onend = () => resolve(null);
+    }).finally(() => { DICTATING = null; });
+    DICTATING = { promise, stop: () => { try { once.stop(); } catch {} } };
+    try { once.start(); } catch { DICTATING = null; return Promise.resolve(null); }
+    return promise;
+  }
+  if (SPEECH_ROAD === "node") {
+    const promise = (async () => {
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch { return null; }
+      const chunks = [];
+      const rec = new MediaRecorder(stream);
+      rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      const stopped = new Promise((r) => { rec.onstop = r; });
+      DICTATING.stop = () => { if (rec.state !== "inactive") rec.stop(); };
+      rec.start();
+      const cap = setTimeout(() => DICTATING && DICTATING.stop(), 60000);
+      await stopped;
+      clearTimeout(cap);
+      stream.getTracks().forEach((track) => track.stop());
+      if (!chunks.length) return null;
+      const form = new FormData();
+      form.append("audio", new Blob(chunks), "dictation.webm");
+      form.append("language", said);
+      form.append("only", "text");
+      try {
+        const res = await request("/v1/listen", { method: "POST", body: form });
+        if (!res.ok) return null;
+        return (await res.json()).said || "";
+      } catch { return null; }
+    })().finally(() => { DICTATING = null; });
+    DICTATING = { promise, stop: () => {} };
+    return promise;
+  }
+  return Promise.resolve(null);
+}
+window.SG.dictateStop = () => { if (DICTATING) DICTATING.stop(); };
+Object.defineProperty(window.SG, "canDictate", { get: () => SPEECH_ROAD !== "type" });
+Object.defineProperty(window.SG, "dictating", { get: () => Boolean(DICTATING) });
 
 // ── the gesture, whichever road it takes ────────────────────────────────────
 // Hold to record on the node's road, one touch on the browser's: the two are

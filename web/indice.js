@@ -37,7 +37,8 @@ const SG = () => window.SG || {};
  * Pure le due funzioni che decidono (`matches`, `filled`), perché sono quelle
  * che si possono sbagliare in silenzio: un contatore giusto su un elenco
  * sbagliato sembra giusto. */
-export const filters = { q: "", area: null, ai: false, inc: false, place: null };
+export const filters = { q: "", area: null, ai: false, inc: false, place: null,
+                         refine: false };
 
 /* IL LUOGO (12 novembre): un clic su un saggio della mappa apre l'elenco
  * filtrato su quel luogo — `{id, name}`, l'id perché due luoghi possono
@@ -100,6 +101,10 @@ export function matches(u, f, listing, fallback) {
   if (f.area && !(u.area || []).includes(f.area)) return false;
   if (f.place && !(u.places || []).includes(f.place.id)) return false;
   if (f.ai && !(Number(u.ai) > 0)) return false;
+  // DA RIFINIRE ALLA SCRIVANIA (14 novembre, CHNT): scritta solo in trincea e
+  // sotto la soglia di parole. Lo decide il NODO (`to_refine`, una costante sola
+  // in `app/unita.py`); un'unità di cui non si sa dove è stata scritta non entra.
+  if (f.refine && !u.to_refine) return false;
   if (f.inc) {
     const share = filled(u, listing, fallback);
     if (share === null || share >= 0.5) return false;
@@ -110,6 +115,9 @@ export function matches(u, f, listing, fallback) {
 /** Quante schede si mostrano prima di dire che ce n'è altre. Uno scavo vero ne
  *  ha migliaia, e una lista lunga su un telefono è una lista che non si legge. */
 export const SHOWN = 40;
+//: …alla scrivania la tabella ne tiene di più: è lo schermo grande, e la
+//: riga è una riga sola (14 novembre)
+export const SHOWN_DESK = 200;
 
 /** La riga di un'unità: cosa è, quanto è piena, e chi l'ha toccata per ultimo. */
 function line(u, t, onPick, listing, lang) {
@@ -172,20 +180,63 @@ function line(u, t, onPick, listing, lang) {
     cosa.textContent = u.description;
     riga.append(cosa);
   }
-  if (!u.number) {
-    //  UN'UNITÀ DI CUI NON SI SA IL NUMERO NON SI RIAPRE. Succede con i grafi
-    //  importati, e proporre una scheda su un numero indovinato sarebbe la
-    //  stessa famiglia di errori del numero mistypato.
-    riga.disabled = true;
-    riga.title = t("index.noNumber");
-    const perche = document.createElement("span");
-    perche.className = "indice-cosa";
-    perche.textContent = t("index.noNumber");
-    riga.append(perche);
-    return riga;
-  }
+  //  UN'UNITÀ SENZA NUMERO SI APRE DAL SUO ID (14 novembre), in lettura: un
+  //  numero indovinato sarebbe lo stesso errore del numero mistypato, ma l'id
+  //  è l'unità. Lo dice UNA riga sopra l'elenco, non ogni riga.
+  if (!u.number) riga.dataset.byId = "true";
   riga.addEventListener("click", () => onPick(u));
   return riga;
+}
+
+/** DOVE È STATA SCRITTA, come la colonna lo dice: «in trincea», «alla
+ *  scrivania», «trincea + scrivania», o «—» se non si sa. */
+export function writtenLabel(u, t) {
+  const key = { trench: "w.trench", desk: "w.desk", both: "w.both" }[u.written_in];
+  return key ? t(key) : "—";
+}
+
+/** LA RIGA DELLA TABELLA, alla scrivania (mockup v7.2): Unità · Definizione ·
+ *  Scritta · Parole · Area · Compilazione · AI · Ultima modifica. */
+function row(u, t, onPick, listing, fallback, prefix) {
+  const tr = document.createElement("tr");
+  tr.dataset.unit = u.id;
+  tr.tabIndex = 0;
+  if (!u.number) tr.dataset.byId = "true";
+  const td = (text, cls) => {
+    const c = document.createElement("td");
+    if (cls) c.className = cls;
+    if (text instanceof Node) c.append(text); else c.textContent = text;
+    tr.append(c);
+    return c;
+  };
+  td(u.number ? `${prefix}${u.number}` : (u.name || u.id), "id");
+  td(u.definition || u.description || "");
+  const wr = document.createElement("span");
+  wr.className = `wr ${u.written_in || "unknown"}`;
+  wr.textContent = writtenLabel(u, t);
+  td(wr);
+  td(String(u.words || 0), "num" + (u.to_refine ? " short" : ""));
+  td((u.area || []).join(", "));
+  const share = filled(u, listing, fallback);
+  const declared = u.scheda && u.scheda.template;
+  const item = (listing || []).find((x) => x.id === declared)
+    || (listing || []).find((x) => x.id === fallback) || (listing || [])[0];
+  const total = item ? Number(item.fields) || 0 : 0;
+  const mini = document.createElement("span");
+  mini.className = "mini";
+  const bar = document.createElement("i");
+  bar.style.width = `${Math.round((share || 0) * 100)}%`;
+  mini.append(bar);
+  const comp = td(mini, "num");
+  comp.append(` ${u.fields || 0}${total ? "/" + total : ""}`);
+  const ai = document.createElement("span");
+  if (Number(u.ai) > 0) { ai.className = "tag warn"; ai.textContent = String(u.ai); }
+  td(ai);
+  td(String(u.modified_at || "").slice(0, 10), "num");
+  const go = () => onPick(u);
+  tr.addEventListener("click", go);
+  tr.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  return tr;
 }
 
 /** Gli standard divisi: quelli già usati nella stanza (dal più usato) e gli
@@ -202,7 +253,9 @@ export function splitByUse(lista, unita) {
   return { used, others };
 }
 
-export function mount({ t, openScheda, schede, current = () => null }) {
+export function mount({ t, openScheda, schede, current = () => null,
+                        onRead = () => {}, isDesk = () => false,
+                        prefix = () => "US " }) {
   const host = $("index-list");
   const nota = $("index-note");
   const titolo = $("index-title");
@@ -239,7 +292,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
       //  è la sua virtù. Il numero lo dice il nodo (`number_from_unit_id`),
       //  non questa pagina.
       b.addEventListener("click",
-        () => openScheda(item.id, u ? { us: u.number } : null));
+        () => openScheda(item.id, u ? (u.number ? { us: u.number } : { node: u.id }) : null));
       return b;
     };
     if (used.length) {
@@ -286,6 +339,8 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     return b;
   }
 
+  let lastRead = null;
+
   async function repaint() {
     const seam = SG();
     asking = false;
@@ -312,6 +367,8 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     // LE STESSE UNITÀ del completamento e di ‹ ›: una lettura, condivisa.
     room.units = unita;
     room.read = true;
+    lastRead = letto;
+    onRead(letto);
     if (!unita.length) {
       host.replaceChildren(newButton());
       nota.textContent = t("index.empty");
@@ -363,18 +420,61 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     }
     chip(t("flt.ai"), filters.ai, () => { filters.ai = !filters.ai; }, "ai");
     chip(t("flt.incomplete"), filters.inc, () => { filters.inc = !filters.inc; }, "inc");
+    const ref = chip(`✎ ${t("flt.refine")}`, filters.refine,
+                     () => { filters.refine = !filters.refine; }, "refine");
+    ref.classList.add("ref");
+    ref.title = t("flt.refine_note", { n: (lastRead && lastRead.refine_under_words) || 30 });
     const conta = document.createElement("span");
     conta.className = "indice-conta";
     conta.id = "index-count";
     bar.append(conta);
 
-    const elenco = document.createElement("div");
-    elenco.className = "indice-elenco";
+    const desk = isDesk();
+    const elenco = document.createElement(desk ? "div" : "div");
+    elenco.className = desk ? "indice-tabella scroller" : "indice-elenco";
+    // CIÒ CHE RESTA FUORI E CIÒ CHE SI APRE DALL'ID, detto UNA volta, in
+    // grigio (14 novembre): prima «l'id di questa unità non porta un numero»
+    // stava su ogni riga, e documenti ed estrattori sembravano unità.
+    const fuori = document.createElement("p");
+    fuori.className = "hint indice-fuori";
+    const said = [];
+    const left = (lastRead && lastRead.left_out) || [];
+    if (left.length) {
+      said.push(t("index.leftOut", {
+        n: left.reduce((a, x) => a + x.count, 0),
+        list: left.map((x) => `${x.label} ${x.count}`).join(", ") }));
+    }
+    const senza = unita.filter((u) => !u.number).length;
+    if (senza) said.push(t("index.byIdNote", { n: senza }));
+    // una frase per riga: due frasi in una riga, in ebraico con il ripiego
+    // inglese, si mescolano (misurato)
+    fuori.replaceChildren(...said.map((x) => Object.assign(document.createElement("span"),
+                                                            { textContent: x })));
+    fuori.hidden = !said.length;
     const riempi = () => {
       const visti = unita.filter((u) => matches(u, filters, listing, fallback));
       conta.textContent = t("flt.count", { n: visti.length, t: unita.length });
-      elenco.replaceChildren(...visti.slice(0, SHOWN)
-        .map((u) => line(u, t, pick, listing, SG().locale)));
+      if (desk) {
+        const head = document.createElement("thead");
+        const hr = document.createElement("tr");
+        for (const k of ["col.unit", "col.definition", "col.written", "col.words",
+                         "col.area", "col.complete", "AI", "col.edited"]) {
+          const th = document.createElement("th");
+          th.textContent = k === "AI" ? "AI" : t(k);
+          hr.append(th);
+        }
+        head.append(hr);
+        const body = document.createElement("tbody");
+        body.append(...visti.slice(0, SHOWN_DESK)
+          .map((u) => row(u, t, pick, listing, fallback, prefix(u))));
+        const table = document.createElement("table");
+        table.className = "tbl";
+        table.append(head, body);
+        elenco.replaceChildren(table);
+      } else {
+        elenco.replaceChildren(...visti.slice(0, SHOWN)
+          .map((u) => line(u, t, pick, listing, SG().locale)));
+      }
       if (!visti.length) {
         const vuoto = document.createElement("p");
         vuoto.className = "hint";
@@ -383,7 +483,7 @@ export function mount({ t, openScheda, schede, current = () => null }) {
         nota.textContent = "";
         return;
       }
-      const oltre = visti.length - Math.min(visti.length, SHOWN);
+      const oltre = visti.length - Math.min(visti.length, desk ? SHOWN_DESK : SHOWN);
       nota.textContent = oltre > 0
         ? t("index.more", { n: oltre, total: visti.length })
         : t(unita.length === 1 ? "index.total.one" : "index.total.many",
@@ -391,7 +491,11 @@ export function mount({ t, openScheda, schede, current = () => null }) {
     };
     cerca.addEventListener("input", () => { filters.q = cerca.value; riempi(); });
     const focused = document.activeElement && document.activeElement.id === "index-search";
-    host.replaceChildren(newButton(), bar, elenco);
+    // alla scrivania «Nuova US» sta nella striscia (`scrivania.js`): qui resta
+    // il bottone, nascosto, perché è la stessa porta
+    const nuova = newButton();
+    if (desk) nuova.hidden = true;
+    host.replaceChildren(nuova, bar, fuori, elenco);
     riempi();
     if (focused) cerca.focus();
   }
@@ -401,8 +505,15 @@ export function mount({ t, openScheda, schede, current = () => null }) {
    *  B5b). Le altre chiedono, come prima — il secondo tocco resta dove serve. */
   function pick(u) {
     const declared = u.scheda && u.scheda.template;
+    const su = u.number ? { us: u.number } : { node: u.id };
     if (declared && schede().some((x) => x.id === declared)) {
-      openScheda(declared, { us: u.number });
+      openScheda(declared, su);
+      return;
+    }
+    // senza numero e con una sola definizione, o con quella aperta: si apre
+    const lista = schede();
+    if (!u.number && (lista.length === 1 || current())) {
+      openScheda(current() || lista[0].id, su);
       return;
     }
     askStandard(u);

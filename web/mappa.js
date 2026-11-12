@@ -349,11 +349,13 @@ export const lastMap = () => last;
 export function openSection(state, mk, tr) {
   const number = state && state.us ? String(state.us) : "";
   const unit = (room.units || []).find((u) => number && u.number === number);
+  // «ALTROVE» (14 novembre, mockup v7.2): EMStudio · Heriverse · PyArchInit,
+  // nell'ordine del mockup e con la logica di sempre
   const sec = mk("section", { class: "fo-apri" },
-    mk("p", { class: "fo-eyebrow", text: tr("insp.open") }));
-  for (const [tool, key] of [["pyarchinit", "act.open_pyarchinit"],
-                             ["emstudio", "act.open_em_unit"],
-                             ["heriverse", "act.open_hv"]]) {
+    mk("p", { class: "fo-eyebrow", text: tr("insp.elsewhere") }));
+  for (const [tool, key] of [["emstudio", "act.open_em_unit"],
+                             ["heriverse", "act.open_hv"],
+                             ["pyarchinit", "act.open_pyarchinit"]]) {
     const b = mk("button", { type: "button", class: "indice-chip", "data-open": tool,
                              text: tr(key) });
     if (tool === "heriverse" || !unit) {

@@ -1,0 +1,296 @@
+/* LA SCRIVANIA COME NEL MOCKUP (NIGHT 14 novembre 2026, v7.2).
+ *
+ * Solo alla scrivania (`data-sg-mode="desktop"`): in campo — telefono e tablet
+ * — la superficie resta quella di prima. La griglia diventa quella del mockup:
+ *
+ *     barra
+ *     sezioni
+ *     striscia
+ *     colonna | piano | ispettore
+ *
+ * Solo ruoli del tema (`--sg-*`): nessun colore scritto qui
+ * (`tests/test_brand.py`). */
+
+/* ── la griglia ──────────────────────────────────────────────────────────── */
+#surface[data-sg-mode="desktop"] {
+  grid-template-areas: "bar bar bar" "tabs tabs tabs" "strip strip strip" "nav work insp";
+  grid-template-columns: 12.5rem minmax(0, 1fr) 19rem;
+  grid-template-rows: auto auto auto 1fr;
+}
+#surface[data-sg-mode="desktop"] .desktabs { grid-area: tabs; }
+#surface[data-sg-mode="desktop"] .deskstrip { grid-area: strip; }
+#surface[data-sg-mode="desktop"] .deskinsp { grid-area: insp; }
+#surface[data-sg-mode="desktop"] .sidenav { width: auto; }
+/* l'ispettore che non c'è (la voce): il piano prende anche la sua colonna */
+#surface[data-sg-mode="desktop"]:has(#desk-insp[hidden]) {
+  grid-template-areas: "bar bar bar" "tabs tabs tabs" "strip strip strip" "nav work work";
+}
+
+/* ── la barra ────────────────────────────────────────────────────────────── */
+.postseg {
+  display: inline-flex;
+  border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-sm);
+  overflow: hidden;
+  background: var(--sg-surface);
+}
+.postseg button {
+  width: auto; margin: 0; box-shadow: none; border: 0; border-radius: 0;
+  padding: 6px 12px; background: none; color: var(--sg-text);
+  font-size: var(--sg-text-sm); text-align: center; cursor: pointer;
+}
+.postseg button + button { border-inline-start: 1px solid var(--sg-line); }
+.postseg button[aria-pressed="true"] {
+  background: var(--sg-surface-sunk);
+  box-shadow: inset 0 -2px 0 var(--sg-accent);
+  font-weight: var(--sg-weight-subtitle);
+}
+.barvoice {
+  display: inline-flex; align-items: center; gap: 6px;
+  width: auto; margin: 0; box-shadow: none;
+  padding: 6px 12px; border-radius: var(--sg-radius-pill);
+  border: 1px solid var(--sg-accent); background: var(--sg-surface);
+  color: var(--sg-text); font-size: var(--sg-text-sm); cursor: pointer;
+}
+.barvoice[aria-current="true"] { background: var(--sg-accent); color: var(--sg-surface); }
+.barlang:empty { display: none; }
+.barlang select { margin: 0; }
+.whoroom button.room {
+  width: auto; margin: 0; padding: 0; border: 0; box-shadow: none;
+  background: none; color: var(--sg-text); font: inherit; text-align: end;
+  cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px;
+}
+.whoroom button.room:hover { color: var(--sg-accent-quiet); }
+
+/* la scelta della stanza, sotto il suo nome */
+.roompop {
+  position: fixed; inset-block-start: 3.4rem; inset-inline-end: var(--sg-space-3);
+  z-index: 40; width: min(26rem, calc(100vw - 2rem));
+  max-height: 70dvh; overflow: auto;
+  background: var(--sg-surface); border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius); box-shadow: var(--sg-shadow-lifted);
+  padding: var(--sg-space-2) 0;
+}
+.roompop h3 {
+  margin: var(--sg-space-2) var(--sg-space-3) var(--sg-space-1);
+  font-family: var(--sg-font-sans); font-size: var(--sg-text-xs);
+  font-weight: var(--sg-weight-subtitle); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sg-muted);
+}
+
+/* ── le sezioni ──────────────────────────────────────────────────────────── */
+.desktabs {
+  display: flex; gap: 2px; padding: 0 var(--sg-space-3);
+  background: var(--sg-surface); border-bottom: 1px solid var(--sg-line);
+}
+.desktabs button {
+  display: inline-flex; align-items: center; gap: 8px;
+  width: auto; margin: 0; box-shadow: none; border: 0; border-radius: 0;
+  background: none; color: var(--sg-text); cursor: pointer;
+  padding: 12px 16px 11px; font-size: var(--sg-text-base);
+  border-bottom: 2px solid transparent;
+}
+.desktabs button:hover { background: var(--sg-surface-sunk); }
+.desktabs button[aria-current="true"] {
+  border-bottom-color: var(--sg-accent);
+  font-weight: var(--sg-weight-subtitle);
+}
+.desktabs .cnt { font: 400 var(--sg-text-xs) var(--sg-font-mono); color: var(--sg-muted); }
+.dk-glyph { display: inline-flex; line-height: 0; }
+
+/* ── la striscia ─────────────────────────────────────────────────────────── */
+.deskstrip {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sg-space-2) var(--sg-space-4);
+  padding: var(--sg-space-2) var(--sg-space-3);
+  background: var(--sg-bg); border-bottom: 1px solid var(--sg-line);
+}
+.deskstrip-sec, .deskstrip-sheet {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sg-space-2) var(--sg-space-4); flex: 1 1 auto;
+}
+.deskstrip .unitname { display: flex; align-items: baseline; gap: var(--sg-space-2); }
+.deskstrip h1 {
+  margin: 0; font-family: var(--sg-font-display);
+  font-weight: var(--sg-weight-headline); font-size: var(--sg-text-xl);
+}
+.deskstrip .ctx { color: var(--sg-muted); font-size: var(--sg-text-sm); }
+.deskstrip .grow { flex: 1; }
+.deskstrip .primary {
+  width: auto; margin: 0; padding: 8px 16px; min-height: 0;
+  font-size: var(--sg-text-sm); border-radius: var(--sg-radius-sm);
+}
+/* il titolo dell'elenco lo dice già la striscia */
+#surface[data-sg-mode="desktop"] #index-title { display: none; }
+.deskstrip-sheet .unav { flex: 0 0 auto; }
+.deskstrip-sheet .fo-strip { flex: 1 1 auto; }
+.deskstrip .primary[disabled] { opacity: .5; cursor: not-allowed; }
+/* l'unità ‹ › e i comandi della scheda, in una riga */
+.deskstrip-sheet .unav { margin: 0; }
+.deskstrip-sheet .unav-here {
+  font-family: var(--sg-font-display); font-weight: var(--sg-weight-headline);
+  font-size: var(--sg-text-xl);
+}
+.deskstrip-sheet .fo-strip {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--sg-space-2) var(--sg-space-4); margin: 0; padding: 0; border: 0;
+}
+.deskstrip-sheet select.std {
+  width: auto; margin: 0; padding: 6px 10px; min-width: 13rem;
+  border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm);
+  background: var(--sg-surface); color: var(--sg-text); font: inherit;
+}
+
+/* ── la colonna: «In questa stanza» ─────────────────────────────────────── */
+#surface[data-sg-mode="desktop"] .sidenav > :not(#nav-inroom-box):not(.navgrab) { display: none; }
+#surface[data-sg-mode="desktop"] .sidenav .navgrab { display: none; }
+.inroom .navitem { display: flex !important; justify-content: space-between; gap: 8px; }
+.inroom .navitem .count { float: none; }
+
+/* ── l'ispettore ─────────────────────────────────────────────────────────── */
+.deskinsp {
+  background: var(--sg-surface);
+  border-inline-start: 1px solid var(--sg-line);
+  overflow-y: auto; min-width: 0;
+}
+.deskinsp .fo-insp { border: 0; position: static; max-height: none; }
+.deskinsp section { padding: var(--sg-space-4); border-bottom: 1px solid var(--sg-line); }
+.dk-open {
+  display: flex !important; align-items: center; gap: 10px;
+  width: 100%; margin: 0 0 8px; box-shadow: none;
+  padding: 10px 12px; border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius-sm); background: var(--sg-bg);
+  color: var(--sg-text); font: inherit; text-align: start; cursor: pointer;
+}
+.dk-open[disabled] { opacity: .55; cursor: not-allowed; }
+.fo-apri .indice-chip { display: block; width: 100%; text-align: start; margin: 0 0 8px; }
+/* «Dettata in trincea · n parole» */
+.refine {
+  border-inline-start: 3px solid var(--sg-accent-quiet);
+  background: color-mix(in srgb, var(--sg-accent-quiet) 8%, transparent);
+}
+.refine[data-refine="short"] h2 { color: var(--sg-accent-quiet); }
+/* il piano del Foglio quando l'ispettore sta fuori: tutta la larghezza */
+.fo-body[data-insp="outside"] { grid-template-columns: minmax(0, 1fr); }
+
+/* ── l'elenco delle unità, in tabella ───────────────────────────────────── */
+.indice-tabella { overflow-x: auto; }
+.tbl {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: var(--sg-surface); border: 1px solid var(--sg-line);
+  border-radius: var(--sg-radius); overflow: hidden; font-size: var(--sg-text-sm);
+}
+.tbl th {
+  text-align: start; font: 500 var(--sg-text-xs) var(--sg-font-mono);
+  letter-spacing: .06em; text-transform: uppercase; color: var(--sg-muted);
+  background: var(--sg-surface-sunk); padding: 10px 12px;
+}
+.tbl td { padding: 12px; border-top: 1px solid var(--sg-line); vertical-align: middle; }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover td { background: var(--sg-bg); }
+.tbl tbody tr:focus-visible { outline: 2px solid var(--sg-accent); outline-offset: -2px; }
+.tbl td.id { font: 600 var(--sg-text-sm) var(--sg-font-mono); white-space: nowrap; }
+.tbl tr[data-by-id="true"] td.id { color: var(--sg-muted); }
+.tbl td.num { font-family: var(--sg-font-mono); white-space: nowrap; }
+.tbl td.num.short { color: var(--sg-accent-quiet); font-weight: 700; }
+.tbl .mini {
+  display: inline-block; width: 64px; height: 5px; vertical-align: middle;
+  border-radius: 3px; background: var(--sg-surface-sunk); overflow: hidden;
+}
+.tbl .mini i { display: block; height: 100%; background: var(--sg-info); }
+.tbl .tag.warn {
+  display: inline-block; min-width: 1.4em; text-align: center;
+  padding: 0 6px; border-radius: var(--sg-radius-pill);
+  background: color-mix(in srgb, var(--sg-warn) 16%, transparent);
+  color: var(--sg-warn); font: 600 var(--sg-text-xs) var(--sg-font-mono);
+}
+.wr {
+  font: 500 var(--sg-text-xs) var(--sg-font-mono); padding: 2px 7px;
+  border-radius: var(--sg-radius-pill); border: 1px solid var(--sg-line); white-space: nowrap;
+}
+.wr.trench { background: color-mix(in srgb, var(--sg-accent-quiet) 14%, transparent); }
+.wr.desk { background: var(--sg-surface-sunk); }
+.wr.both { background: color-mix(in srgb, var(--sg-info) 16%, transparent); }
+.wr.unknown { border-style: dashed; color: var(--sg-muted); }
+.indice-chip.ref[aria-pressed="true"] { background: var(--sg-accent-quiet); color: var(--sg-surface); border-color: transparent; }
+.indice-fuori { margin: 0 0 var(--sg-space-2); color: var(--sg-muted); }
+
+/* ── i pannelli nuovi ────────────────────────────────────────────────────── */
+.deskpanel .sheetwrap { display: grid; gap: var(--sg-space-3); }
+.dk-empty {
+  display: grid; justify-items: start; gap: var(--sg-space-2);
+  padding: var(--sg-space-5, 24px); border: 1px dashed var(--sg-line);
+  border-radius: var(--sg-radius); background: var(--sg-surface); color: var(--sg-muted);
+}
+.dk-empty h2 { margin: 0; font-family: var(--sg-font-display); color: var(--sg-text); font-size: var(--sg-text-lg); }
+.dk-empty p { margin: 0; max-width: 60ch; }
+.deskpanel .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--sg-space-3); }
+.pgrid .ph { border: 1px solid var(--sg-line); border-radius: var(--sg-radius-sm); background: var(--sg-surface); overflow: hidden; }
+.pgrid .ph.nolink { border-style: dashed; }
+.pgrid .img {
+  aspect-ratio: 4 / 3; display: grid; place-items: center;
+  background: repeating-linear-gradient(135deg, var(--sg-surface-sunk) 0 7px, var(--sg-bg) 7px 14px);
+  font: 600 var(--sg-text-xs) var(--sg-font-mono); color: var(--sg-muted);
+}
+.pgrid .cap { display: flex; justify-content: space-between; gap: 6px; padding: 6px 8px; font: 400 var(--sg-text-xs) var(--sg-font-mono); }
+.pgrid .cap span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree ul { padding-inline-start: var(--sg-space-4); border-inline-start: 1px solid var(--sg-line); margin-inline-start: var(--sg-space-2); }
+.tree .node {
+  display: flex !important; align-items: baseline; gap: 10px;
+  width: auto; margin: 2px 0; box-shadow: none; padding: 6px 10px;
+  border: 1px solid transparent; border-radius: var(--sg-radius-sm);
+  background: none; color: var(--sg-text); font: inherit; cursor: pointer; text-align: start;
+}
+.tree .node:hover { background: var(--sg-surface); border-color: var(--sg-line); }
+.tree .lv { font: 500 var(--sg-text-xs) var(--sg-font-mono); text-transform: uppercase; color: var(--sg-muted); min-width: 5.5em; }
+.tree .nm { font-weight: var(--sg-weight-subtitle); }
+.tree .cnt { font: 400 var(--sg-text-xs) var(--sg-font-mono); color: var(--sg-muted); }
+
+/* ── la pagina dell'unità (vista «Unità») ───────────────────────────────── */
+.unitpage { display: grid; gap: var(--sg-space-3); max-width: 60rem; }
+.unitpage .hero h2 { margin: 0; font-family: var(--sg-font-display); font-weight: var(--sg-weight-headline); }
+.unitpage .card { background: var(--sg-surface); border: 1px solid var(--sg-line); border-radius: var(--sg-radius); padding: var(--sg-space-3) var(--sg-space-4); }
+.unitpage h3 { margin: 0 0 var(--sg-space-2); font-size: var(--sg-text-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--sg-muted); }
+.up-row { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: var(--sg-space-3); padding: 6px 0; border-top: 1px solid var(--sg-line); }
+.up-row:first-of-type { border-top: 0; }
+.up-l { color: var(--sg-muted); font-size: var(--sg-text-sm); }
+
+/* ── RTL: la cornice segue l'interfaccia, la carta segue la sua scheda ──── */
+[dir="rtl"] .tbl td.id, [dir="rtl"] .tbl td.num, [dir="rtl"] .whoroom .orcid { unicode-bidi: isolate; direction: ltr; }
+
+/* ── 1100 px: l'ispettore si stringe, la colonna anche ──────────────────── */
+@media (max-width: 1280px) {
+  #surface[data-sg-mode="desktop"] { grid-template-columns: 11rem minmax(0, 1fr) 16rem; }
+  .desktabs button { padding: 12px 10px 11px; }
+}
+
+/* ── IN CAMPO: testi lunghi sul telefono (C.3) e l'avviso d'uscita (C.4) ── */
+.ftool { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.ftool .wc { font: 500 var(--sg-text-xs) var(--sg-font-mono); color: var(--sg-muted); margin-inline-end: auto; }
+.ftool button { width: auto; margin: 0; min-height: 44px; padding: 0 14px; box-shadow: none; }
+.ftool button.go { background: var(--sg-accent); color: var(--sg-surface); border-color: transparent; }
+.ftool button[disabled] { opacity: .5; }
+.box.full {
+  position: fixed; inset: 0; z-index: 50; margin: 0;
+  display: flex !important; flex-direction: column; gap: var(--sg-space-2);
+  padding: var(--sg-space-3); padding-bottom: calc(var(--sg-space-3) + env(safe-area-inset-bottom));
+  background: var(--sg-bg);
+}
+.box.full textarea { flex: 1; min-height: 50dvh; font-size: var(--sg-text-base); line-height: 1.5; }
+.me-guard { display: grid; gap: var(--sg-space-2); margin-top: var(--sg-space-3); padding: var(--sg-space-3); border-inline-start: 3px solid var(--sg-warn); background: var(--sg-surface-sunk); border-radius: var(--sg-radius-sm); }
+.me-guard p { margin: 0; color: var(--sg-text); font-weight: var(--sg-weight-subtitle); }
+
+/* il titolo dello standard lo dicono già la striscia («Scheda») e l'ispettore
+   («Questa scheda»); resta «Svuota la scheda», in cima, lontano da «Salva» */
+#surface[data-sg-mode="desktop"] .fo-head h2 { display: none; }
+#surface[data-sg-mode="desktop"] .fo-head { justify-content: flex-end; }
+/* sul telefono la barra resta nell'ordine di prima: stanza, stato, chi firma */
+#surface[data-sg-mode="phone"] .whoroom { order: 1; }
+#surface[data-sg-mode="phone"] #state { order: 2; }
+#surface[data-sg-mode="phone"] #me { order: 3; }
+/* gli identificativi in RTL restano da sinistra a destra (1.US5, US 3014) */
+[dir="rtl"] .inroom .navitem > span:first-child,
+[dir="rtl"] .deskstrip-sheet .unav-here { unicode-bidi: isolate; direction: ltr; }
+.indice-fuori span { display: block; }

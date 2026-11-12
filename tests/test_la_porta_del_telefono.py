@@ -152,8 +152,10 @@ def test_il_pannello_a_schermo_non_si_deduce_dalla_definizione():
     la stessa variabile, ed è per questo che «Detta» spegneva la barra."""
     shell = (WEB / "shell.js").read_text(encoding="utf-8")
     assert 'panel: "voice"' in shell
-    assert 'state.panel = "scheda"' in shell
-    assert 'state.panel = "voice"' in shell
+    # dal 14 novembre UN posto decide il pannello davanti (`only`): la scheda
+    # ci passa, «Detta» anche, e la voce diventa `state.panel = "voice"`
+    assert 'only("scheda")' in shell and 'only("work")' in shell
+    assert 'state.panel = panel === "work" ? "voice" : panel;' in shell
 
 
 # ── la colonna del dettato ──────────────────────────────────────────────────

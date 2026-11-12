@@ -246,7 +246,17 @@ export function drawSheet(host, def, state, opts) {
     if (!event.target.closest(".fo-f")) select(root, ctx, null);
   });
   const insp = el("aside", { class: "fo-insp", "aria-live": "polite" });
-  body.append(desk, insp);
+  // ALLA SCRIVANIA L'ISPETTORE STA NELLA COLONNA DI DESTRA della pagina
+  // (`state.inspHost`, 14 novembre, mockup v7.2), a tutta altezza accanto alla
+  // carta; altrove accanto al piano, come prima. È lo stesso pannello.
+  ctx.insp = insp;
+  if (state.inspHost) {
+    body.append(desk);
+    body.dataset.insp = "outside";
+    state.inspHost.replaceChildren(insp);
+  } else {
+    body.append(desk, insp);
+  }
   root.append(body);
 
   const foot = el("footer", { class: "sheetfoot" });
@@ -563,7 +573,7 @@ function select(root, ctx, fieldId) {
   for (const box of root.querySelectorAll(".fo-f")) {
     box.classList.toggle("fo-sel", box.dataset.field === fieldId);
   }
-  const insp = root.querySelector(".fo-insp");
+  const insp = ctx.insp || root.querySelector(".fo-insp");
   if (!insp) return;
   if (fieldId && ctx.byId.has(fieldId)) paintField(insp, ctx.byId.get(fieldId), ctx);
   else paintSummary(insp, def, state);
@@ -644,8 +654,38 @@ function paintField(insp, field, ctx) {
   }
 }
 
+/** L'ISPETTORE SENZA UN CAMPO SCELTO, anche per le viste che non sono il
+ *  Foglio (Campi, Unità) alla scrivania: lo stesso pannello, la stessa
+ *  funzione. */
+export function paintInspector(insp, def, state) {
+  insp.classList.add("fo-insp");
+  paintSummary(insp, def, state);
+}
+
+/* «DETTATA IN TRINCEA · n parole» (14 novembre, CHNT): quando la descrizione
+ * dell'unità è stata scritta solo in trincea, il riquadro lo dice e porta al
+ * campo. Il dato viene dal nodo (`state.unitInfo`: `written_in`, `words`,
+ * `description_field`), il gesto dalla conchiglia (`state.onRefine`). */
+function refineBox(state) {
+  const info = state.unitInfo || {};
+  if (info.written_in !== "trench" || !info.description_field) return null;
+  // in lettura (la lente, un'unità aperta dal suo id, un ruolo che legge) non
+  // si rifinisce niente: il riquadro non promette un gesto che non c'è
+  if (state.lens || state.byId || SG().readOnly) return null;
+  const box = el("section", { class: "refine", "data-refine": info.to_refine ? "short" : "ok" },
+    el("p", { class: "fo-eyebrow", text: tr("refine.title") }),
+    el("h2", { text: tr("f.words", { n: String(info.words || 0) }) }),
+    el("p", { text: tr("refine.note", { w: String(info.words || 0) }) }));
+  const go = el("button", { class: "fo-confirm", type: "button", text: tr("refine.go") });
+  go.addEventListener("click", () => state.onRefine && state.onRefine(info.description_field));
+  box.append(go);
+  return box;
+}
+
 function paintSummary(insp, def, state) {
   insp.replaceChildren();
+  const refine = refineBox(state);
+  if (refine) insp.append(refine);
   const fields = def.fields || [];
   const filled = (f) => isFilled(state.values[f.id]);
   const meter = el("div", { class: "fo-meter" });

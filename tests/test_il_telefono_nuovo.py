@@ -20,8 +20,11 @@ def test_i_controlli_di_aspetto_stanno_nel_foglio_e_ci_si_spostano():
     assert 'const MOVABLE = ["modes", "theme", "skin", "lang"];' in SHELL
     place = SHELL[SHELL.index("function placeControls"):]
     place = place[:place.index("\n}\n")]
-    # spostati, non copiati: nessun cloneNode, un solo append
-    assert "cloneNode" not in place and "home.append(node)" in place
+    # spostati, non copiati: nessun cloneNode, un solo append. Dal 14
+    # novembre alla scrivania la LINGUA va nella barra (`#bar-lang`, mockup
+    # v7.2): lo stesso nodo, un'altra casa — ancora un solo append
+    assert "cloneNode" not in place and place.count(".append(node)") == 1
+    assert 'id === "lang" && mode === "desktop"' in place
 
 
 def test_le_quattro_voci_ci_sono_e_la_porta_resta():
@@ -39,8 +42,13 @@ def test_le_quattro_voci_ci_sono_e_la_porta_resta():
 def test_chi_firma_sta_nelle_iniziali_e_la_fascia_non_si_vede_piu():
     assert 'class="avatar" id="me"' in PAGE and "initialsOf(" in PAGE
     assert "#signature { display: none !important; }" in CSS
-    # …ma «Esci» è lo stesso gesto di prima, non un secondo logout
-    assert '$("me-signout").addEventListener("click", () => { openMe(false); $("signout").click(); });' in PAGE
+    # …ma «Esci» è lo stesso gesto di prima, non un secondo logout. Dal 14
+    # novembre, in campo e con consegne in sospeso, prima si avvisa (C.4);
+    # poi è ancora `openMe(false); $("signout").click()`, e solo quello
+    out = PAGE[PAGE.index('$("me-signout").addEventListener("click"'):]
+    out = out[:out.index("\n});\n")]
+    assert 'openMe(false); $("signout").click();' in out
+    assert "f.signout_guard" in out
 
 
 def test_il_microfono_scende_dove_arriva_il_pollice():

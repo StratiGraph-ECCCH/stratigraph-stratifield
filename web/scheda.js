@@ -500,6 +500,12 @@ function boxFor(field, state) {
     writeValue(state, field.id, kind === "checkbox" ? input.checked : input.value);
   });
   box.append(input);
+  // TESTI LUNGHI SUL TELEFONO (14 novembre, CHNT): le parole contate, «A tutto
+  // schermo», «Detta il resto» (la voce AGGIUNGE in coda, con la strada della
+  // dettatura di oggi: `SG.dictate`), «Fatto» per tornare al passo.
+  if (field.type === "longtext" && state.mode === "phone") {
+    box.append(longTools(box, input, field, state));
+  }
 
   if (field.help) box.append(el("p", { class: "help", text: field.help }));
   if (field.vocabulary) {
@@ -526,6 +532,58 @@ function boxFor(field, state) {
   box.append(strip);
   paintAuthorship(box, said, field, state);
   return box;
+}
+
+/** Le parole di un testo: la stessa regola del nodo (`app/unita.py::words`),
+ *  lettere o cifre, l'apostrofo e il trattino dentro la parola. */
+export function wordCount(text) {
+  const found = String(text || "").match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu);
+  return found ? found.length : 0;
+}
+
+/** «Detta il resto»: ciò che la voce ha sentito, in coda a ciò che c'era. */
+export function appendSaid(before, said) {
+  const add = String(said || "").trim();
+  if (!add) return String(before || "");
+  const was = String(before || "").replace(/\s+$/, "");
+  return was ? `${was} ${add}` : add;
+}
+
+function longTools(box, input, field, state) {
+  const tr = (k, v) => (SG().t ? SG().t(k, v) : k);
+  const bar = el("div", { class: "ftool" });
+  const count = el("span", { class: "wc" });
+  const paint = () => { count.textContent = tr("f.words", { n: String(wordCount(input.value)) }); };
+  paint();
+  input.addEventListener("input", paint);
+  const full = el("button", { type: "button", "data-ftool": "full", text: tr("f.full") });
+  const more = el("button", { type: "button", "data-ftool": "more", text: tr("f.dictate_more") });
+  const done = el("button", { type: "button", class: "go", "data-ftool": "done", text: tr("f.done") });
+  done.hidden = true;
+  const setFull = (on) => {
+    box.classList.toggle("full", on);
+    full.hidden = on;
+    done.hidden = !on;
+    document.documentElement.dataset.fulltext = on ? "on" : "off";
+    if (on) input.focus();
+  };
+  full.addEventListener("click", () => setFull(true));
+  done.addEventListener("click", () => setFull(false));
+  if (!SG().canDictate) { more.disabled = true; more.title = tr("f.no_mic"); }
+  more.addEventListener("click", async () => {
+    const seam = SG();
+    if (!seam.dictate) return;
+    if (seam.dictating) { seam.dictateStop(); return; }
+    more.textContent = `■ ${tr("f.stop")}`;
+    const said = await seam.dictate(state.def && state.def.lang);
+    more.textContent = tr("f.dictate_more");
+    if (!said) return;
+    input.value = appendSaid(input.value, said);
+    writeValue(state, field.id, input.value);
+    paint();
+  });
+  bar.append(count, full, more, done);
+  return bar;
 }
 
 /** DI CHI È IL VALORE di un campo, in una parola: `ai` (proposto da un
