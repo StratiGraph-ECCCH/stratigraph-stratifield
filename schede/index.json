@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.43",
-            "connections": "1.6.53",
+            "nodes": "1.6.44",
+            "connections": "1.6.54",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:55f0b6943c238f557fc73feac6fc77da507135f47a207af27eacc90c96592738"
+            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.43",
-            "connections": "1.6.53",
+            "nodes": "1.6.44",
+            "connections": "1.6.54",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:55f0b6943c238f557fc73feac6fc77da507135f47a207af27eacc90c96592738"
+            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.43",
-            "connections": "1.6.53",
+            "nodes": "1.6.44",
+            "connections": "1.6.54",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:55f0b6943c238f557fc73feac6fc77da507135f47a207af27eacc90c96592738"
+            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.43",
-            "connections": "1.6.53",
+            "nodes": "1.6.44",
+            "connections": "1.6.54",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:55f0b6943c238f557fc73feac6fc77da507135f47a207af27eacc90c96592738"
+            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
           }
         }
       },
