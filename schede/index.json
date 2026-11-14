@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.44",
-            "connections": "1.6.54",
+            "nodes": "1.6.46",
+            "connections": "1.6.55",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
+            "digest": "sha256:5cb1d279046421795b7d9ae8332d185c26e2d428ba5ab58a40e10e77ea60351c"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.44",
-            "connections": "1.6.54",
+            "nodes": "1.6.46",
+            "connections": "1.6.55",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
+            "digest": "sha256:5cb1d279046421795b7d9ae8332d185c26e2d428ba5ab58a40e10e77ea60351c"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.44",
-            "connections": "1.6.54",
+            "nodes": "1.6.46",
+            "connections": "1.6.55",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
+            "digest": "sha256:5cb1d279046421795b7d9ae8332d185c26e2d428ba5ab58a40e10e77ea60351c"
           }
         }
       },
@@ -220,11 +220,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.44",
-            "connections": "1.6.54",
+            "nodes": "1.6.46",
+            "connections": "1.6.55",
             "qualia": "1.6.11",
             "em_ttl": "1.6.26",
-            "digest": "sha256:82ca8b9ba7ce5b3addc90d8cf9976bad923762fe14df00cec5a6297701bb32bc"
+            "digest": "sha256:5cb1d279046421795b7d9ae8332d185c26e2d428ba5ab58a40e10e77ea60351c"
           }
         }
       },
