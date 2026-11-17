@@ -1,0 +1,41 @@
+{
+ "attribution": "Extended Matrix — vocabolario originato in StratiGraph WP3 (CNR-ISPC), deciso da E. Demetrescu il 17 nov 2026; termini dalle etichette del modello ICCD US 2021 e dal datamodel di s3Dgraphy, definizioni scritte qui.",
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/documentation-act/excavation",
+   "labels": {
+    "en": "excavation",
+    "it": "scavo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/documentation-act/recording",
+   "labels": {
+    "en": "field recording",
+    "it": "rilevamento sul campo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/documentation-act/revision",
+   "labels": {
+    "en": "revision",
+    "it": "rielaborazione"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Documentation act (excavation, recording, revision — Extended Matrix)",
+  "it": "Atto di documentazione (scavo, rilevamento, rielaborazione — Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "scheme": "em-documentation-act",
+ "status": "resolvable",
+ "uri": "https://w3id.org/extendedmatrix/vocab/documentation-act/"
+}

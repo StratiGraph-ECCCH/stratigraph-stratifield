@@ -1,0 +1,62 @@
+{
+ "attribution": "Extended Matrix — vocabolario originato in StratiGraph WP3 (CNR-ISPC), deciso da E. Demetrescu il 17 nov 2026; termini dalle etichette del modello ICCD US 2021 e dal datamodel di s3Dgraphy, definizioni scritte qui.",
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/ambiente",
+   "labels": {
+    "en": "room",
+    "it": "ambiente"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/area",
+   "labels": {
+    "en": "area",
+    "it": "area"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/quadrato",
+   "labels": {
+    "en": "square",
+    "it": "quadrato"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/saggio",
+   "labels": {
+    "en": "trench",
+    "it": "saggio"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/settore",
+   "labels": {
+    "en": "sector",
+    "it": "settore"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/place-level/sito",
+   "labels": {
+    "en": "site",
+    "it": "sito"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Place level (the context boxes of a unit sheet, Extended Matrix)",
+  "it": "Livello del luogo (caselle di contesto della scheda US, Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "scheme": "em-place-level",
+ "status": "resolvable",
+ "uri": "https://w3id.org/extendedmatrix/vocab/place-level/"
+}

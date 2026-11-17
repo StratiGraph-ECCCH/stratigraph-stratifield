@@ -1,0 +1,34 @@
+{
+ "attribution": "Extended Matrix — vocabolario originato in StratiGraph WP3 (CNR-ISPC), deciso da E. Demetrescu il 17 nov 2026; termini dalle etichette del modello ICCD US 2021 e dal datamodel di s3Dgraphy, definizioni scritte qui.",
+ "authority": "Extended Matrix",
+ "concepts": [
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/record-status/from_field",
+   "labels": {
+    "en": "from the field",
+    "it": "da campo"
+   }
+  },
+  {
+   "concept": "https://w3id.org/extendedmatrix/vocab/record-status/revised",
+   "labels": {
+    "en": "revised",
+    "it": "rielaborato"
+   }
+  }
+ ],
+ "fixture": false,
+ "format": 1,
+ "labels": {
+  "en": "Record status of a unit (from the field, revised — Extended Matrix)",
+  "it": "Stato del record dell'unità (da campo, rielaborato — Extended Matrix)"
+ },
+ "languages": [
+  "en",
+  "it"
+ ],
+ "license": "CC BY 4.0",
+ "scheme": "em-record-status",
+ "status": "resolvable",
+ "uri": "https://w3id.org/extendedmatrix/vocab/record-status/"
+}

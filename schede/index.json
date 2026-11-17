@@ -31,11 +31,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.46",
+            "nodes": "1.6.47",
             "connections": "1.6.55",
-            "qualia": "1.6.11",
+            "qualia": "1.6.12",
             "em_ttl": "1.6.26",
-            "digest": "sha256:5c5dcf150e758d734fe3f778d95ff7791f6257725828b4dc4cdb842a4d307ffd"
+            "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
         }
       },
@@ -70,11 +70,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.46",
+            "nodes": "1.6.47",
             "connections": "1.6.55",
-            "qualia": "1.6.11",
+            "qualia": "1.6.12",
             "em_ttl": "1.6.26",
-            "digest": "sha256:5c5dcf150e758d734fe3f778d95ff7791f6257725828b4dc4cdb842a4d307ffd"
+            "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
         }
       },
@@ -92,11 +92,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.46",
+            "nodes": "1.6.47",
             "connections": "1.6.55",
-            "qualia": "1.6.11",
+            "qualia": "1.6.12",
             "em_ttl": "1.6.26",
-            "digest": "sha256:5c5dcf150e758d734fe3f778d95ff7791f6257725828b4dc4cdb842a4d307ffd"
+            "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
         }
       },
@@ -226,9 +226,26 @@
             "em_ttl": "1.6.26",
             "digest": "sha256:5c5dcf150e758d734fe3f778d95ff7791f6257725828b4dc4cdb842a4d307ffd"
           }
+        },
+        "3.0.0": {
+          "path": "iccd-us-2021/3.0.0.json",
+          "digest": "sha256:1c78ba15bb59770a2e8c11f730db739b1564b3a59d6a24ea4b67dab959746989",
+          "standard": {
+            "authority": "ICCD",
+            "code": "US",
+            "version": "2021",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.47",
+            "connections": "1.6.55",
+            "qualia": "1.6.12",
+            "em_ttl": "1.6.26",
+            "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
+          }
         }
       },
-      "latest": "2.0.1"
+      "latest": "3.0.0"
     }
   }
 }
