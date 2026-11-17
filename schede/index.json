@@ -37,9 +37,26 @@
             "em_ttl": "1.6.26",
             "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
+        },
+        "0.3.0": {
+          "path": "dai-idaifield-layer-2026/0.3.0.json",
+          "digest": "sha256:834dd9af2f830857c4674c1b4e9527f7bc8431b436a7f9d0324952bd707cb870",
+          "standard": {
+            "authority": "DAI",
+            "code": "iDAI.field Layer",
+            "version": "config 4b5c1e2 (2026-09-24)",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.48",
+            "connections": "1.6.55",
+            "qualia": "1.6.13",
+            "em_ttl": "1.6.26",
+            "digest": "sha256:a6632923a44dcccae0d641dd1b8f4ea7be3fe9780592dfbd636868611a43d5e8"
+          }
         }
       },
-      "latest": "0.2.0"
+      "latest": "0.3.0"
     },
     "es-ue-demo-2026": {
       "versions": {
@@ -76,9 +93,26 @@
             "em_ttl": "1.6.26",
             "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
+        },
+        "0.2.0": {
+          "path": "es-ue-demo-2026/0.2.0.json",
+          "digest": "sha256:414a568ce9e406c027d4db4e93495403368f739caf261cb7ed061f15faa82a87",
+          "standard": {
+            "authority": "DEMO",
+            "code": "UE",
+            "version": "2026-demo",
+            "invented": true
+          },
+          "datamodel": {
+            "nodes": "1.6.48",
+            "connections": "1.6.55",
+            "qualia": "1.6.13",
+            "em_ttl": "1.6.26",
+            "digest": "sha256:a6632923a44dcccae0d641dd1b8f4ea7be3fe9780592dfbd636868611a43d5e8"
+          }
         }
       },
-      "latest": "0.1.1"
+      "latest": "0.2.0"
     },
     "hu-rl-demo-2026": {
       "versions": {
@@ -92,11 +126,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.47",
+            "nodes": "1.6.48",
             "connections": "1.6.55",
-            "qualia": "1.6.12",
+            "qualia": "1.6.13",
             "em_ttl": "1.6.26",
-            "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
+            "digest": "sha256:a6632923a44dcccae0d641dd1b8f4ea7be3fe9780592dfbd636868611a43d5e8"
           }
         }
       },
@@ -243,9 +277,26 @@
             "em_ttl": "1.6.26",
             "digest": "sha256:5f48e71d48850da08200c7516ddf355a75abd4dab77a02728d82bb8390b97af8"
           }
+        },
+        "4.0.0": {
+          "path": "iccd-us-2021/4.0.0.json",
+          "digest": "sha256:52156fc0e2ea888c91d781b4c7c4a21eda0b1b78f973174dcccd1d91b80a5528",
+          "standard": {
+            "authority": "ICCD",
+            "code": "US",
+            "version": "2021",
+            "invented": false
+          },
+          "datamodel": {
+            "nodes": "1.6.48",
+            "connections": "1.6.55",
+            "qualia": "1.6.13",
+            "em_ttl": "1.6.26",
+            "digest": "sha256:a6632923a44dcccae0d641dd1b8f4ea7be3fe9780592dfbd636868611a43d5e8"
+          }
         }
       },
-      "latest": "3.0.0"
+      "latest": "4.0.0"
     }
   }
 }
