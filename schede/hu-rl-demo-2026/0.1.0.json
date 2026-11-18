@@ -26,17 +26,17 @@
     "vocabularies": [],
     "digest": "sha256:dcadbf81f7f41b0837bb20df17f3fd1a836c9b9f1702db113dc197a7fc0ae68b",
     "datamodel": {
-      "nodes": "1.6.48",
+      "nodes": "1.6.51",
       "node_registry": "1.6.41",
       "connections": "1.6.55",
-      "visual_rules": "1.6.47",
+      "visual_rules": "1.6.48",
       "qualia": "1.6.13",
       "translations": "1.17",
-      "digest": "sha256:a6632923a44dcccae0d641dd1b8f4ea7be3fe9780592dfbd636868611a43d5e8",
+      "digest": "sha256:feaee8d2599ad9a0672e8963f6ce8bfd409e09359f8dcbd5c3d439e35b17d0be",
       "files": {
         "nodes": {
-          "digest": "sha256:03a49281a9f72e279abac53374670ba94ef040d821daf1fc3bbdb5b0e2b5f9e5",
-          "version": "1.6.48"
+          "digest": "sha256:21c7a2346f9b670207802c036135ed65f9d055ae7984b78a3a565d8170af2117",
+          "version": "1.6.51"
         },
         "node_registry": {
           "digest": "sha256:5669c0824d7149e22a25d424645b3b78b7c698c5338f3fd639d75c60b31483da",
@@ -52,9 +52,9 @@
         }
       },
       "em_ttl": "1.6.26",
-      "s3dgraphy": "1.6.0.dev121",
+      "s3dgraphy": "1.6.0.dev122",
       "taken_from": {
-        "git_commit": "548557510fe065f7815ca799d83ef8b0b1ad3db0",
+        "git_commit": "8e6d5a002b219a9cb494b79b10dc144e16c1cc54",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
