@@ -115,6 +115,9 @@ class Scheda:
             self.datamodel: Dict[str, Any] = dict(header.get("datamodel") or {})
             #: THE RECIPE — read by `app/operazioni.py`, never interpreted here.
             self.recipe: Optional[Dict[str, Any]] = dict(doc.get("recipe") or {})
+            #: the community packages it was compiled with (MICRO-PL13)
+            self.packages: List[Dict[str, Any]] = [
+                dict(p) for p in header.get("packages") or [] if isinstance(p, dict)]
         else:
             template = doc.get("template") if isinstance(doc, dict) else None
             if not isinstance(template, dict):
@@ -127,6 +130,7 @@ class Scheda:
             self.datamodel = {}
             #: A YAML SOURCE HAS NO RECIPE. It can be drawn and not saved.
             self.recipe = None
+            self.packages = []
         self.raw = template
         self.path = path
         self.id = str(template.get("id") or "")
@@ -303,6 +307,9 @@ class Scheda:
         check = self.datamodel_check()
         if check is not None:
             out["datamodel_check"] = check
+        # The community package it came with (MICRO-PL13): the page names it.
+        if self.packages:
+            out["package"] = dict(self.packages[0])
         # The running head of the sheet spells the unit with the definition's
         # own pattern (SPEC §1.2), so the browser does not invent «US 12».
         pattern = ((self.raw.get("identity") or {}).get("human_key")
@@ -856,6 +863,31 @@ def _qualia_labels() -> Any:
     return datamodel_i18n
 
 
+def _safe(part: str) -> str:
+    return "".join(ch for ch in part if ch.isalnum() or ch in "-_.")
+
+
+def _vocabulary_path(scheme_id: str) -> Optional[pathlib.Path]:
+    """`vocabolari/<schema>.json`, or — for a scheme a COMMUNITY PACKAGE carries,
+    `<prefisso>:<slug>` (MICRO-PL13) — `vocabolari/<prefisso>/<slug>.json`: a
+    colon is not a file name, and a folder per package keeps its LICENSE and
+    NOTICE beside its schemes. Anything else (a path, two colons) is None."""
+    sid = str(scheme_id or "")
+    parts = sid.split(":")
+    if len(parts) > 2 or any(not p or _safe(p) != p or p.startswith(".") for p in parts):
+        return None
+    path = VOCABULARY_DIR.joinpath(*parts[:-1], f"{parts[-1]}.json")
+    return path if path.is_file() else None
+
+
+def package_of(scheda: "Scheda") -> Optional[Dict[str, str]]:
+    """THE COMMUNITY PACKAGE a scheda came with (`header.packages`, written by
+    `stratigraph-templates package-build`), or None for a scheda of the core.
+    Said in the list so the phone can name it (MICRO-PL13)."""
+    found = list(getattr(scheda, "packages", None) or [])
+    return dict(found[0]) if found else None
+
+
 def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
     """I concetti di uno schema, con l'etichetta in UNA lingua — o None.
 
@@ -869,10 +901,9 @@ def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
     prescrive un vocabolario che non esiste in SKOS, e il widget scrive allora
     una parola senza concetto — che è ciò che SPEC §3 chiama `uncontrolled`.
     """
-    safe = "".join(ch for ch in str(scheme_id or "") if ch.isalnum() or ch in "-_.")
-    if not safe or safe != scheme_id:
+    path = _vocabulary_path(scheme_id)
+    if path is None:
         return None
-    path = VOCABULARY_DIR / f"{safe}.json"
     if not path.is_file():
         return None
     doc = json.loads(path.read_text(encoding="utf-8"))
@@ -886,6 +917,7 @@ def vocabulary(scheme_id: str, lang: str) -> Optional[Dict[str, Any]]:
                                              "label_there": other[1]})})
     return {"scheme": doc.get("scheme"), "status": doc.get("status"),
             "authority": doc.get("authority"), "fixture": bool(doc.get("fixture")),
+            **({"package": doc["package"], "fascia": doc.get("fascia")} if doc.get("package") else {}),
             **({"provisional_for": doc["provisional_for"]} if doc.get("provisional_for") else {}),
             "unverified": lang in (doc.get("unverified_languages") or []),
             "label": (doc.get("labels") or {}).get(lang), "lang": lang,

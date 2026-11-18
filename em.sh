@@ -53,7 +53,13 @@ WHAT IT DOES
       iaa-dana-locus-2026, until its licence lets it move to templates);
     · the fingerprint of the latest version of each vendored scheda against the
       s3dgraphy this node runs (= aligned, ≠ moved, · compiled before the
-      fingerprint).
+      fingerprint);
+    · the COMMUNITY PACKAGES pacchetti.json declares (MICRO-PL13): each one's
+      scheda, verified against its digest, into schede/<id>/, and its
+      vocabularies of tier A and B into vocabolari/<prefix>/ — only the data,
+      never a package's code. Looked for in STRATIGRAPH_PACKAGES_PATH
+      (colon-separated folders or zips), then ../em-profiles/profiles.
+        STRATIGRAPH_PACKAGES_PATH=../em-profiles/examples ./em.sh sync-schede
   Then `git status --short` of schede/ and vocabolari/.
 
 WHAT IT DOES NOT DO

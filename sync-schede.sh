@@ -53,10 +53,26 @@ if [ -z "$SRC" ] && has_dist "$SIBLING"; then SRC="$SIBLING"; fi
 # nobody and believed by whoever reads the directory. A scheda `dist/` does not
 # have is left as it is (see the top), and named.
 mkdir -p "$DST"
+# The index as it was before this sync: the community packages' step (below)
+# reads which schede it vendored last time, and those are not «only here».
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+PREV_INDEX="$WORK/index.before.json"
+if [ -f "$DST/index.json" ]; then cp "$DST/index.json" "$PREV_INDEX"; else echo '{}' > "$PREV_INDEX"; fi
+FROM_PACKAGES=" $(python3 - "$PREV_INDEX" <<'PYEOF'
+import json, sys
+try:
+    index = json.load(open(sys.argv[1], encoding="utf-8"))
+except ValueError:
+    index = {}
+print(" ".join(sid for sid, e in (index.get("schede") or {}).items() if e.get("package")))
+PYEOF
+) "
 ONLY_HERE=()
 for dir in "$DST"/*/; do
   [ -d "$dir" ] || continue
   sid="$(basename "$dir")"
+  case "$FROM_PACKAGES" in *" $sid "*) continue ;; esac
   [ -d "$SRC/dist/schede/$sid" ] || ONLY_HERE+=("$sid")
 done
 for dir in "$SRC/dist/schede"/*/; do
@@ -121,6 +137,23 @@ for sid, entry in sorted(index["schede"].items()):
     print(f"  {sid:<18} {', '.join(versions):<12} latest {latest}  "
           f"datamodel nodes {dm['nodes']} · connections {dm['connections']}")
 EOF
+# ── THE COMMUNITY PACKAGES THIS NODE DECLARES (MICRO-PL13, 2026-11-18) ──────
+#
+# A community package (EM Profile) can carry a scheda, compiled with its digest,
+# and the vocabularies its boxes offer. `pacchetti.json` says WHICH packages
+# this node serves (id + version); the folders they are looked for in are
+# `STRATIGRAPH_PACKAGES_PATH` (colon-separated) and then ../em-profiles/profiles.
+# Each scheda is verified (digest, compiled form, id, version) before anything
+# is written; only tiers A and B of its vocabularies travel; a mixed package
+# gives its data and never its code. The whole reasoning is in
+# scripts/sync_pacchetti.py. With nothing declared, nothing changes.
+PKG_ARGS=()
+IFS=':' read -r -a PKG_DIRS <<< "${STRATIGRAPH_PACKAGES_PATH:-}"
+for d in ${PKG_DIRS[@]+"${PKG_DIRS[@]}"}; do [ -n "$d" ] && PKG_ARGS+=(--from "$d"); done
+PYP="$SRC/.venv/bin/python"
+[ -x "$PYP" ] || PYP="python3"
+PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PYP" "$HERE/scripts/sync_pacchetti.py" \
+  "$HERE" "$PREV_INDEX" ${PKG_ARGS[@]+"${PKG_ARGS[@]}"}
 echo "  vendored size    $(du -sh "$DST" | cut -f1)"
 for sid in ${ONLY_HERE[@]+"${ONLY_HERE[@]}"}; do
   last="$(git -C "$HERE" log -1 --format='%ad %h' --date=short -- "schede/$sid" 2>/dev/null || true)"
@@ -200,8 +233,8 @@ VOC="$HERE/vocabolari"
 PY="$SRC/.venv/bin/python"
 [ -x "$PY" ] || PY="python3"
 mkdir -p "$VOC"
-VOC_NEW="$(mktemp -d)"
-trap 'rm -rf "$VOC_NEW"' EXIT
+VOC_NEW="$WORK/vocabolari"
+mkdir -p "$VOC_NEW"
 PYTHONPATH="$SRC/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" - "$DST" "$VOC_NEW" <<'EOF'
 import json, pathlib, sys
 from stratigraph_templates.vocab import Vocabularies, VocabularyError
@@ -214,7 +247,13 @@ for path in sorted(schede.rglob("*.json")):
     if path.name == "index.json":
         continue
     header = json.loads(path.read_text(encoding="utf-8"))["header"]
+    # a scheme a COMMUNITY PACKAGE carries (`<prefix>:<slug>` of one of the
+    # scheda's `header.packages`) was vendored by the packages' step, from
+    # the package itself, into vocabolari/<prefix>/ (MICRO-PL13)
+    own = {str(p.get("prefix")) for p in header.get("packages") or [] if p.get("prefix")}
     for entry in header.get("vocabularies") or []:
+        if ":" in entry["id"] and entry["id"].split(":", 1)[0] in own:
+            continue
         wanted.setdefault(entry["id"], set()).update(header.get("languages") or [])
         if entry.get("provisional_for"):
             stands_in[entry["id"]] = entry["provisional_for"]

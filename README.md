@@ -98,6 +98,27 @@ Tests:
 .venv/bin/python -m pytest -q      # 46 passed
 ```
 
+### The schede of a community package
+
+A community package (EM Profile, `ExtendedMatrix/em-profiles`) can carry a
+scheda and the vocabularies its boxes offer. A node serves those it DECLARES in
+`pacchetti.json` (id + version; the file ships with none), taken at sync like
+every other scheda — never at runtime, and never the 3D pose (D-10):
+
+```bash
+STRATIGRAPH_PACKAGES_PATH=../em-profiles/examples ./em.sh sync-schede
+```
+
+`scripts/sync_pacchetti.py` verifies each compiled scheda against its digest
+before anything is written, copies it byte for byte into `schede/<id>/`, and
+resolves its vocabularies of tier A and B into `vocabolari/<prefix>/<slug>.json`
+(`GET /v1/vocabolario/<prefix>:<slug>`), with the package's licence and a
+`NOTICE` beside them. A mixed package gives its data, never its code. A version
+no longer declared stays (a unit compiled with it is read back with it), marked
+`declared: false` in `schede/index.json`. `GET /v1/schede` names the package of
+each such scheda, and the phone says «community package … / pacchetto di
+comunità …».
+
 ## Configuration
 
 | variable | what it does |

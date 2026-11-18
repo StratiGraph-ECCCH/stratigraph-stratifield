@@ -530,6 +530,17 @@ async function loadSchede() {
                            `${item.recorded_in.trench} in the trench of ${item.fields}`,
                            { t: item.recorded_in.trench, n: item.fields });
     button.append(count);
+    // UNA SCHEDA ARRIVATA CON UN PACCHETTO DI COMUNITÀ lo dice (MICRO-PL13):
+    // chi la compila deve sapere che non è una norma del nucleo.
+    if (item.package) {
+      const pkg = document.createElement("span");
+      pkg.className = "indice-cosa";
+      pkg.dataset.package = item.package.name;
+      pkg.textContent = tr("schede.package",
+                           `community package ${item.package.name} ${item.package.version}`,
+                           { name: item.package.name, version: item.package.version });
+      button.append(pkg);
+    }
     button.addEventListener("click", () => openScheda(item.id));
     host.append(button);
   }
@@ -997,6 +1008,8 @@ function paintStrip() {
         ? ` — ${tr("schede.count", "", { t: item.recorded_in.trench, n: item.fields })}` : "";
       const o = make("option", { value: item.id,
         textContent: standardName(item, SG().locale) + (demo ? " · demo" : "")
+          + (item.package ? ` · ${tr("schede.package", "", { name: item.package.name,
+                                                               version: item.package.version })}` : "")
           + (state.lens && item.id === written ? ` · ${t("lens.written")}` : "") + trench });
       o.selected = item.id === def.id;
       pick.append(o);

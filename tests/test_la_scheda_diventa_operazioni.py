@@ -139,6 +139,9 @@ def test_a_scheda_only_here_survives_the_sync(tmp_path):
     here = tmp_path / "node"
     (here / "schede").mkdir(parents=True)
     shutil.copy(ROOT / "sync-schede.sh", here / "sync-schede.sh")
+    # the community packages' step (MICRO-PL13) lives beside it
+    (here / "scripts").mkdir()
+    shutil.copy(ROOT / "scripts" / "sync_pacchetti.py", here / "scripts" / "sync_pacchetti.py")
     # una scheda che templates non ha: la IAA con un altro id
     src = ROOT / "schede" / "iaa-dana-locus-2026" / "0.1.1.json"
     doc = json.loads(src.read_text(encoding="utf-8"))

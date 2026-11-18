@@ -567,7 +567,12 @@ def list_schede() -> Dict[str, Any]:
                     # The three counts, so a client can SEE that a definition
                     # has not been decided yet instead of discovering it as an
                     # empty phone form.
-                    "recorded_in": s.counts()}
+                    "recorded_in": s.counts(),
+                    # THE COMMUNITY PACKAGE it came with (MICRO-PL13), or
+                    # absent for a scheda of the core: {name, iri, prefix,
+                    # version}. Its vocabularies answer at
+                    # /v1/vocabolario/<prefix>:<slug>.
+                    **({"package": schede.package_of(s)} if schede.package_of(s) else {})}
                    for s in found],
         # Said out loud rather than left to be inferred from an empty list: a
         # node with no definitions is not broken, it is a node that takes
