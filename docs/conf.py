@@ -55,6 +55,11 @@ html_static_path = ['_static']
 # manuale letto in trincea non ha una CDN. Chiaro e scuro seguono
 # l'impostazione di sistema di chi legge; i contrasti sono misurati nel
 # marchio. Per cambiare un colore si cambia lì, e si ridà il sync.
+# EPUB non conosce il tipo di un .woff2 e, con -W, la sua lamentela
+# («unknown mimetype … ignoring») ferma la pubblicazione: i caratteri del
+# marchio servono alla pagina web, non al libro.
+suppress_warnings = ['epub.unknown_project_files']
+
 html_css_files = [
     'brand/stratigraph-theme.css',
     'brand/sphinx-rtd-bridge.css',
