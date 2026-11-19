@@ -133,7 +133,7 @@ is still missing — the ORCID client, for instance, if you skipped it.
 
 The first start downloads the programs ready-made (the images published on GHCR,
 for Intel and ARM alike — see *[From the code, or from the published
-images](../../stratigraph-server/docs/DEPLOYMENT.md#from-the-code-or-from-the-published-images)*
+images](https://github.com/StratiGraph-ECCCH/stratigraph-server/blob/main/docs/DEPLOYMENT.md#from-the-code-or-from-the-published-images)*
 in the server's manual): nothing is built on the node, and only `stratigraph-server` is cloned
 on it. It needs the internet this once — `./fcn-install.sh` has usually
 downloaded them already. From then on the node starts by itself at every
@@ -310,5 +310,5 @@ The mechanism on this page is public. Some things of a real node are not: the
 contents of `.env.dev`, the node's private key (`node-key.pem`, in the node's
 data), the packages of people (they are personal data), the node's address and
 its list of trusted nodes. See *Handle with care* in
-[People, profiles and roles](../../stratigraph-server/docs/ROLES-AND-USERS.md#people-between-nodes),
+[People, profiles and roles](https://github.com/StratiGraph-ECCCH/stratigraph-server/blob/main/docs/ROLES-AND-USERS.md#people-between-nodes),
 in the server's manual.

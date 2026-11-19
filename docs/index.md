@@ -15,7 +15,7 @@ written**, and this page says what is here and what is not yet.
 You prepare the node that goes to the excavation, look after it during the
 campaign, and bring the work home. How a room looks from inside — signing in,
 sharing, roles — is the same on a field node as on any other, and is told once,
-in [Working in a room](../../stratigraph-server/docs/ROOM-GUIDE.md) in the
+in [Working in a room](https://github.com/StratiGraph-ECCCH/stratigraph-server/blob/main/docs/ROOM-GUIDE.md) in the
 server's manual.
 
 ```{toctree}
@@ -34,20 +34,20 @@ it says when it does not understand and what it does when the network goes.
 You change StratiField's code, add a tool to it, or install it on a node.
 
 **Not written yet, as pages.** What exists today is in the repository's
-[README](../README.md), and it is where to read it until it moves here:
+[README](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md), and it is where to read it until it moves here:
 
-- [the tool contract](../README.md#the-centre-of-gravity-the-tool-contract),
+- [the tool contract](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#the-centre-of-gravity-the-tool-contract),
   the shape that lets a partner add a capability with a descriptor and an
-  adapter, and [the five MVP tools](../README.md#the-five-mvp-tools);
-- [where a write lands](../README.md#where-a-write-lands) in the room's graph;
-- [running it](../README.md#running-it) and its
-  [configuration](../README.md#configuration);
-- [hearing](../README.md#hearing-three-roads-and-the-node-says-which) and
-  [interpreting](../README.md#interpreting-the-rules-first-a-model-second): the
+  adapter, and [the five MVP tools](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#the-five-mvp-tools);
+- [where a write lands](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#where-a-write-lands) in the room's graph;
+- [running it](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#running-it) and its
+  [configuration](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#configuration);
+- [hearing](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#hearing-three-roads-and-the-node-says-which) and
+  [interpreting](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#interpreting-the-rules-first-a-model-second): the
   speech engine on the node, the rules before a model;
-- [the image](../README.md#limmagine-e-il-passo-che-nessun-workflow-può-fare)
+- [the image](https://github.com/StratiGraph-ECCCH/stratigraph-stratifield/blob/main/README.md#limmagine-e-il-passo-che-nessun-workflow-può-fare)
   and the step no workflow can do.
 
 How a node is switched on — StratiField is one of its services — is
-[Running a node](../../stratigraph-server/docs/DEPLOYMENT.md) in the server's
+[Running a node](https://github.com/StratiGraph-ECCCH/stratigraph-server/blob/main/docs/DEPLOYMENT.md) in the server's
 manual.
