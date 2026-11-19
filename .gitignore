@@ -17,3 +17,6 @@ data/
 models/
 
 .DS_Store
+
+# l'uscita di `sphinx-build docs docs/_build` (Read the Docs la rifà da sé)
+docs/_build/

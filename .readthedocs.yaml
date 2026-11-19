@@ -1,0 +1,29 @@
+# .readthedocs.yaml — stratigraph-stratifield
+# Stessa forma di stratigraph-server (v2, ubuntu-22.04, python 3.11, pdf ed
+# epub), e per la stessa ragione il progetto NON si installa: il manuale è
+# markdown letto da MyST, senza autodoc, e installare StratiField (Whisper,
+# s3dgraphy…) servirebbe solo a rallentare il build. La versione la legge
+# docs/conf.py da pyproject.toml.
+# https://docs.readthedocs.io/en/stable/config-file/v2.html
+#
+# `fail_on_warning: true`, come il server: il cancello locale è
+# `sphinx-build -W docs docs/_build`.
+
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+
+python:
+  install:
+    - requirements: docs/requirements.txt
+
+sphinx:
+  configuration: docs/conf.py
+  fail_on_warning: true
+
+formats:
+  - pdf
+  - epub
