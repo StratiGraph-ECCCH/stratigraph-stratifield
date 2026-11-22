@@ -49,10 +49,10 @@
           },
           "datamodel": {
             "nodes": "1.6.52",
-            "connections": "1.6.56",
+            "connections": "1.6.57",
             "qualia": "1.6.14",
             "em_ttl": "1.6.27",
-            "digest": "sha256:2b5eebccc57a4590d87c37cc05b353938abce43dabc9600145e6f01979f0062a"
+            "digest": "sha256:0f3b0131721438ed6d24b5b11e9269c19d15cf135369316fc311c8fcbb89e945"
           }
         }
       },
@@ -105,10 +105,10 @@
           },
           "datamodel": {
             "nodes": "1.6.52",
-            "connections": "1.6.56",
+            "connections": "1.6.57",
             "qualia": "1.6.14",
             "em_ttl": "1.6.27",
-            "digest": "sha256:2b5eebccc57a4590d87c37cc05b353938abce43dabc9600145e6f01979f0062a"
+            "digest": "sha256:0f3b0131721438ed6d24b5b11e9269c19d15cf135369316fc311c8fcbb89e945"
           }
         }
       },
@@ -127,10 +127,10 @@
           },
           "datamodel": {
             "nodes": "1.6.52",
-            "connections": "1.6.56",
+            "connections": "1.6.57",
             "qualia": "1.6.14",
             "em_ttl": "1.6.27",
-            "digest": "sha256:2b5eebccc57a4590d87c37cc05b353938abce43dabc9600145e6f01979f0062a"
+            "digest": "sha256:0f3b0131721438ed6d24b5b11e9269c19d15cf135369316fc311c8fcbb89e945"
           }
         }
       },
@@ -289,10 +289,10 @@
           },
           "datamodel": {
             "nodes": "1.6.52",
-            "connections": "1.6.56",
+            "connections": "1.6.57",
             "qualia": "1.6.14",
             "em_ttl": "1.6.27",
-            "digest": "sha256:2b5eebccc57a4590d87c37cc05b353938abce43dabc9600145e6f01979f0062a"
+            "digest": "sha256:0f3b0131721438ed6d24b5b11e9269c19d15cf135369316fc311c8fcbb89e945"
           }
         }
       },
