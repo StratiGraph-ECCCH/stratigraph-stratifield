@@ -48,11 +48,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.53",
-            "connections": "1.6.59",
-            "qualia": "1.6.16",
-            "em_ttl": "1.6.28",
-            "digest": "sha256:fa552ea53a435315ad4888ec52da10cb3813eb8b2e317cb21553ac9dab161f83"
+            "nodes": "1.6.54",
+            "connections": "1.6.60",
+            "qualia": "1.6.19",
+            "em_ttl": "1.6.29",
+            "digest": "sha256:183f5383b5351901d52c6e9007b0f3fb3a2de56e48ed2dcdc36c9b5a21b7f812"
           }
         }
       },
@@ -104,11 +104,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.53",
-            "connections": "1.6.59",
-            "qualia": "1.6.16",
-            "em_ttl": "1.6.28",
-            "digest": "sha256:fa552ea53a435315ad4888ec52da10cb3813eb8b2e317cb21553ac9dab161f83"
+            "nodes": "1.6.54",
+            "connections": "1.6.60",
+            "qualia": "1.6.19",
+            "em_ttl": "1.6.29",
+            "digest": "sha256:183f5383b5351901d52c6e9007b0f3fb3a2de56e48ed2dcdc36c9b5a21b7f812"
           }
         }
       },
@@ -126,11 +126,11 @@
             "invented": true
           },
           "datamodel": {
-            "nodes": "1.6.53",
-            "connections": "1.6.59",
-            "qualia": "1.6.16",
-            "em_ttl": "1.6.28",
-            "digest": "sha256:fa552ea53a435315ad4888ec52da10cb3813eb8b2e317cb21553ac9dab161f83"
+            "nodes": "1.6.54",
+            "connections": "1.6.60",
+            "qualia": "1.6.19",
+            "em_ttl": "1.6.29",
+            "digest": "sha256:183f5383b5351901d52c6e9007b0f3fb3a2de56e48ed2dcdc36c9b5a21b7f812"
           }
         }
       },
@@ -288,11 +288,11 @@
             "invented": false
           },
           "datamodel": {
-            "nodes": "1.6.53",
-            "connections": "1.6.59",
-            "qualia": "1.6.16",
-            "em_ttl": "1.6.28",
-            "digest": "sha256:fa552ea53a435315ad4888ec52da10cb3813eb8b2e317cb21553ac9dab161f83"
+            "nodes": "1.6.54",
+            "connections": "1.6.60",
+            "qualia": "1.6.19",
+            "em_ttl": "1.6.29",
+            "digest": "sha256:183f5383b5351901d52c6e9007b0f3fb3a2de56e48ed2dcdc36c9b5a21b7f812"
           }
         }
       },
