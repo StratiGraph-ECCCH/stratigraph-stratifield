@@ -189,35 +189,35 @@
     ],
     "digest": "sha256:52156fc0e2ea888c91d781b4c7c4a21eda0b1b78f973174dcccd1d91b80a5528",
     "datamodel": {
-      "nodes": "1.6.52",
-      "node_registry": "1.6.52",
-      "connections": "1.6.57",
+      "nodes": "1.6.53",
+      "node_registry": "1.6.53",
+      "connections": "1.6.59",
       "visual_rules": "1.6.48",
-      "qualia": "1.6.14",
-      "translations": "1.19",
-      "digest": "sha256:0f3b0131721438ed6d24b5b11e9269c19d15cf135369316fc311c8fcbb89e945",
+      "qualia": "1.6.16",
+      "translations": "1.21",
+      "digest": "sha256:fa552ea53a435315ad4888ec52da10cb3813eb8b2e317cb21553ac9dab161f83",
       "files": {
         "nodes": {
-          "digest": "sha256:19c0c1621576bffdb09964560e3c4497060cc96676e9174626b4d210d1d7bc4f",
-          "version": "1.6.52"
+          "digest": "sha256:dd1801543364a26b656a1442f64c64aabcd958d12c7d9771782d13b586159bfb",
+          "version": "1.6.53"
         },
         "node_registry": {
-          "digest": "sha256:f65037c4883e168b347e7ba07ee9006ccecea6815fa2954dfc820045806847e5",
-          "version": "1.6.52"
+          "digest": "sha256:bbc281c7ffd8f5eef3a1c40f99940c211b863c6c9dbce9cf01e6b89c0236b515",
+          "version": "1.6.53"
         },
         "connections": {
-          "digest": "sha256:7037d5fb8065edd1da36ff9c2f620b4ed867ccf86c9dce203929a607d2457766",
-          "version": "1.6.57"
+          "digest": "sha256:88f41a23fe336a815a70cf4e4aee08bbbbf04f15922a7911a57618b5574fd8ef",
+          "version": "1.6.59"
         },
         "qualia": {
-          "digest": "sha256:7cd2895ab4c325d96ee7424f69bb162b76eb2f625ca52ef1cd700bb4f64d44d6",
-          "version": "1.6.14"
+          "digest": "sha256:27fe2f610366aa1682443c05ce66f68f0256ad8b45e27490f28cc11c0fbe2553",
+          "version": "1.6.16"
         }
       },
-      "em_ttl": "1.6.27",
-      "s3dgraphy": "1.6.0.dev137",
+      "em_ttl": "1.6.28",
+      "s3dgraphy": "1.6.0.dev138",
       "taken_from": {
-        "git_commit": "0edc105959366b386a603ac154e111a422b0f519",
+        "git_commit": "6f1abf7e917b71c05fc58c35dd84158b4e99f18e",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
