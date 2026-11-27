@@ -189,25 +189,25 @@
     ],
     "digest": "sha256:52156fc0e2ea888c91d781b4c7c4a21eda0b1b78f973174dcccd1d91b80a5528",
     "datamodel": {
-      "nodes": "1.6.56",
-      "node_registry": "1.6.56",
-      "connections": "1.6.61",
+      "nodes": "1.6.57",
+      "node_registry": "1.6.57",
+      "connections": "1.6.62",
       "visual_rules": "1.6.48",
       "qualia": "1.6.21",
       "translations": "1.27",
-      "digest": "sha256:db171a946d73ec384072dd5ca514d93ac185864c4ff8af3d50df133764a2b051",
+      "digest": "sha256:81f7dd3986966e0549b14dd0eafe1432ecbaa6a4a7fb3afa5e6b01b8e8cf7727",
       "files": {
         "nodes": {
-          "digest": "sha256:fbf6d6bd731e1394a33af94e18c296e1496c273f24dfcaae56ea447ce50ec891",
-          "version": "1.6.56"
+          "digest": "sha256:84bb2dd7379d62adcc25d23b11d9a50b3ae7ee31281cefe6ecdcfb8bb432be6c",
+          "version": "1.6.57"
         },
         "node_registry": {
-          "digest": "sha256:4f37e44e75b58dce227e7f06371d5fd9ab6382879b4cf1fa934e8446698a2675",
-          "version": "1.6.56"
+          "digest": "sha256:bf15598600ab0dfe1fddc6cb68a0caedfd470fef98cc76b58505befd31103e43",
+          "version": "1.6.57"
         },
         "connections": {
-          "digest": "sha256:6e6d9b833fed4416df1a6c8466d7b11a97fb681635e97825debd05e890d6e570",
-          "version": "1.6.61"
+          "digest": "sha256:24654e3c453149577dc7d2bce07353c9ae737d295ad9b3271d07e6864aa8bdc4",
+          "version": "1.6.62"
         },
         "qualia": {
           "digest": "sha256:7f1e51f9529350e2c761c21f08411c3ca314d88292c939e0a36411f5ecdafefc",
@@ -215,9 +215,9 @@
         }
       },
       "em_ttl": "1.6.31",
-      "s3dgraphy": "1.6.0.dev143",
+      "s3dgraphy": "1.6.0.dev144",
       "taken_from": {
-        "git_commit": "171089bab0e23d1f3719fb3bfe1bcd8aaef04d7d",
+        "git_commit": "a393a13dd86f5152685758aeb39fec4b8897a36a",
         "git_dirty": false
       },
       "snapshot": "registry/s3dgraphy-snapshot.json"
